@@ -1,0 +1,39 @@
+# ─── Node.js ───────────────────────────────────────────────
+node_modules/
+dist/
+*.js.map
+.env
+.env.local
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+
+# ─── TypeScript ────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+*.egg
+MANIFEST
+.python-version
+
+# ─── OS / Editor ───────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

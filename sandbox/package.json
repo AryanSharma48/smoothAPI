@@ -1,0 +1,13 @@
+{
+  "name": "smooth-api-sandbox",
+  "version": "1.0.0",
+  "description": "Chaos test server for smooth-api integration tests",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
