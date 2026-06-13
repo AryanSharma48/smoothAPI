@@ -38,7 +38,6 @@ export function createResilientFetch<T>(globalConfig: ResilientFetchConfig<T>) {
         // fetch() resolves for any HTTP status. Retryable codes need to be
         // treated as failures manually so they dont throw on their own.
         if (retryOn.includes(response.status)) {
-          breaker.recordFailure(domain);
           throw new Error(`HTTP ${response.status}`);
         }
 
