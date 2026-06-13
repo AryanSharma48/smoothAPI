@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "smooth-api"
+name = "smoothapi-py"
 version = "0.1.0"
 description = "API resilience library — exponential backoff and circuit breaker"
 readme = "README.md"

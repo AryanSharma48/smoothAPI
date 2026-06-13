@@ -1,5 +1,5 @@
 {
-  "name": "smooth-api",
+  "name": "smoothapi",
   "version": "0.1.0",
   "description": "API resilience library — exponential backoff and circuit breaker for fetch",
   "type": "module",
