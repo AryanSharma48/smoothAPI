@@ -63,6 +63,11 @@ def resilient_api(config: ResilientConfig):
                         last_err = err
                         if attempt < config.backoff.max_retries:
                             await asyncio.sleep(calculate_backoff(attempt, config.backoff))
+                            continue
+                            
+                        # If retries are exhausted and it's an HTTP error, return the response instead of raising
+                        if status is not None and hasattr(err, 'response'):
+                            return err.response
 
                 raise last_err  # type: ignore[misc]
 
@@ -93,6 +98,10 @@ def resilient_api(config: ResilientConfig):
                         last_err = err
                         if attempt < config.backoff.max_retries:
                             sleep_backoff(calculate_backoff(attempt, config.backoff))
+                            continue
+                            
+                        if status is not None and hasattr(err, 'response'):
+                            return err.response
 
                 raise last_err  # type: ignore[misc]
 

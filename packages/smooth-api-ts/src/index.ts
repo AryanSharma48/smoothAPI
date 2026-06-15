@@ -36,9 +36,14 @@ export function createResilientFetch<T>(globalConfig: ResilientFetchConfig<T>) {
         const response = await fetch(url, options);
 
         // fetch() resolves for any HTTP status. Retryable codes need to be
-        // treated as failures manually so they dont throw on their own.
+        // treated as failures manually.
         if (retryOn.includes(response.status)) {
-          throw new Error(`HTTP ${response.status}`);
+          breaker.recordFailure(domain);
+          if (attempt < backoffConfig.maxRetries) {
+            await sleep(calculateBackoff(attempt, backoffConfig));
+            continue;
+          }
+          return response;
         }
 
         breaker.recordSuccess(domain);
