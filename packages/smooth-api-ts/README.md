@@ -19,7 +19,38 @@ npm install @codingaryan/smoothapi
 
 ## Usage
 
-Create your resilient fetch wrapper once and use it throughout your application:
+### Basic Usage (Defaults)
+
+If you don't need custom configurations, you can instantiate the resilient fetch with its defaults by simply passing an empty object.
+
+```typescript
+import { createResilientFetch } from '@codingaryan/smoothapi';
+
+// Create it with default settings
+const fetchWithRetry = createResilientFetch({});
+
+async function main() {
+  try {
+    // Drop-in replacement for native fetch
+    const response = await fetchWithRetry('https://api.example.com/data');
+    const data = await response.json();
+    console.log(data);
+  } catch (err) {
+    console.error("Request failed completely:", err);
+  }
+}
+```
+
+**Default Settings provided automatically:**
+- **Retries**: 3 attempts
+- **Backoff Base Delay**: 100 milliseconds
+- **Circuit Failure Threshold**: Trips after 3 consecutive failures
+- **Circuit Cooldown**: Stays open for 10 seconds before probing
+- **Status Codes to Retry**: `429`, `500`, `502`, `503`, and `504`
+
+### Advanced Usage (Custom Settings)
+
+You can override any of the defaults to suit your application's needs, such as adding a fallback object.
 
 ```typescript
 import { createResilientFetch } from '@codingaryan/smoothapi';
@@ -42,7 +73,6 @@ const fetchWithRetry = createResilientFetch({
 
 async function main() {
   try {
-    // Drop-in replacement for native fetch
     const response = await fetchWithRetry('https://api.example.com/data');
     
     // If fallback triggered, it returns your fallback object directly

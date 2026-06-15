@@ -19,7 +19,41 @@ pip install smoothapi-py
 
 ## Usage
 
-Define your configuration once and apply the `@resilient_api` decorator to your functions:
+### Basic Usage (Defaults)
+
+If you don't need custom configurations, you can instantiate the decorator with its defaults by passing an empty config object.
+
+```python
+import requests
+from smooth_api import resilient_api, ResilientConfig
+
+# Create it with default settings
+config = ResilientConfig()
+
+@resilient_api(config)
+def get_user_data(user_id: str):
+    res = requests.get(f"https://api.example.com/users/{user_id}")
+    res.raise_for_status() # Always raise so the decorator knows it failed!
+    return res.json()
+
+# Standard usage
+try:
+    data = get_user_data("123")
+    print(data)
+except Exception as e:
+    print("Request failed completely:", e)
+```
+
+**Default Settings provided automatically:**
+- **Retries**: 3 attempts
+- **Backoff Base Delay**: 0.1 seconds (100 milliseconds)
+- **Circuit Failure Threshold**: Trips after 3 consecutive failures
+- **Circuit Cooldown**: Stays open for 10 seconds before probing
+- **Status Codes to Retry**: `429`, `500`, `502`, `503`, and `504`
+
+### Advanced Usage (Custom Settings)
+
+You can override any of the defaults to suit your application's needs, such as adding a fallback object.
 
 ```python
 from smooth_api import resilient_api, ResilientConfig
@@ -47,13 +81,6 @@ def get_user_data(user_id: str):
     res = requests.get(f"https://api.example.com/users/{user_id}")
     res.raise_for_status()
     return res.json()
-
-# Standard usage
-try:
-    data = get_user_data("123")
-    print(data)
-except Exception as e:
-    print("Request failed completely:", e)
 
 # You can also override the fallback at runtime per-call:
 data = get_user_data("456", fallback={"status": "override"})
