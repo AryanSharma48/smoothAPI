@@ -1,6 +1,7 @@
 # ─── Node.js ───────────────────────────────────────────────
 node_modules/
 dist/
+dist-test/
 *.js.map
 .env
 .env.local
