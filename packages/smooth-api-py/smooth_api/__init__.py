@@ -27,6 +27,29 @@ def _get_status_code(err: Exception) -> int | None:
     return None
 
 
+class MockResponse:
+    def __init__(self, status_code: int, content: dict, reason: str = ""):
+        self.status_code = status_code
+        self._content = content
+        self.reason = reason
+        self.reason_phrase = reason
+
+    def json(self) -> dict:
+        return self._content
+
+    @property
+    def text(self) -> str:
+        import json
+        return json.dumps(self._content)
+
+    @property
+    def ok(self) -> bool:
+        return self.status_code < 400
+
+    def raise_for_status(self) -> None:
+        pass
+
+
 def resilient_api(config: ResilientConfig):
     def decorator(fn):
         # One breaker per decorated function, shared across all calls to fn.
@@ -58,6 +81,23 @@ def resilient_api(config: ResilientConfig):
                         status = _get_status_code(err)
                         # Non-retryable HTTP errors (e.g. 400, 401, 404) bubble up immediately.
                         if status is not None and status not in config.retry_on:
+                            if config.fallback_on_non_retryable:
+                                import sys
+                                reason = getattr(err.response, 'reason', getattr(err.response, 'reason_phrase', ''))
+                                message = f"Non-retryable HTTP error: {status} {reason}".strip()
+                                if config.on_non_retryable_error:
+                                    config.on_non_retryable_error(status, message)
+                                else:
+                                    sys.stderr.write(f"{message}\n")
+                                
+                                breaker.record_success(domain)
+                                if fallback is not None:
+                                    return fallback
+                                return MockResponse(
+                                    status_code=status,
+                                    content={"error": True, "status": status, "message": message},
+                                    reason=reason
+                                )
                             raise
                         breaker.record_failure(domain)
                         last_err = err
@@ -93,6 +133,23 @@ def resilient_api(config: ResilientConfig):
                     except Exception as err:
                         status = _get_status_code(err)
                         if status is not None and status not in config.retry_on:
+                            if config.fallback_on_non_retryable:
+                                import sys
+                                reason = getattr(err.response, 'reason', getattr(err.response, 'reason_phrase', ''))
+                                message = f"Non-retryable HTTP error: {status} {reason}".strip()
+                                if config.on_non_retryable_error:
+                                    config.on_non_retryable_error(status, message)
+                                else:
+                                    sys.stderr.write(f"{message}\n")
+                                
+                                breaker.record_success(domain)
+                                if fallback is not None:
+                                    return fallback
+                                return MockResponse(
+                                    status_code=status,
+                                    content={"error": True, "status": status, "message": message},
+                                    reason=reason
+                                )
                             raise
                         breaker.record_failure(domain)
                         last_err = err

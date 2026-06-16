@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 
 @dataclass
@@ -25,3 +25,5 @@ class ResilientConfig:
     fallback: Any = None
     # HTTP status codes that trigger a retry. Mirrors DEFAULT_RETRY_ON in index.ts.
     retry_on: list[int] = field(default_factory=lambda: [429, 500, 502, 503, 504])
+    fallback_on_non_retryable: bool = False
+    on_non_retryable_error: Callable[[int, str], None] | None = None

@@ -161,3 +161,108 @@ def test_circuit_recovers_after_cooldown():
     # Probe should succeed and close the circuit
     result = get_data()
     assert result == {"success": True, "data": "Solid Data"}
+
+
+# ─── Non-retryable error fallback & callbacks ──────────────────────────────────
+
+def test_python_non_retryable_default_behavior():
+    config = ResilientConfig(fallback_on_non_retryable=False)
+
+    @resilient_api(config)
+    def get_data():
+        raise requests.exceptions.HTTPError(
+            response=type('R', (), {'status_code': 404, 'reason': 'Not Found'})()
+        )
+
+    with pytest.raises(requests.exceptions.HTTPError):
+        get_data()
+
+
+def test_python_non_retryable_fallback_and_stderr(capsys):
+    config = ResilientConfig(fallback_on_non_retryable=True)
+
+    @resilient_api(config)
+    def get_data_sync():
+        raise requests.exceptions.HTTPError(
+            response=type('R', (), {'status_code': 405, 'reason': 'Method Not Allowed'})()
+        )
+
+    res = get_data_sync()
+    
+    # Check return type and fields
+    assert res.status_code == 405
+    assert res.ok is False
+    assert res.reason == "Method Not Allowed"
+    
+    data = res.json()
+    assert data["error"] is True
+    assert data["status"] == 405
+    assert "405 Method Not Allowed" in data["message"]
+    
+    # Check stderr warning
+    captured = capsys.readouterr()
+    assert "405 Method Not Allowed" in captured.err
+
+
+@pytest.mark.asyncio
+async def test_python_non_retryable_async_fallback_and_stderr(capsys):
+    config = ResilientConfig(fallback_on_non_retryable=True)
+
+    @resilient_api(config)
+    async def get_data_async():
+        raise requests.exceptions.HTTPError(
+            response=type('R', (), {'status_code': 404, 'reason': 'Not Found'})()
+        )
+
+    res = await get_data_async()
+    
+    assert res.status_code == 404
+    assert res.ok is False
+    
+    data = res.json()
+    assert data["error"] is True
+    assert data["status"] == 404
+    
+    captured = capsys.readouterr()
+    assert "404 Not Found" in captured.err
+
+
+def test_python_non_retryable_custom_fallback():
+    fallback_val = {"custom": "python_fallback"}
+    config = ResilientConfig(fallback_on_non_retryable=True, fallback=fallback_val)
+
+    @resilient_api(config)
+    def get_data():
+        raise requests.exceptions.HTTPError(
+            response=type('R', (), {'status_code': 400, 'reason': 'Bad Request'})()
+        )
+
+    res = get_data()
+    assert res == fallback_val
+
+
+def test_python_non_retryable_custom_callback(capsys):
+    called = []
+    def callback(status, msg):
+        called.append((status, msg))
+
+    config = ResilientConfig(
+        fallback_on_non_retryable=True,
+        on_non_retryable_error=callback
+    )
+
+    @resilient_api(config)
+    def get_data():
+        raise requests.exceptions.HTTPError(
+            response=type('R', (), {'status_code': 403, 'reason': 'Forbidden'})()
+        )
+
+    res = get_data()
+    assert res.status_code == 403
+    assert len(called) == 1
+    assert called[0][0] == 403
+    assert "403 Forbidden" in called[0][1]
+
+    # Stderr should be empty since callback was used
+    captured = capsys.readouterr()
+    assert captured.err == ""
