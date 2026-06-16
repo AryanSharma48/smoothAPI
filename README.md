@@ -49,27 +49,23 @@ smooth-api/
 ### Flow Overview
 
 ```mermaid
-graph TD
-    Client["Client Application"] -->|Initiates Request| SmoothAPI
+sequenceDiagram
+    participant Client
+    participant SmoothAPI
+    participant Target API
 
-    subgraph "SmoothAPI"
-        direction TB
-        CB{"Circuit Breaker State"}
-        Retry["Retry & Backoff Controller"]
-        Fallback["Safe Fallback Data"]
-
-        CB -- "State: OPEN" --> Fallback
-        CB -- "State: CLOSED / HALF-OPEN" --> Retry
+    Client->>SmoothAPI: Request Data
+    SmoothAPI->>Target API: HTTP Fetch
+    
+    alt Success
+        Target API-->>SmoothAPI: 200 OK
+        SmoothAPI-->>Client: Actual Data
+    else Transient Error
+        Target API-->>SmoothAPI: 500 / 429
+        SmoothAPI->>Target API: Retry with Backoff
+    else Circuit Open / Max Retries
+        SmoothAPI-->>Client: Fallback Data
     end
-
-    Retry -->|HTTP Call| Target["Third-Party API"]
-
-    Target -- "HTTP 500 / 429" --> Retry
-    Retry -. "Max Retries Exhausted" .-> CB
-    Target -. "HTTP 200 OK" .-> CB
-
-    Fallback -. "Returns Default Data" .-> Client
-    CB -. "Returns Successful Data" .-> Client
 ```
 
 ---
