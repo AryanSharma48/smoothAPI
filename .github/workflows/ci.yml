@@ -16,8 +16,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: 'packages/smooth-api-ts/package-lock.json'
           
       - name: Install sandbox dependencies
         working-directory: ./sandbox
@@ -75,7 +73,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
           
       - name: Install Python package dependencies
         working-directory: ./packages/smooth-api-py

@@ -46,6 +46,32 @@ smooth-api/
 └── .gitignore
 ```
 
+### Flow Overview
+
+```mermaid
+graph TD
+    Client["Client Application"] -->|Initiates Request| SmoothAPI
+
+    subgraph "SmoothAPI"
+        direction TB
+        CB{"Circuit Breaker State"}
+        Retry["Retry & Backoff Controller"]
+        Fallback["Safe Fallback Data"]
+
+        CB -- "State: OPEN" --> Fallback
+        CB -- "State: CLOSED / HALF-OPEN" --> Retry
+    end
+
+    Retry -->|HTTP Call| Target["Third-Party API"]
+
+    Target -- "HTTP 500 / 429" --> Retry
+    Retry -. "Max Retries Exhausted" .-> CB
+    Target -. "HTTP 200 OK" .-> CB
+
+    Fallback -. "Returns Default Data" .-> Client
+    CB -. "Returns Successful Data" .-> Client
+```
+
 ---
 
 ## Quickstart
