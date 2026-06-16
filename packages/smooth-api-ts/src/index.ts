@@ -46,6 +46,36 @@ export function createResilientFetch<T>(globalConfig: ResilientFetchConfig<T>) {
           return response;
         }
 
+        if (response.status >= 400 && globalConfig.fallbackOnNonRetryable) {
+          const message = `Non-retryable HTTP error: ${response.status}${response.statusText ? ' ' + response.statusText : ''}`;
+          if (globalConfig.onNonRetryableError) {
+            globalConfig.onNonRetryableError(response.status, message);
+          } else if (typeof window !== 'undefined') {
+            window.alert(message);
+          } else {
+            console.error(message);
+          }
+
+          breaker.recordSuccess(domain);
+
+          if (globalConfig.fallback !== undefined) {
+            return globalConfig.fallback as T;
+          }
+
+          return new Response(
+            JSON.stringify({
+              error: true,
+              status: response.status,
+              message,
+            }),
+            {
+              status: response.status,
+              statusText: response.statusText,
+              headers: { "Content-Type": "application/json" }
+            }
+          );
+        }
+
         breaker.recordSuccess(domain);
         return response;
       } catch (err) {

@@ -159,3 +159,119 @@ describe('circuit breaker recovery', () => {
     );
   });
 });
+
+describe('non-retryable error fallback & alerts', () => {
+  it('returns normal response without alert when fallbackOnNonRetryable is false', async () => {
+    const resilientFetch = createResilientFetch({
+      backoff: { maxRetries: 0 },
+      fallbackOnNonRetryable: false,
+    });
+
+    const originalFetch = globalThis.fetch;
+    let alertCalled = false;
+    const mockAlert = () => { alertCalled = true; };
+    const originalWindow = (globalThis as any).window;
+    (globalThis as any).window = { alert: mockAlert };
+
+    globalThis.fetch = async () => new Response(null, { status: 404, statusText: 'Not Found' });
+
+    try {
+      const res = await resilientFetch(`${BASE}/some-url`);
+      assert.ok(res instanceof Response);
+      assert.equal(res.status, 404);
+      assert.equal(alertCalled, false);
+    } finally {
+      globalThis.fetch = originalFetch;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+
+  it('triggers window.alert and returns mock Response on 405 when fallbackOnNonRetryable is true and no fallback config', async () => {
+    const resilientFetch = createResilientFetch({
+      backoff: { maxRetries: 0 },
+      fallbackOnNonRetryable: true,
+    });
+
+    const originalFetch = globalThis.fetch;
+    let alertedMessage = '';
+    const mockAlert = (msg: string) => { alertedMessage = msg; };
+    const originalWindow = (globalThis as any).window;
+    (globalThis as any).window = { alert: mockAlert };
+
+    globalThis.fetch = async () => new Response(null, { status: 405, statusText: 'Method Not Allowed' });
+
+    try {
+      const res = await resilientFetch(`${BASE}/some-url`);
+      assert.ok(res instanceof Response);
+      assert.equal(res.status, 405);
+      
+      const body = await res.json();
+      assert.equal(body.error, true);
+      assert.equal(body.status, 405);
+      assert.ok(body.message.includes('405 Method Not Allowed'));
+      assert.ok(alertedMessage.includes('405 Method Not Allowed'));
+    } finally {
+      globalThis.fetch = originalFetch;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+
+  it('returns configured fallback when fallbackOnNonRetryable is true and fallback is provided', async () => {
+    const fallbackVal = { fallbackMsg: 'custom_fallback' };
+    const resilientFetch = createResilientFetch({
+      backoff: { maxRetries: 0 },
+      fallbackOnNonRetryable: true,
+      fallback: fallbackVal,
+    });
+
+    const originalFetch = globalThis.fetch;
+    let alertCalled = false;
+    const mockAlert = () => { alertCalled = true; };
+    const originalWindow = (globalThis as any).window;
+    (globalThis as any).window = { alert: mockAlert };
+
+    globalThis.fetch = async () => new Response(null, { status: 404, statusText: 'Not Found' });
+
+    try {
+      const res = await resilientFetch(`${BASE}/some-url`);
+      assert.deepEqual(res, fallbackVal);
+      assert.equal(alertCalled, true);
+    } finally {
+      globalThis.fetch = originalFetch;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+
+  it('calls custom callback instead of window.alert when provided', async () => {
+    let callbackArgs: { status: number; msg: string } | null = null;
+    const resilientFetch = createResilientFetch({
+      backoff: { maxRetries: 0 },
+      fallbackOnNonRetryable: true,
+      onNonRetryableError: (status, msg) => {
+        callbackArgs = { status, msg };
+      },
+    });
+
+    const originalFetch = globalThis.fetch;
+    let alertCalled = false;
+    const mockAlert = () => { alertCalled = true; };
+    const originalWindow = (globalThis as any).window;
+    (globalThis as any).window = { alert: mockAlert };
+
+    globalThis.fetch = async () => new Response(null, { status: 403, statusText: 'Forbidden' });
+
+    try {
+      const res = await resilientFetch(`${BASE}/some-url`);
+      assert.ok(res instanceof Response);
+      assert.equal(res.status, 403);
+      assert.equal(alertCalled, false);
+      assert.ok(callbackArgs !== null);
+      const args = callbackArgs as { status: number; msg: string };
+      assert.equal(args.status, 403);
+      assert.ok(args.msg.includes('403 Forbidden'));
+    } finally {
+      globalThis.fetch = originalFetch;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+});

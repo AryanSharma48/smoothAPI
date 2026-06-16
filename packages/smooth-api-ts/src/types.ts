@@ -24,6 +24,8 @@ export interface ResilientFetchConfig<T = unknown> {
   circuitBreaker?: Partial<CircuitBreakerConfig>;
   fallback?: T;    // returned immediately on an OPEN circuit, no network IO
   retryOn?: number[]; // defaults applied in index.ts
+  fallbackOnNonRetryable?: boolean;
+  onNonRetryableError?: (status: number, message: string) => void;
 }
 
 // Thrown when the circuit is OPEN and no fallback is configured.
