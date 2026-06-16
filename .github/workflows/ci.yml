@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  typescript-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'packages/smooth-api-ts/package-lock.json'
+          
+      - name: Install sandbox dependencies
+        working-directory: ./sandbox
+        run: npm install
+        
+      - name: Start sandbox server
+        working-directory: ./sandbox
+        run: node server.js &
+        
+      - name: Wait for sandbox server
+        run: |
+          # Wait up to 10 seconds for the server to be ready
+          for i in {1..10}; do
+            curl -s -f http://localhost:3001/health > /dev/null && break || sleep 1
+          done
+          
+      - name: Install TypeScript package dependencies
+        working-directory: ./packages/smooth-api-ts
+        run: npm install
+        
+      - name: Build and Test TypeScript package
+        working-directory: ./packages/smooth-api-ts
+        run: |
+          npm run build
+          npm test
+
+  python-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js (for sandbox server)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          
+      - name: Install sandbox dependencies
+        working-directory: ./sandbox
+        run: npm install
+        
+      - name: Start sandbox server
+        working-directory: ./sandbox
+        run: node server.js &
+        
+      - name: Wait for sandbox server
+        run: |
+          for i in {1..10}; do
+            curl -s -f http://localhost:3001/health > /dev/null && break || sleep 1
+          done
+          
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          
+      - name: Install Python package dependencies
+        working-directory: ./packages/smooth-api-py
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          
+      - name: Run Python tests
+        working-directory: ./packages/smooth-api-py
+        run: pytest tests/ -v
