@@ -54,18 +54,10 @@ sequenceDiagram
     participant SmoothAPI
     participant Target API
 
-    Client->>SmoothAPI: Request Data
-    SmoothAPI->>Target API: HTTP Fetch
-    
-    alt Success
-        Target API-->>SmoothAPI: 200 OK
-        SmoothAPI-->>Client: Actual Data
-    else Transient Error
-        Target API-->>SmoothAPI: 500 / 429
-        SmoothAPI->>Target API: Retry with Backoff
-    else Circuit Open / Max Retries
-        SmoothAPI-->>Client: Fallback Data
-    end
+    Client->>SmoothAPI: 1. Request Data
+    SmoothAPI->>Target API: 2. Fetch (Retries on Error)
+    Target API-->>SmoothAPI: 3. Return Response
+    SmoothAPI-->>Client: 4. Return Data or Fallback
 ```
 
 ---
