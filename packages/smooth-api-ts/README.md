@@ -90,6 +90,27 @@ async function main() {
 }
 ```
 
+### Client Error Handling & Alerts
+
+By default, client errors (e.g. `400`, `401`, `403`, `404`, `405`) resolve immediately and bypass the retry loop. If you want to handle these errors gracefully and alert users:
+
+```typescript
+import { createResilientFetch } from '@codingaryan/smoothapi';
+
+const fetchWithRetry = createResilientFetch({
+  fallbackOnNonRetryable: true,
+  // Optional: Trigger custom UI logic when a client error happens
+  onNonRetryableError: (status, message) => {
+    console.log(`Custom callback: Received status ${status}`);
+  },
+  // Optional: Fallback returned on non-retryable errors
+  fallback: { error: "Page not found." }
+});
+```
+
+* **Default Alerting**: If `fallbackOnNonRetryable` is `true` and no custom `onNonRetryableError` is provided, running in a browser environment will trigger a standard `window.alert("Non-retryable HTTP error: [status]")`. In backend/Node environments, it logs the warning to `console.error`.
+* **Graceful Return**: If no custom `fallback` is configured, it returns a mock `Response` wrapper with the status code and a JSON error body: `{ error: true, status: 404, message: "..." }`. Callers can safely call `.json()`, `.status`, or `.ok` on it without crashing.
+
 ## How It Works
 
 1. **Host Extraction:** The domain is automatically extracted from the URL. The circuit breaker state is isolated per host (e.g., `api.github.com` failing won't trip the circuit for `api.stripe.com`).

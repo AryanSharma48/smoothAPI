@@ -86,6 +86,29 @@ def get_user_data(user_id: str):
 data = get_user_data("456", fallback={"status": "override"})
 ```
 
+### Client Error Handling & Warnings
+
+By default, non-retryable client errors (e.g. `400`, `401`, `403`, `404`, `405`) bubble up and raise exceptions immediately. If you want to intercept these client errors:
+
+```python
+from smooth_api import resilient_api, ResilientConfig
+
+def my_callback(status: int, message: str):
+    print(f"Error hook: Received client error {status}")
+
+config = ResilientConfig(
+    fallback_on_non_retryable=True,
+    # Optional: Custom error hook function
+    on_non_retryable_error=my_callback,
+    # Optional: Fallback returned on non-retryable errors
+    fallback={"status": "error", "message": "Not Found"}
+)
+```
+
+* **Default Warning**: If `fallback_on_non_retryable` is `True` and no custom `on_non_retryable_error` is defined, it will write a warning message to `sys.stderr`.
+* **Graceful Return**: If no `fallback` is configured, it returns a mock `Response` wrapper with `status_code`, `.json()` returning `{"error": True, "status": status, "message": "..."}`, and `.ok` returning `False`. Code downstream can check `res.status_code` or call `res.json()` without raising exceptions.
+```
+
 ### Async Support
 
 The decorator automatically detects if your function is a coroutine and uses `asyncio.sleep` instead of blocking the thread:

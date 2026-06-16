@@ -7,7 +7,7 @@
   <a href="https://www.npmjs.com/package/@codingaryan/smoothapi"><img src="https://img.shields.io/npm/v/@codingaryan/smoothapi?style=flat-square&color=8b5cf6" alt="NPM Version"></a>
   <a href="https://pypi.org/project/smoothapi-py/"><img src="https://img.shields.io/pypi/v/smoothapi-py?style=flat-square&color=ec4899" alt="PyPI Version"></a>
   <a href="https://www.npmjs.com/package/@codingaryan/smoothapi"><img src="https://img.shields.io/npm/dm/@codingaryan/smoothapi?style=flat-square&color=10b981" alt="NPM Downloads"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/AryanSharma48/smoothAPI?style=flat-square&color=6b7280" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6b7280?style=flat-square" alt="License"></a>
 </p>
 
 A failing third-party API can bring down your entire application, leading to cascading service failures, degraded user experience, and lost revenue. How do you protect your systems and keep them resilient, even when downstream dependencies are completely unresponsive or failing?
@@ -149,6 +149,36 @@ result = get_data(fallback={'data': 'dynamic override fallback'})
 - **Status Codes to Retry**: `429`, `500`, `502`, `503`, and `504`
 
 *Note: The Python package fully supports async functions and `httpx` out of the box.*
+
+---
+
+## Client Error Handling & Graceful Fallbacks
+
+By default, client errors (status codes `400` to `499` not in `retryOn` / `retry_on`) immediately fail and bypass retries. You can handle them gracefully using `fallbackOnNonRetryable` (TS) or `fallback_on_non_retryable` (Python):
+
+* **TypeScript:**
+  ```ts
+  const fetch = createResilientFetch({
+    fallbackOnNonRetryable: true,
+    // Optional custom callback (replaces default window.alert/console.error)
+    onNonRetryableError: (status, message) => console.warn(message),
+    // Optional fallback (otherwise returns a mock Response wrapper)
+    fallback: { error: 'stale data' }
+  });
+  ```
+  *If `fallbackOnNonRetryable` is `true` in a browser and no custom callback is set, it triggers a browser `alert()` popup by default.*
+
+* **Python:**
+  ```python
+  config = ResilientConfig(
+      fallback_on_non_retryable=True,
+      # Optional custom callback (replaces default stderr warning)
+      on_non_retryable_error=lambda status, msg: print(msg),
+      # Optional fallback (otherwise returns a MockResponse wrapper)
+      fallback={'error': 'stale data'}
+  )
+  ```
+  *If `fallback_on_non_retryable` is `True` and no custom callback is set, it prints a warning to `sys.stderr` by default.*
 
 ---
 
