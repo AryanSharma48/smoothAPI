@@ -38,17 +38,27 @@ describe('circuit breaker', () => {
       fallback: { tripped: true },
     });
 
-    const results: (string | number)[] = [];
-    for (let i = 0; i < 7; i++) {
-      const res = await resilientFetch(`${BASE}/unstable-data`);
-      if (res && typeof res === 'object' && 'tripped' in (res as object)) {
-        results.push('FALLBACK');
-      } else {
-        results.push((res as Response).status);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(null, { status: 500 });
+
+    try {
+      const results: (string | number)[] = [];
+      for (let i = 0; i < 5; i++) {
+        const res = await resilientFetch(`${BASE}/unstable-data`);
+        if (res && typeof res === 'object' && 'tripped' in (res as object)) {
+          results.push('FALLBACK');
+        } else if (res) {
+          results.push((res as Response).status);
+        } else {
+          results.push('NETWORK_ERROR');
+        }
       }
+
+      assert.ok(results.includes('FALLBACK'), `circuit should have returned fallback, got: ${JSON.stringify(results)}`);
+    } finally {
+      globalThis.fetch = originalFetch;
     }
 
-    assert.ok(results.includes('FALLBACK'), `circuit should have returned fallback, got: ${JSON.stringify(results)}`);
   });
 
   it('returns fallback immediately when circuit is OPEN', async () => {
@@ -62,14 +72,21 @@ describe('circuit breaker', () => {
       fallback,
     });
 
-    // Drive failures until circuit trips, then check fallback is returned
-    for (let i = 0; i < 6; i++) {
-      await resilientFetch(`${BASE}/unstable-data`).catch(() => {});
-    }
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(null, { status: 500 });
 
-    // Next call should hit OPEN circuit and get fallback instantly
-    const result = await resilientFetch(`${BASE}/unstable-data`);
-    assert.deepEqual(result, fallback, 'should return the exact fallback object');
+    try {
+      // Drive failures until circuit trips, then check fallback is returned
+      for (let i = 0; i < 5; i++) {
+        await resilientFetch(`${BASE}/unstable-data`).catch(() => {});
+      }
+
+      // Next call should hit OPEN circuit and get fallback instantly
+      const result = await resilientFetch(`${BASE}/unstable-data`);
+      assert.deepEqual(result, fallback, 'should return the exact fallback object');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('throws CircuitOpenError when OPEN and no fallback is configured', async () => {
@@ -82,18 +99,25 @@ describe('circuit breaker', () => {
       // no fallback
     });
 
-    for (let i = 0; i < 6; i++) {
-      await resilientFetch(`${BASE}/unstable-data`).catch(() => {});
-    }
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(null, { status: 500 });
 
-    await assert.rejects(
-      () => resilientFetch(`${BASE}/unstable-data`),
-      (err: unknown) => {
-        assert.ok(err instanceof CircuitOpenError, `expected CircuitOpenError, got ${err}`);
-        assert.ok((err as CircuitOpenError).domain.includes('localhost'));
-        return true;
+    try {
+      for (let i = 0; i < 5; i++) {
+        await resilientFetch(`${BASE}/unstable-data`).catch(() => {});
       }
-    );
+
+      await assert.rejects(
+        () => resilientFetch(`${BASE}/unstable-data`),
+        (err: unknown) => {
+          assert.ok(err instanceof CircuitOpenError, `expected CircuitOpenError, got ${err}`);
+          assert.ok((err as CircuitOpenError).domain.includes('localhost'));
+          return true;
+        }
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
 
@@ -109,9 +133,16 @@ describe('circuit breaker recovery', () => {
       fallback: { tripped: true },
     });
 
-    // Trip the circuit
-    for (let i = 0; i < 9; i++) {
-      await resilientFetch(`${BASE}/unstable-data`).catch(() => {});
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(null, { status: 500 });
+
+    try {
+      // Trip the circuit
+      for (let i = 0; i < 5; i++) {
+        await resilientFetch(`${BASE}/unstable-data`).catch(() => {});
+      }
+    } finally {
+      globalThis.fetch = originalFetch;
     }
 
     // Wait for cooldown
