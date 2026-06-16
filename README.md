@@ -1,15 +1,26 @@
-# smooth-api
+<p align="center">
+  <img src="public/logo.svg" alt="SmoothAPI logo" width="650" />
+</p>
 
-> Smooth API stops third-party API crashes from breaking your app. It catches network errors instantly, spaces out retries so servers can recover, and serves safe backup data the millisecond a service goes completely dead.
->
-> A zero-dependency, dual-language API Resilience and Fault-Tolerance Library.
-> Implemented natively in **TypeScript** (`@codingaryan/smoothapi` on NPM) and **Python** (`smoothapi-py` on PyPI).
+<p align="center">
+  <a href="https://github.com/AryanSharma48/smoothAPI/actions"><img src="https://img.shields.io/github/actions/workflow/status/AryanSharma48/smoothAPI/ci.yml?branch=main&style=flat-square&label=CI&color=3b82f6" alt="CI Status"></a>
+  <a href="https://www.npmjs.com/package/@codingaryan/smoothapi"><img src="https://img.shields.io/npm/v/@codingaryan/smoothapi?style=flat-square&color=8b5cf6" alt="NPM Version"></a>
+  <a href="https://pypi.org/project/smoothapi-py/"><img src="https://img.shields.io/pypi/v/smoothapi-py?style=flat-square&color=ec4899" alt="PyPI Version"></a>
+  <a href="https://www.npmjs.com/package/@codingaryan/smoothapi"><img src="https://img.shields.io/npm/dm/@codingaryan/smoothapi?style=flat-square&color=10b981" alt="NPM Downloads"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/AryanSharma48/smoothAPI?style=flat-square&color=6b7280" alt="License"></a>
+</p>
+
+A failing third-party API can bring down your entire application, leading to cascading service failures, degraded user experience, and lost revenue. How do you protect your systems and keep them resilient, even when downstream dependencies are completely unresponsive or failing?
+
+Enter **SmoothAPI**. SmoothAPI stops third-party API crashes from breaking your app. It wraps your HTTP calls with industry-standard resilience patterns, catches network errors instantly, spaces out retries so recovering servers can breathe, and serves safe backup data the millisecond a service goes completely dead.
+
+A zero-dependency, dual-language API resilience and fault-tolerance library, implemented natively in **TypeScript** (`@codingaryan/smoothapi` on NPM) and **Python** (`smoothapi-py` on PyPI).
 
 ---
 
 ## What it does
 
-`smooth-api` wraps your HTTP calls with two resilience patterns:
+`SmoothAPI` wraps your HTTP calls with two resilience patterns:
 
 1. **Exponential Backoff with Full Jitter** — automatically retries failed requests with randomized delays so clients don't hammer a recovering server in sync.
 2. **Finite State Machine Circuit Breaker** — tracks failures per domain and trips a circuit to block further requests before they even hit the network, with automatic half-open probing for recovery.
