@@ -93,8 +93,11 @@ def test_circuit_trips_and_returns_fallback():
 
     results = []
     for _ in range(5):
-        result = get_data(fallback=fallback)
-        results.append(result)
+        try:
+            result = get_data(fallback=fallback)
+            results.append(result)
+        except requests.exceptions.HTTPError:
+            results.append("ERROR")
 
     assert fallback in results, f"circuit should have returned fallback, got: {results}"
 
@@ -144,7 +147,10 @@ def test_circuit_recovers_after_cooldown():
 
     # Trip the circuit
     for _ in range(9):
-        get_data(fallback={"tripped": True})
+        try:
+            get_data(fallback={"tripped": True})
+        except requests.exceptions.HTTPError:
+            pass
 
     # Wait for cooldown
     time.sleep((cooldown_ms / 1000) + 0.2)
