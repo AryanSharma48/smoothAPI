@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 180" width="100%" height="auto">
+  <defs>
+    <!-- Emerald Red / Rich Gemstone Crimson Gradient -->
+    <linearGradient id="grad-emerald-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="50%" stop-color="#e11d48" />
+      <stop offset="100%" stop-color="#9f1239" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Logo Graphic (Concept 4 - State Machine Gate) -->
+  <g transform="translate(40, 10)">
+    <!-- Connecting Lines (calculated to touch circle boundaries) -->
+    <path d="M62.1,58.9 L37.9,101.1 M77.9,58.9 L102.1,101.1" stroke="#ffffff" stroke-width="7" stroke-linecap="round" />
+
+    <!-- Top Circle (Client Request node) -->
+    <circle cx="70" cy="45" r="16" fill="none" stroke="#ffffff" stroke-width="7" />
+
+    <!-- Bottom Left Circle (Resilient API node) -->
+    <circle cx="30" cy="115" r="16" fill="none" stroke="url(#grad-emerald-red)" stroke-width="7" />
+
+    <!-- Bottom Right Circle (Fallback node) -->
+    <circle cx="110" cy="115" r="16" fill="none" stroke="url(#grad-emerald-red)" stroke-width="7" />
+  </g>
+
+  <!-- Left-Aligned Styled Text -->
+  <text x="210" y="125" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" 
+        font-size="104" font-weight="900" letter-spacing="-3px" text-anchor="start">
+    <tspan fill="#ffffff">Smooth</tspan><tspan fill="url(#grad-emerald-red)">API</tspan>
+  </text>
+</svg>

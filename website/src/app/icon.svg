@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Emerald Red / Rich Gemstone Crimson Gradient -->
+    <linearGradient id="grad-emerald-red" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#9f1239" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base App Icon Container -->
+  <rect width="512" height="512" rx="128" fill="#0b0f19" />
+
+  <!-- Connecting Lines (behind circles) -->
+  <path d="M256,160 L140,360 M256,160 L372,360" stroke="#ffffff" stroke-width="20" stroke-linecap="round" />
+
+  <!-- Top Circle (Client Request node) -->
+  <circle cx="256" cy="160" r="44" fill="#0b0f19" stroke="#ffffff" stroke-width="20" />
+
+  <!-- Bottom Left Circle (Resilient API node) -->
+  <circle cx="140" cy="360" r="44" fill="#0b0f19" stroke="url(#grad-emerald-red)" stroke-width="20" />
+
+  <!-- Bottom Right Circle (Fallback node) -->
+  <circle cx="372" cy="360" r="44" fill="#0b0f19" stroke="url(#grad-emerald-red)" stroke-width="20" />
+</svg>
