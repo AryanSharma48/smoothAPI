@@ -214,6 +214,47 @@ pytest tests/ -v
 
 ---
 
+## Roadmap
+
+### Core Reliability
+- [ ] Request timeout support
+- [ ] AbortController integration
+- [ ] Retry-After header support
+- [ ] Custom retry strategies
+
+### Observability
+- [ ] Event hooks
+- [ ] Metrics hooks
+- [ ] OpenTelemetry integration
+- [ ] Structured logging support
+
+### Ecosystem
+- [ ] Next.js example project
+- [ ] Express integration examples
+- [ ] Browser examples
+- [ ] Benchmark suite
+
+### Advanced Resilience
+- [ ] Request deduplication
+- [ ] Redis-backed circuit breaker state
+- [ ] Bulkhead pattern support
+- [ ] Service health scoring
+
+---
+
+## Contributing
+
+Contributions are welcome! Join our [Discord Server](https://discord.gg/2NabXnQzmv) to connect with the maintainers and other contributors.
+
+Whether it's fixing bugs, improving documentation, adding examples, or implementing new features, every contribution helps improve SmoothAPI.
+
+Before opening a pull request, please read the contribution guidelines in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+If you're looking to get started, check out issues labeled `good first issue` or `help wanted`.
+
+---
+
 ## License
 
 MIT
+
