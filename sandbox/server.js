@@ -34,10 +34,15 @@ app.get('/reset', (_req, res) => {
 //       3   0       500
 //       5       0   429
 //       6   0       500
-//       9   0       500   <-- circuit threshold hit (3 consecutive 500s)
+//       9   0       500
 //      10       0   429
 //      12   0       500
 //      15   0   0   500
+//
+// Note: the failures are spaced out by 200s, never 3-in-a-row. A circuit
+// breaker that resets its failure count on every success (as ours does) will
+// therefore never trip against this endpoint — each 500/429 is followed by a
+// 200 that clears the counter. Use /always-fail to exercise the breaker.
 //
 app.get('/unstable-data', (_req, res) => {
   requestCount++;
@@ -56,6 +61,13 @@ app.get('/unstable-data', (_req, res) => {
 
   console.log(`[sandbox]   200`);
   return res.status(200).json({ success: true, data: 'Solid Data' });
+});
+
+// Always 500. Unlike /unstable-data, this never succeeds, so consecutive
+// failures accumulate and trip a circuit breaker. Does not touch requestCount.
+app.get('/always-fail', (_req, res) => {
+  console.log(`[sandbox] /always-fail -> 500`);
+  return res.status(500).json({ error: 'Service Unavailable' });
 });
 
 app.listen(PORT, () => {
