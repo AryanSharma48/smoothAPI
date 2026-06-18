@@ -81,12 +81,17 @@ class RequestDeduplicator:
         # is already running (Python 3.10+) and emits DeprecationWarnings.
         loop = asyncio.get_running_loop()
 
-        if key in self._inflight:
+        # asyncio.Future instances are bound to a specific event loop. Scope the
+        # inflight key by loop id so calls from different loops don't try to
+        # await a Future created in another loop.
+        inflight_key = f"{id(loop)}:{key}"
+
+        if inflight_key in self._inflight:
             # Another coroutine is already executing this call — share its Future.
-            return await self._inflight[key]
+            return await self._inflight[inflight_key]
 
         future: asyncio.Future[Any] = loop.create_future()
-        self._inflight[key] = future
+        self._inflight[inflight_key] = future
 
         try:
             result = await thunk()
@@ -103,7 +108,7 @@ class RequestDeduplicator:
             raise
         finally:
             # Always clean up so the next call (after settlement) runs fresh.
-            self._inflight.pop(key, None)
+            self._inflight.pop(inflight_key, None)
 
     @property
     def inflight_count(self) -> int:
