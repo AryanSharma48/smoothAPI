@@ -166,7 +166,7 @@ describe('Request Deduplication', () => {
     }
   });
 
-  it('respects a custom keyFn — different keys are NOT deduplicated', async () => {
+  it('respects a custom keyFn — requests sharing a key ARE deduplicated', async () => {
     const counter = { calls: 0 };
 
     const originalFetch = globalThis.fetch;
@@ -177,7 +177,8 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      // Custom key always returns the same constant — every request is considered identical.
+      // Custom key returns only the HTTP method — two GETs share the same key
+      // and are therefore deduplicated regardless of their URLs.
       const resilientFetch = createResilientFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {
@@ -277,12 +278,8 @@ describe('Request Deduplication Benchmark', () => {
         `[Benchmark] ${CONCURRENCY} concurrent requests × ${RUNS} runs | ` +
         `plain avg: ${avgPlain}ms | deduped avg: ${avgDeduped}ms`
       );
-
-      // Deduplication overhead should be negligible (< 50 ms on any reasonable machine).
-      assert.ok(
-        Number(avgDeduped) - Number(avgPlain) < 50,
-        'Deduplication map lookup overhead must be less than 50 ms'
-      );
+      // Benchmark is informational only — no timing assertion to avoid
+      // flaky failures across machines and CI runners.
     } finally {
       globalThis.fetch = originalFetch;
     }

@@ -89,6 +89,14 @@ def resilient_api(config: ResilientConfig):
                             result = await fn(*args, **kwargs)
                             breaker.record_success(domain)
                             return result
+                        except asyncio.CancelledError:
+                            # CancelledError is a BaseException (Python 3.8+) and
+                            # escapes `except Exception`.  We still need to record
+                            # the failure so sustained cancellation (e.g. client
+                            # timeouts) is counted toward tripping the circuit,
+                            # then re-raise so the cancellation propagates normally.
+                            breaker.record_failure(domain)
+                            raise
                         except Exception as err:
                             status = _get_status_code(err)
                             # Non-retryable HTTP errors (e.g. 400, 401, 404) bubble up immediately.

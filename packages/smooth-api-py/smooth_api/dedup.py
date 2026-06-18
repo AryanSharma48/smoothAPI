@@ -77,7 +77,9 @@ class RequestDeduplicator:
         if key is None:
             return await thunk()
 
-        loop = asyncio.get_event_loop()
+        # Use get_running_loop() — get_event_loop() is deprecated when a loop
+        # is already running (Python 3.10+) and emits DeprecationWarnings.
+        loop = asyncio.get_running_loop()
 
         if key in self._inflight:
             # Another coroutine is already executing this call — share its Future.
@@ -90,8 +92,14 @@ class RequestDeduplicator:
             result = await thunk()
             future.set_result(result)
             return result
-        except Exception as exc:
-            future.set_exception(exc)
+        except BaseException as exc:
+            # Catch BaseException (not just Exception) so that
+            # asyncio.CancelledError — which is a BaseException in Python 3.8+
+            # — also resolves the shared Future.  Without this, a cancelled
+            # execution would leave the Future unresolved and any concurrent
+            # waiters would hang forever.
+            if not future.done():
+                future.set_exception(exc)
             raise
         finally:
             # Always clean up so the next call (after settlement) runs fresh.
