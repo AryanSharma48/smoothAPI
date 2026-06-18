@@ -9,6 +9,11 @@ let requestCount = 0;
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
+
 // Always 200. Used by test runners to poll for readiness before the suite
 // starts. Does not touch requestCount.
 app.get('/health', (_req, res) => {
