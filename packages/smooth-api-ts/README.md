@@ -16,6 +16,7 @@ npm install @codingaryan/smoothapi
 - **Circuit Breaker (FSM):** Isolated per-domain state machine (`CLOSED` → `OPEN` → `HALF_OPEN`).
 - **Smart Retries:** Automatically retries on specific HTTP status codes (e.g., 429, 500, 502, 503, 504) while throwing immediately on client errors (400, 401, 404).
 - **Graceful Fallbacks:** Optionally serve cached or default data instantly when the circuit is `OPEN`.
+- **Request Deduplication:** Automatically coalesce concurrent identical requests into a single network call.
 
 ## Usage
 
@@ -110,6 +111,56 @@ const fetchWithRetry = createResilientFetch({
 
 * **Default Alerting**: If `fallbackOnNonRetryable` is `true` and no custom `onNonRetryableError` is provided, running in a browser environment will trigger a standard `window.alert("Non-retryable HTTP error: [status]")`. In backend/Node environments, it logs the warning to `console.error`.
 * **Graceful Return**: If no custom `fallback` is configured, it returns a mock `Response` wrapper with the status code and a JSON error body: `{ error: true, status: 404, message: "..." }`. Callers can safely call `.json()`, `.status`, or `.ok` on it without crashing.
+
+### Request Deduplication
+
+When multiple identical requests are made concurrently, SmoothAPI can execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services.
+
+**Enable with default key function** (deduplicates by URL):
+
+```typescript
+import { createResilientFetch } from '@codingaryan/smoothapi';
+
+const fetchWithRetry = createResilientFetch({
+  deduplication: {} // Empty object activates deduplication
+});
+
+// All three calls share a single network request
+const [a, b, c] = await Promise.all([
+  fetchWithRetry('http://api.example.com/users/1'),
+  fetchWithRetry('http://api.example.com/users/1'),
+  fetchWithRetry('http://api.example.com/users/1'),
+]);
+```
+
+**Custom key function** for advanced coalescing:
+
+```typescript
+const fetchWithRetry = createResilientFetch({
+  deduplication: {
+    // Deduplicate by method + URL (ignores headers/body)
+    keyFn: (url, options) => `${options?.method ?? 'GET'}:${url.toString()}`
+  }
+});
+```
+
+**Opt out of deduplication** for specific requests:
+
+```typescript
+const fetchWithRetry = createResilientFetch({
+  deduplication: {
+    keyFn: (url, options) => {
+      // Skip dedup for POST requests
+      if (options?.method === 'POST') return null;
+      return url.toString();
+    }
+  }
+});
+```
+
+* **Default Behavior**: Deduplicates by URL only (method-agnostic). Concurrent GETs to the same URL are coalesced.
+* **Error Propagation**: If the network call fails, all waiting callers receive the same error.
+* **Settlement**: Once a request completes, the next call to the same URL triggers a fresh network request.
 
 ## How It Works
 
