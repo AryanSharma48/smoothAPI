@@ -16,6 +16,7 @@ pip install smoothapi-py
 - **Circuit Breaker (FSM):** Isolated state machine (`CLOSED` → `OPEN` → `HALF_OPEN`) per decorated function. Thread-safe execution.
 - **Smart Retries:** Automatically detects HTTP status codes from `requests` and `httpx` exceptions. Retries on transient codes (429, 500, 502, 503, 504) and re-raises client errors immediately.
 - **Graceful Fallbacks:** Optionally return cached or default data instantly when the circuit is `OPEN`, bypassing network IO entirely.
+- **Request Deduplication:** Automatically coalesce concurrent identical requests into a single network call (async only).
 
 ## Usage
 
@@ -123,6 +124,62 @@ async def get_user_data_async(user_id: str):
         res.raise_for_status()
         return res.json()
 ```
+
+### Request Deduplication (Async Only)
+
+When multiple identical async requests are made concurrently, SmoothAPI can execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services.
+
+**Enable with default key function** (deduplicates by positional args):
+
+```python
+import httpx
+from smooth_api import resilient_api, ResilientConfig
+from smooth_api.config import DeduplicationConfig
+
+config = ResilientConfig(deduplication=DeduplicationConfig())
+
+@resilient_api(config)
+async def get_user(user_id: int):
+    async with httpx.AsyncClient() as client:
+        res = await client.get(f"https://api.example.com/users/{user_id}")
+        res.raise_for_status()
+        return res.json()
+
+# All three calls share a single network request
+import asyncio
+results = await asyncio.gather(
+    get_user(1),
+    get_user(1),
+    get_user(1),
+)
+```
+
+**Custom key function** for advanced coalescing:
+
+```python
+from smooth_api.config import DeduplicationConfig
+
+def my_key(*args, **kwargs):
+    # Deduplicate by second argument (resource type)
+    return str(args[1]) if len(args) > 1 else str(args[0])
+
+config = ResilientConfig(deduplication=DeduplicationConfig(key_fn=my_key))
+```
+
+**Opt out of deduplication** for specific calls:
+
+```python
+config = ResilientConfig(
+    deduplication=DeduplicationConfig(
+        key_fn=lambda *a, **k: None  # Return None to skip dedup
+    )
+)
+```
+
+* **Default Behavior**: Deduplicates by joining positional args with `:`. E.g., `get_user(1)` produces key `"1"`.
+* **Error Propagation**: If the coroutine raises an exception, all waiting callers receive the same exception.
+* **Settlement**: Once a call completes, the next call with the same key triggers a fresh execution.
+* **Sync Functions**: Deduplication only works with async-decorated functions. Sync functions are unaffected.
 
 ## How It Works
 
