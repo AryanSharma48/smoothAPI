@@ -1,5 +1,24 @@
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
 
+/**
+ * Optional function that derives a cache key from a request.
+ * Defaults to `url.toString()` when not provided.
+ * Return `null` to opt this specific request out of deduplication.
+ */
+export type DeduplicationKeyFn = (
+  url: string | URL,
+  options?: RequestInit
+) => string | null;
+
+export interface DeduplicationConfig {
+  /**
+   * Custom function to compute the deduplication key.
+   * Receives the same (url, options) passed to resilientFetch.
+   * Defaults to the stringified URL (method-agnostic).
+   */
+  keyFn?: DeduplicationKeyFn;
+}
+
 // Per-domain runtime entry stored in the state map.
 export interface CircuitEntry {
   state: CircuitState;
@@ -26,6 +45,11 @@ export interface ResilientFetchConfig<T = unknown> {
   retryOn?: number[]; // defaults applied in index.ts
   fallbackOnNonRetryable?: boolean;
   onNonRetryableError?: (status: number, message: string) => void;
+  /**
+   * When set, enables request deduplication.
+   * Pass an empty object `{}` to activate with the default key function.
+   */
+  deduplication?: DeduplicationConfig;
 }
 
 // Thrown when the circuit is OPEN and no fallback is configured.
