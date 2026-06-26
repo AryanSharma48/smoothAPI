@@ -1,16 +1,29 @@
+import os
+from contextlib import asynccontextmanager
+from typing import Any, Dict
+
 from fastapi import FastAPI
 import httpx
 
 from smooth_api import resilient_api, ResilientConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
+# Shared HTTP client for connection pooling
+http_client = httpx.AsyncClient(timeout=10.0)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await http_client.aclose()
+
 app = FastAPI(
     title="SmoothAPI FastAPI Example",
     description="Demonstrates retry handling, circuit breaker behavior, and fallback handling using SmoothAPI.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
-SANDBOX_URL = "http://localhost:3001"
+SANDBOX_URL = os.getenv("SANDBOX_URL", "http://localhost:3001")
 
 retry_config = ResilientConfig(
     backoff=BackoffConfig(
@@ -43,7 +56,7 @@ circuit_config = ResilientConfig(
     summary="Project Overview",
     description="Returns information about the available SmoothAPI demonstration endpoints.",
 )
-async def root():
+async def root() -> Dict[str, Any]:
     return {
         "project": "SmoothAPI FastAPI Example",
         "description": "Demonstrates retries, circuit breakers, and fallback handling using SmoothAPI.",
@@ -56,11 +69,10 @@ async def root():
 
 
 @resilient_api(retry_config)
-async def fetch_unstable_data():
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        response = await client.get(f"{SANDBOX_URL}/unstable-data")
-        response.raise_for_status()
-        return response.json()
+async def fetch_unstable_data() -> Any:
+    response = await http_client.get(f"{SANDBOX_URL}/unstable-data")
+    response.raise_for_status()
+    return response.json()
 
 
 @app.get(
@@ -68,7 +80,7 @@ async def fetch_unstable_data():
     summary="Retry Handling Example",
     description="Demonstrates SmoothAPI automatically retrying transient failures.",
 )
-async def retry_demo():
+async def retry_demo() -> Dict[str, Any]:
     result = await fetch_unstable_data()
 
     return {
@@ -81,11 +93,10 @@ async def retry_demo():
 
 
 @resilient_api(circuit_config)
-async def fetch_failing_data():
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        response = await client.get(f"{SANDBOX_URL}/always-fail")
-        response.raise_for_status()
-        return response
+async def fetch_failing_data() -> Any:
+    response = await http_client.get(f"{SANDBOX_URL}/always-fail")
+    response.raise_for_status()
+    return response
 
 
 @app.get(
@@ -93,7 +104,7 @@ async def fetch_failing_data():
     summary="Circuit Breaker Example",
     description="Demonstrates circuit breaker behavior and fallback responses.",
 )
-async def circuit_demo():
+async def circuit_demo() -> Dict[str, Any]:
     result = await fetch_failing_data()
 
     if isinstance(result, httpx.Response):
