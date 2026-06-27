@@ -9,7 +9,7 @@ import asyncio
 import time
 import pytest
 
-from smooth_api import resilient_api, ResilientConfig, DeduplicationConfig
+from smooth_api import smooth_api, SmoothConfig, DeduplicationConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
 
@@ -17,9 +17,9 @@ from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _fast_config(**extra) -> ResilientConfig:
+def _fast_config(**extra) -> SmoothConfig:
     """Minimal config: no real delays, no retries."""
-    return ResilientConfig(
+    return SmoothConfig(
         backoff=BackoffConfig(base_delay=0, max_delay=0, max_retries=0),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=100, cooldown_ms=60_000),
         **extra,
@@ -35,7 +35,7 @@ async def test_deduplication_disabled_by_default():
     """Without deduplication config each call runs the function independently."""
     counter = {"calls": 0}
 
-    @resilient_api(_fast_config())
+    @smooth_api(_fast_config())
     async def fetch_user(user_id: int):
         counter["calls"] += 1
         await asyncio.sleep(0.02)  # simulate latency
@@ -53,7 +53,7 @@ async def test_concurrent_identical_calls_deduplicated():
     """3 concurrent calls with the same arg produce exactly 1 execution."""
     counter = {"calls": 0}
 
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig()))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig()))
     async def fetch_user(user_id: int):
         counter["calls"] += 1
         await asyncio.sleep(0.02)
@@ -71,7 +71,7 @@ async def test_different_args_not_deduplicated():
     """Calls with different arguments must each execute independently."""
     counter = {"calls": 0}
 
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig()))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig()))
     async def fetch_user(user_id: int):
         counter["calls"] += 1
         await asyncio.sleep(0.02)
@@ -89,7 +89,7 @@ async def test_sequential_calls_not_deduplicated():
     """After a call settles the next sequential call triggers a fresh execution."""
     counter = {"calls": 0}
 
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig()))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig()))
     async def fetch_user(user_id: int):
         counter["calls"] += 1
         return {"id": user_id}
@@ -105,7 +105,7 @@ async def test_error_propagated_to_all_callers():
     """When the executing coroutine raises, all waiting callers get the same exception."""
     counter = {"calls": 0}
 
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig()))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig()))
     async def fetch_user(user_id: int):
         counter["calls"] += 1
         await asyncio.sleep(0.01)
@@ -131,7 +131,7 @@ async def test_custom_key_fn_coalesces_by_resource_type():
     def resource_key(*args, **kwargs):
         return str(args[1]) if len(args) > 1 else str(args[0])
 
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig(key_fn=resource_key)))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig(key_fn=resource_key)))
     async def fetch_resource(resource_id: int, resource_type: str):
         counter["calls"] += 1
         await asyncio.sleep(0.02)
@@ -152,7 +152,7 @@ async def test_none_key_fn_opts_out_of_deduplication():
     counter = {"calls": 0}
 
     # Always return None → every call bypasses dedup.
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig(key_fn=lambda *a, **k: None)))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig(key_fn=lambda *a, **k: None)))
     async def fetch_user(user_id: int):
         counter["calls"] += 1
         await asyncio.sleep(0.02)
@@ -173,11 +173,11 @@ async def test_deduplication_benchmark(capsys):
     CONCURRENCY = 200
     RUNS = 5
 
-    @resilient_api(_fast_config())
+    @smooth_api(_fast_config())
     async def plain_fn(x: int):
         return x
 
-    @resilient_api(_fast_config(deduplication=DeduplicationConfig()))
+    @smooth_api(_fast_config(deduplication=DeduplicationConfig()))
     async def deduped_fn(x: int):
         return x
 

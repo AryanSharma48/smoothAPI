@@ -110,3 +110,6 @@ export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
     return executeRequest();
   };
 }
+
+/** @deprecated use createSmoothFetch instead */
+export const createResilientFetch = createSmoothFetch;

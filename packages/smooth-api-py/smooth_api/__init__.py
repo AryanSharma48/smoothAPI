@@ -192,6 +192,17 @@ def smooth_api(config: SmoothConfig):
     return decorator
 
 
-__all__ = ['smooth_api', 'SmoothConfig', 'DeduplicationConfig']
+import warnings
+
+def resilient_api(*args, **kwargs):
+    warnings.warn("'resilient_api' is deprecated, use 'smooth_api' instead", DeprecationWarning, stacklevel=2)
+    return smooth_api(*args, **kwargs)
+
+class ResilientConfig(SmoothConfig):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("'ResilientConfig' is deprecated, use 'SmoothConfig' instead", DeprecationWarning, stacklevel=2)
+        super().__init__(*args, **kwargs)
+
+__all__ = ['smooth_api', 'SmoothConfig', 'DeduplicationConfig', 'resilient_api', 'ResilientConfig']
 
 from .config import DeduplicationConfig  # re-export for convenience

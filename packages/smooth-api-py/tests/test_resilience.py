@@ -6,7 +6,7 @@ import time
 import pytest
 import requests
 
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
 BASE = "http://localhost:3001"
@@ -29,12 +29,12 @@ def reset_counter():
 # ─── Retry logic ──────────────────────────────────────────────────────────────
 
 def test_retries_on_500_and_eventually_succeeds():
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.1, max_retries=5),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=10, cooldown_ms=60_000),
     )
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         res = requests.get(f"{BASE}/unstable-data")
         res.raise_for_status()
@@ -46,7 +46,7 @@ def test_retries_on_500_and_eventually_succeeds():
 
 def test_retry_respects_retry_on_codes():
     """429 and 500 trigger retries; 200 does not."""
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.1, max_retries=3),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=10, cooldown_ms=60_000),
         retry_on=[429, 500],
@@ -54,7 +54,7 @@ def test_retry_respects_retry_on_codes():
 
     call_count = [0]
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         call_count[0] += 1
         res = requests.get(f"{BASE}/unstable-data")
@@ -74,7 +74,7 @@ def test_retry_respects_retry_on_codes():
 
 def test_circuit_trips_and_returns_fallback():
     fallback = {"data": "cached"}
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.05, max_retries=0),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=3, cooldown_ms=60_000),
         retry_on=[500, 429],
@@ -83,7 +83,7 @@ def test_circuit_trips_and_returns_fallback():
 
     call_count = [0]
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         call_count[0] += 1
         # Always raise so failures accumulate without recordSuccess resetting the count.
@@ -103,13 +103,13 @@ def test_circuit_trips_and_returns_fallback():
 
 
 def test_circuit_open_raises_runtime_error_without_fallback():
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.05, max_retries=0),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=3, cooldown_ms=60_000),
         retry_on=[500, 429],
     )
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         # Always raises a 500 so recordSuccess never fires and count accumulates.
         raise requests.exceptions.HTTPError(
@@ -132,14 +132,14 @@ def test_circuit_open_raises_runtime_error_without_fallback():
 
 def test_circuit_recovers_after_cooldown():
     cooldown_ms = 500
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.05, max_retries=0),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=3, cooldown_ms=cooldown_ms),
         retry_on=[500, 429],
         fallback={"tripped": True},
     )
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         res = requests.get(f"{BASE}/unstable-data")
         res.raise_for_status()
@@ -166,9 +166,9 @@ def test_circuit_recovers_after_cooldown():
 # ─── Non-retryable error fallback & callbacks ──────────────────────────────────
 
 def test_python_non_retryable_default_behavior():
-    config = ResilientConfig(fallback_on_non_retryable=False)
+    config = SmoothConfig(fallback_on_non_retryable=False)
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         raise requests.exceptions.HTTPError(
             response=type('R', (), {'status_code': 404, 'reason': 'Not Found'})()
@@ -179,9 +179,9 @@ def test_python_non_retryable_default_behavior():
 
 
 def test_python_non_retryable_fallback_and_stderr(capsys):
-    config = ResilientConfig(fallback_on_non_retryable=True)
+    config = SmoothConfig(fallback_on_non_retryable=True)
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data_sync():
         raise requests.exceptions.HTTPError(
             response=type('R', (), {'status_code': 405, 'reason': 'Method Not Allowed'})()
@@ -206,9 +206,9 @@ def test_python_non_retryable_fallback_and_stderr(capsys):
 
 @pytest.mark.asyncio
 async def test_python_non_retryable_async_fallback_and_stderr(capsys):
-    config = ResilientConfig(fallback_on_non_retryable=True)
+    config = SmoothConfig(fallback_on_non_retryable=True)
 
-    @resilient_api(config)
+    @smooth_api(config)
     async def get_data_async():
         raise requests.exceptions.HTTPError(
             response=type('R', (), {'status_code': 404, 'reason': 'Not Found'})()
@@ -229,9 +229,9 @@ async def test_python_non_retryable_async_fallback_and_stderr(capsys):
 
 def test_python_non_retryable_custom_fallback():
     fallback_val = {"custom": "python_fallback"}
-    config = ResilientConfig(fallback_on_non_retryable=True, fallback=fallback_val)
+    config = SmoothConfig(fallback_on_non_retryable=True, fallback=fallback_val)
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         raise requests.exceptions.HTTPError(
             response=type('R', (), {'status_code': 400, 'reason': 'Bad Request'})()
@@ -246,12 +246,12 @@ def test_python_non_retryable_custom_callback(capsys):
     def callback(status, msg):
         called.append((status, msg))
 
-    config = ResilientConfig(
+    config = SmoothConfig(
         fallback_on_non_retryable=True,
         on_non_retryable_error=callback
     )
 
-    @resilient_api(config)
+    @smooth_api(config)
     def get_data():
         raise requests.exceptions.HTTPError(
             response=type('R', (), {'status_code': 403, 'reason': 'Forbidden'})()

@@ -1,7 +1,7 @@
 import asyncio
 import pytest
 import httpx
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
 BASE = "http://localhost:3001"
@@ -15,14 +15,14 @@ def reset_counter():
 
 @pytest.mark.asyncio
 async def test_async_wrapper_concurrency():
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.05, max_retries=0),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=3, cooldown_ms=60_000),
         retry_on=[500],
         fallback={"tripped": True}
     )
 
-    @resilient_api(config)
+    @smooth_api(config)
     async def get_data():
         request = httpx.Request("GET", f"{BASE}/unstable-data")
         response = httpx.Response(500, request=request)

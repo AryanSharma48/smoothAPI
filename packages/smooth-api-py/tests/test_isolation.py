@@ -1,6 +1,6 @@
 import pytest
 import requests
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
 BASE = "http://localhost:3001"
@@ -12,18 +12,18 @@ def reset_counter():
     requests.get(f"{BASE}/reset")
 
 def test_decorator_isolation_and_runtime_override():
-    config = ResilientConfig(
+    config = SmoothConfig(
         backoff=BackoffConfig(base_delay=0.01, max_delay=0.05, max_retries=0),
         circuit_breaker=CircuitBreakerConfig(failure_threshold=2, cooldown_ms=60_000),
         retry_on=[500],
         fallback={"default": True}
     )
 
-    @resilient_api(config)
+    @smooth_api(config)
     def api_one():
         raise requests.exceptions.HTTPError(response=type('R', (), {'status_code': 500})())
 
-    @resilient_api(config)
+    @smooth_api(config)
     def api_two():
         return {"success": True}
 
