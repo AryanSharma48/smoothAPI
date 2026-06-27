@@ -1,4 +1,4 @@
-import { createResilientFetch } from "@codingaryan/smoothapi";
+import { createSmoothFetch } from "@codingaryan/smoothapi";
 
 const retryButton = document.getElementById("retry-btn");
 const circuitButton = document.getElementById("circuit-btn");
@@ -12,13 +12,13 @@ const circuitFallback = {
     data: "circuit-open fallback"
 };
 
-const retryFetch = createResilientFetch({
+const retryFetch = createSmoothFetch({
     retryOn: [429, 500, 502, 503, 504],
     fallback: retryFallback,
     fallbackOnNonRetryable: true
 });
 
-const circuitFetch = createResilientFetch({
+const circuitFetch = createSmoothFetch({
     retryOn: [429, 500, 502, 503, 504],
     circuitBreaker: {
         failureThreshold: 3,

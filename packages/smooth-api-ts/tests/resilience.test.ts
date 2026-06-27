@@ -1,6 +1,6 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { createResilientFetch } from '../src/index.js';
+import { createSmoothFetch } from '../src/index.js';
 import { CircuitOpenError } from '../src/types.js';
 
 const BASE = 'http://localhost:3001';
@@ -16,7 +16,7 @@ describe('retry logic', () => {
     await reset();
     // seq after reset: 1=200, 2=200, 3=500, 4=200, 5=429, 6=500, ...
     // with maxRetries:3 and a lucky sequence we should get through
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { baseDelay: 10, maxDelay: 50, maxRetries: 3 },
       circuitBreaker: { failureThreshold: 10, cooldownMs: 60_000 },
       retryOn: [429, 500],
@@ -31,7 +31,7 @@ describe('circuit breaker', () => {
   it('trips to OPEN after failureThreshold consecutive failures', async () => {
     await reset();
 
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { baseDelay: 5, maxDelay: 20, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 3, cooldownMs: 60_000 },
       retryOn: [500, 429],
@@ -65,7 +65,7 @@ describe('circuit breaker', () => {
     await reset();
 
     const fallback = { data: 'cached_value' };
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { baseDelay: 5, maxDelay: 20, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 3, cooldownMs: 60_000 },
       retryOn: [500, 429],
@@ -92,7 +92,7 @@ describe('circuit breaker', () => {
   it('throws CircuitOpenError when OPEN and no fallback is configured', async () => {
     await reset();
 
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { baseDelay: 5, maxDelay: 20, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 3, cooldownMs: 60_000 },
       retryOn: [500, 429],
@@ -126,7 +126,7 @@ describe('circuit breaker recovery', () => {
     await reset();
 
     const cooldownMs = 500; // short cooldown for testing
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { baseDelay: 5, maxDelay: 20, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 3, cooldownMs },
       retryOn: [500, 429],
@@ -162,7 +162,7 @@ describe('circuit breaker recovery', () => {
 
 describe('non-retryable error fallback & alerts', () => {
   it('returns normal response without alert when fallbackOnNonRetryable is false', async () => {
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { maxRetries: 0 },
       fallbackOnNonRetryable: false,
     });
@@ -187,7 +187,7 @@ describe('non-retryable error fallback & alerts', () => {
   });
 
   it('triggers window.alert and returns mock Response on 405 when fallbackOnNonRetryable is true and no fallback config', async () => {
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { maxRetries: 0 },
       fallbackOnNonRetryable: true,
     });
@@ -201,7 +201,7 @@ describe('non-retryable error fallback & alerts', () => {
     globalThis.fetch = async () => new Response(null, { status: 405, statusText: 'Method Not Allowed' });
 
     try {
-      const res = await resilientFetch(`${BASE}/some-url`);
+      const res: any = await resilientFetch(`${BASE}/some-url`);
       assert.ok(res instanceof Response);
       assert.equal(res.status, 405);
       
@@ -218,7 +218,7 @@ describe('non-retryable error fallback & alerts', () => {
 
   it('returns configured fallback when fallbackOnNonRetryable is true and fallback is provided', async () => {
     const fallbackVal = { fallbackMsg: 'custom_fallback' };
-    const resilientFetch = createResilientFetch({
+    const resilientFetch = createSmoothFetch({
       backoff: { maxRetries: 0 },
       fallbackOnNonRetryable: true,
       fallback: fallbackVal,
@@ -243,8 +243,8 @@ describe('non-retryable error fallback & alerts', () => {
   });
 
   it('calls custom callback instead of window.alert when provided', async () => {
-    let callbackArgs: { status: number; msg: string } | null = null;
-    const resilientFetch = createResilientFetch({
+    let callbackArgs: { status: number; msg: string } | unknown;
+    const resilientFetch = createSmoothFetch({
       backoff: { maxRetries: 0 },
       fallbackOnNonRetryable: true,
       onNonRetryableError: (status, msg) => {
@@ -261,7 +261,7 @@ describe('non-retryable error fallback & alerts', () => {
     globalThis.fetch = async () => new Response(null, { status: 403, statusText: 'Forbidden' });
 
     try {
-      const res = await resilientFetch(`${BASE}/some-url`);
+      const res : any = await resilientFetch(`${BASE}/some-url`);
       assert.ok(res instanceof Response);
       assert.equal(res.status, 403);
       assert.equal(alertCalled, false);

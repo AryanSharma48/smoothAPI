@@ -1,6 +1,6 @@
 # @codingaryan/smoothapi
 
-API resilience library for TypeScript/JavaScript. It wraps the native `fetch` API with **exponential backoff, full jitter, and a finite-state machine circuit breaker** to protect against cascading failures.
+API protection library for TypeScript/JavaScript. It wraps the native `fetch` API with state of the art protections like **exponential backoff, full jitter, and a finite-state machine circuit breaker** to protect against cascading failures.
 
 Zero dependencies. Small bundle size. Built for modern ESM.
 
@@ -16,19 +16,19 @@ npm install @codingaryan/smoothapi
 - **Circuit Breaker (FSM):** Isolated per-domain state machine (`CLOSED` → `OPEN` → `HALF_OPEN`).
 - **Smart Retries:** Automatically retries on specific HTTP status codes (e.g., 429, 500, 502, 503, 504) while throwing immediately on client errors (400, 401, 404).
 - **Graceful Fallbacks:** Optionally serve cached or default data instantly when the circuit is `OPEN`.
-- **Request Deduplication:** Automatically coalesce concurrent identical requests into a single network call.
+- **Request Deduplication:** Automatically couples concurrent identical requests into a single network call.
 
 ## Usage
 
 ### Basic Usage (Defaults)
 
-If you don't need custom configurations, you can instantiate the resilient fetch with its defaults by simply passing an empty object.
+If you don't need custom configurations, you can use the smooth fetch with its defaults by simply passing an empty object.
 
 ```typescript
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
 // Create it with default settings
-const fetchWithRetry = createResilientFetch({});
+const fetchWithRetry = createSmoothFetch({});
 
 async function main() {
   try {
@@ -54,9 +54,9 @@ async function main() {
 You can override any of the defaults to suit your application's needs, such as adding a fallback object.
 
 ```typescript
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
-const fetchWithRetry = createResilientFetch({
+const fetchWithRetry = createSmoothFetch({
   backoff: {
     baseDelay: 100,      // ms to wait before first retry
     maxDelay: 30000,     // cap on exponential growth
@@ -96,9 +96,9 @@ async function main() {
 By default, client errors (e.g. `400`, `401`, `403`, `404`, `405`) resolve immediately and bypass the retry loop. If you want to handle these errors gracefully and alert users:
 
 ```typescript
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
-const fetchWithRetry = createResilientFetch({
+const fetchWithRetry = createSmoothFetch({
   fallbackOnNonRetryable: true,
   // Optional: Trigger custom UI logic when a client error happens
   onNonRetryableError: (status, message) => {
@@ -114,14 +114,14 @@ const fetchWithRetry = createResilientFetch({
 
 ### Request Deduplication
 
-When multiple identical requests are made concurrently, SmoothAPI can execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services.
+When multiple identical requests are made concurrently, SmoothAPI will execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services and prevents exausting computing resources.
 
 **Enable with default key function** (deduplicates by URL):
 
 ```typescript
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
-const fetchWithRetry = createResilientFetch({
+const fetchWithRetry = createSmoothFetch({
   deduplication: {} // Empty object activates deduplication
 });
 
@@ -136,7 +136,7 @@ const [a, b, c] = await Promise.all([
 **Custom key function** for advanced coalescing:
 
 ```typescript
-const fetchWithRetry = createResilientFetch({
+const fetchWithRetry = createSmoothFetch({
   deduplication: {
     // Deduplicate by method + URL (ignores headers/body)
     keyFn: (url, options) => `${options?.method ?? 'GET'}:${url.toString()}`
@@ -147,7 +147,7 @@ const fetchWithRetry = createResilientFetch({
 **Opt out of deduplication** for specific requests:
 
 ```typescript
-const fetchWithRetry = createResilientFetch({
+const fetchWithRetry = createSmoothFetch({
   deduplication: {
     keyFn: (url, options) => {
       // Skip dedup for POST requests
@@ -158,7 +158,7 @@ const fetchWithRetry = createResilientFetch({
 });
 ```
 
-* **Default Behavior**: Deduplicates by URL only (method-agnostic). Concurrent GETs to the same URL are coalesced.
+* **Default Behavior**: Deduplicates by URL only (method-agnostic). Concurrent GETs to the same URL are merged.
 * **Error Propagation**: If the network call fails, all waiting callers receive the same error.
 * **Settlement**: Once a request completes, the next call to the same URL triggers a fresh network request.
 

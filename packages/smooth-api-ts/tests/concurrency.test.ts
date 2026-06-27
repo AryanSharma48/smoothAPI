@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createResilientFetch } from '../src/index.js';
+import { createSmoothFetch } from '../src/index.js';
 
 const BASE = 'http://localhost:3001';
 
@@ -12,14 +12,14 @@ describe('Concurrency and Isolation', () => {
   it('instances have isolated circuit breaker states', async () => {
     await reset();
     
-    const fetchA = createResilientFetch({
+    const fetchA = createSmoothFetch({
       backoff: { baseDelay: 1, maxDelay: 5, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 2, cooldownMs: 60_000 },
       retryOn: [500],
       fallback: { trippedA: true },
     });
 
-    const fetchB = createResilientFetch({
+    const fetchB = createSmoothFetch({
       backoff: { baseDelay: 1, maxDelay: 5, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 10, cooldownMs: 60_000 },
       retryOn: [500],
@@ -52,7 +52,7 @@ describe('Concurrency and Isolation', () => {
     await reset();
 
     const cooldownMs = 100;
-    const fetchC = createResilientFetch({
+    const fetchC = createSmoothFetch({
       backoff: { baseDelay: 1, maxDelay: 5, maxRetries: 0 },
       circuitBreaker: { failureThreshold: 2, cooldownMs },
       retryOn: [500],

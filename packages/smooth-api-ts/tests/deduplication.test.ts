@@ -6,7 +6,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createResilientFetch } from '../src/index.js';
+import { createSmoothFetch } from '../src/index.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -33,7 +33,7 @@ describe('Request Deduplication', () => {
     globalThis.fetch = makeStubFetch(() => new Response('{}', { status: 200 }), counter);
 
     try {
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
       });
 
@@ -64,7 +64,7 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
@@ -96,7 +96,7 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
@@ -122,7 +122,7 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
@@ -146,7 +146,7 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
@@ -179,7 +179,7 @@ describe('Request Deduplication', () => {
     try {
       // Custom key returns only the HTTP method — two GETs share the same key
       // and are therefore deduplicated regardless of their URLs.
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {
           keyFn: (_url, options) => (options?.method ?? 'GET').toUpperCase(),
@@ -209,7 +209,7 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createResilientFetch({
+      const resilientFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {
           keyFn: (_url, options) =>
@@ -244,7 +244,7 @@ describe('Request Deduplication Benchmark', () => {
 
     try {
       // --- Without deduplication ---
-      const plain = createResilientFetch({
+      const plain = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
       });
 
@@ -258,7 +258,7 @@ describe('Request Deduplication Benchmark', () => {
       }
 
       // --- With deduplication ---
-      const deduped = createResilientFetch({
+      const deduped = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });

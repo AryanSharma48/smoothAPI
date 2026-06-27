@@ -11,7 +11,7 @@ const BACKOFF_DEFAULTS = {
 
 const DEFAULT_RETRY_ON = [429, 500, 502, 503, 504];
 
-export function createResilientFetch<T>(globalConfig: ResilientFetchConfig<T>) {
+export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
   const backoffConfig = { ...BACKOFF_DEFAULTS, ...globalConfig.backoff };
   const retryOn = globalConfig.retryOn ?? DEFAULT_RETRY_ON;
   const breaker = new CircuitBreakerState(globalConfig.circuitBreaker);
@@ -19,7 +19,7 @@ export function createResilientFetch<T>(globalConfig: ResilientFetchConfig<T>) {
     ? new RequestDeduplicator(globalConfig.deduplication.keyFn)
     : null;
 
-  return async function resilientFetch(
+  return async function smoothFetch(
     url: string | URL,
     options?: RequestInit
   ): Promise<Response | T> {
