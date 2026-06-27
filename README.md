@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo.svg" alt="SmoothAPI logo" width="650" />
+  <a href="https://smoothapi.org"><img src="public/logo.svg" alt="SmoothAPI logo" width="650" />
 </p>
 
 <p align="center">
@@ -10,19 +10,19 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6b7280?style=flat-square" alt="License"></a>
 </p>
 
-A failing third-party API can bring down your entire application, leading to cascading service failures, degraded user experience, and lost revenue. How do you protect your systems and keep them resilient, even when downstream dependencies are completely unresponsive or failing?
+A failing third-party API can bring down your entire application, leading to cascading service failures, degraded user experience, and lost revenue. How do you protect your systems and keep them shielded, even when downstream dependencies are completely unresponsive or failing?
 
-Enter **SmoothAPI**. SmoothAPI stops third-party API crashes from breaking your app. It wraps your HTTP calls with industry-standard resilience patterns, catches network errors instantly, spaces out retries so recovering servers can breathe, and serves safe backup data the millisecond a service goes completely dead.
+Enter **SmoothAPI**. SmoothAPI stops third-party API crashes from breaking your app. It wraps your HTTP calls with secure patterns, catches network errors instantly, spaces out retries so recovering servers can breathe, and serves safe backup data the millisecond a service goes completely dead.
 
-A zero-dependency, dual-language API resilience and fault-tolerance library, implemented natively in **TypeScript** (`@codingaryan/smoothapi` on NPM) and **Python** (`smoothapi-py` on PyPI).
+A zero-dependency, dual-language API shielding and fault-tolerance library, implemented natively in **TypeScript** (`@codingaryan/smoothapi` on NPM) and **Python** (`smoothapi-py` on PyPI).
 
 ---
 
 ## What it does
 
-`SmoothAPI` wraps your HTTP calls with two resilience patterns:
+`SmoothAPI` wraps your HTTP calls with two patterns:
 
-1. **Exponential Backoff with Full Jitter** — automatically retries failed requests with randomized delays so clients don't hammer a recovering server in sync.
+1. **Exponential Backoff with Full Jitter** — automatically retries failed requests with randomized delays so clients don't hammer a recovering server.
 2. **Finite State Machine Circuit Breaker** — tracks failures per domain and trips a circuit to block further requests before they even hit the network, with automatic half-open probing for recovery.
 
 ### Features
@@ -31,18 +31,22 @@ A zero-dependency, dual-language API resilience and fault-tolerance library, imp
 - **Sync & Async Support (Python):** Seamlessly works with `asyncio`, `requests`, and `httpx`.
 - **Graceful Fallbacks:** Return default or cached data instantly when the circuit is open, bypassing network IO entirely.
 - **Smart Retries:** Automatically detect HTTP status codes to retry on transient errors (e.g., 429, 500, 502, 503, 504).
-
+- **Request Deduplication** Automatically detect multiple requests for same external API, merging them into one and saving compute.
+ 
 ---
 
 ## Workspace Layout
 
 ```
 smooth-api/
+├── examples/                   # Browser examples showing the usade of SmoothAPI
 ├── packages/
 │   ├── smooth-api-ts/          # TypeScript NPM package (@codingaryan/smoothapi)
 │   └── smooth-api-py/          # Python PyPI package (smoothapi-py)
 ├── sandbox/                    # Shared chaos test server (Express, port 3001)
+├── website/                    # Documentation website for SmoothAPI
 ├── README.md
+├── CONTRIBUTING.md
 └── .gitignore
 ```
 
@@ -75,18 +79,18 @@ npm install @codingaryan/smoothapi
 
 **Basic Usage (Defaults):**
 ```ts
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
-const fetch = createResilientFetch({});
+const fetch = createSmoothFetch({});
 
 const res = await fetch('https://api.example.com/data');
 ```
 
 **Advanced Usage (Custom):**
 ```ts
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
-const fetch = createResilientFetch({
+const fetch = createSmoothFetch({
   backoff: { baseDelay: 100, maxDelay: 5000, maxRetries: 3 },
   circuitBreaker: { failureThreshold: 3, cooldownMs: 10000 },
   fallback: { data: 'cached fallback' },
@@ -107,12 +111,12 @@ pip install smoothapi-py
 
 **Basic Usage (Defaults):**
 ```python
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 import requests
 
-config = ResilientConfig()
+config = SmoothConfig()
 
-@resilient_api(config)
+@smooth_api(config)
 def get_data():
     res = requests.get('https://api.example.com/data')
     res.raise_for_status()
@@ -121,17 +125,17 @@ def get_data():
 
 **Advanced Usage (Custom):**
 ```python
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 import requests
 
-config = ResilientConfig(
+config = SmoothConfig(
     backoff={"base_delay": 0.1, "max_delay": 30.0, "max_retries": 3},
     circuit_breaker={"failure_threshold": 3, "cooldown_ms": 10000},
     fallback={'data': 'cached fallback'},
     retry_on=[429, 500, 502, 503, 504]
 )
 
-@resilient_api(config)
+@smooth_api(config)
 def get_data():
     res = requests.get('https://api.example.com/data')
     res.raise_for_status()
@@ -158,7 +162,7 @@ By default, client errors (status codes `400` to `499` not in `retryOn` / `retry
 
 * **TypeScript:**
   ```ts
-  const fetch = createResilientFetch({
+  const fetch = createSmoothFetch({
     fallbackOnNonRetryable: true,
     // Optional custom callback (replaces default window.alert/console.error)
     onNonRetryableError: (status, message) => console.warn(message),
@@ -170,7 +174,7 @@ By default, client errors (status codes `400` to `499` not in `retryOn` / `retry
 
 * **Python:**
   ```python
-  config = ResilientConfig(
+  config = SmoothConfig(
       fallback_on_non_retryable=True,
       # Optional custom callback (replaces default stderr warning)
       on_non_retryable_error=lambda status, msg: print(msg),
@@ -184,7 +188,7 @@ By default, client errors (status codes `400` to `499` not in `retryOn` / `retry
 
 ## Running the Sandbox
 
-The sandbox provides an Express server with chaotic endpoints to test resilience.
+The sandbox provides an Express server with chaotic endpoints to test protection using SmoothAPI.
 
 ```bash
 cd sandbox
@@ -229,16 +233,17 @@ pytest tests/ -v
 - [ ] Structured logging support
 
 ### Ecosystem
-- [ ] Next.js example project
-- [ ] Express integration examples
-- [ ] Browser examples
+- [x] Next.js example project
+- [x] Express integration examples
+- [x] Browser examples
 - [ ] Benchmark suite
 
-### Advanced Resilience
-- [ ] Request deduplication
+### Advanced Security and Performance
+- [x] Request deduplication
 - [ ] Redis-backed circuit breaker state
 - [ ] Bulkhead pattern support
 - [ ] Service health scoring
+- [ ] Go engine for high concurrency and bare metal execution
 
 ---
 

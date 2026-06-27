@@ -19,10 +19,12 @@ SmoothAPI is a dual-language API resilience and fault-tolerance library. The wor
 
 ```text
 smooth-api/
+├── examples/                   # Broswer based examples for SmoothAPI
 ├── packages/
 │   ├── smooth-api-ts/          # TypeScript package (@codingaryan/smoothapi)
 │   └── smooth-api-py/          # Python package (smoothapi-py)
 ├── sandbox/                    # Express-based chaos server (used by integration tests)
+├── website/                    # Documentation wesbsite
 ├── README.md                   # Project overview
 └── CONTRIBUTING.md             # You are here!
 ```
