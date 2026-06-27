@@ -4,7 +4,7 @@ import asyncio
 import functools
 from urllib.parse import urlparse
 
-from .config import ResilientConfig
+from .config import SmoothConfig
 from .dedup import RequestDeduplicator
 from .state import CircuitBreakerState
 from .utils import calculate_backoff, sleep_backoff
@@ -51,7 +51,7 @@ class MockResponse:
         pass
 
 
-def resilient_api(config: ResilientConfig):
+def smooth_api(config: SmoothConfig):
     def decorator(fn):
         # One breaker per decorated function, shared across all calls to fn.
         breaker = CircuitBreakerState(config.circuit_breaker)
@@ -192,6 +192,6 @@ def resilient_api(config: ResilientConfig):
     return decorator
 
 
-__all__ = ['resilient_api', 'ResilientConfig', 'DeduplicationConfig']
+__all__ = ['smooth_api', 'SmoothConfig', 'DeduplicationConfig']
 
 from .config import DeduplicationConfig  # re-export for convenience

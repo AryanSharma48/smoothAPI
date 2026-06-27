@@ -27,7 +27,7 @@ class DeduplicationConfig:
     """
     Configuration for request deduplication.
 
-    When attached to ``ResilientConfig``, in-flight calls that share the same
+    When attached to ``SmoothConfig``, in-flight calls that share the same
     *key* are coalesced: only the first caller actually runs the function; all
     others await the same coroutine and receive its result (or exception).
 
@@ -43,7 +43,7 @@ class DeduplicationConfig:
 
 
 @dataclass
-class ResilientConfig:
+class SmoothConfig:
     backoff: BackoffConfig = field(default_factory=BackoffConfig)
     circuit_breaker: CircuitBreakerConfig = field(default_factory=CircuitBreakerConfig)
     # Returned immediately on an OPEN circuit, no network IO.

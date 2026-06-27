@@ -1,6 +1,6 @@
 # smoothapi-py
 
-API resilience library for Python. It provides a decorator to wrap your HTTP requests with **exponential backoff, full jitter, and a finite-state machine circuit breaker** to protect against cascading failures.
+API protection library for Python. It provides a decorator to wrap your HTTP requests with **exponential backoff, full jitter, and a finite-state machine circuit breaker** to protect against cascading failures.
 
 Zero dependencies. Fully typed. Supports both sync and async functions out of the box. Automatically integrates with `requests` and `httpx` if installed.
 
@@ -14,24 +14,24 @@ pip install smoothapi-py
 
 - **Exponential Backoff with Full Jitter:** Prevents the "thundering herd" problem by randomizing retry delays.
 - **Circuit Breaker (FSM):** Isolated state machine (`CLOSED` → `OPEN` → `HALF_OPEN`) per decorated function. Thread-safe execution.
-- **Smart Retries:** Automatically detects HTTP status codes from `requests` and `httpx` exceptions. Retries on transient codes (429, 500, 502, 503, 504) and re-raises client errors immediately.
+- **Smart Retries:** Automatically detects HTTP status codes from `requests` and `httpx` exceptions. Retries on retryable codes (429, 500, 502, 503, 504) and re-raises client errors immediately.
 - **Graceful Fallbacks:** Optionally return cached or default data instantly when the circuit is `OPEN`, bypassing network IO entirely.
-- **Request Deduplication:** Automatically coalesce concurrent identical requests into a single network call (async only).
+- **Request Deduplication:** Automatically merges concurrent identical requests into a single network call (async only).
 
 ## Usage
 
 ### Basic Usage (Defaults)
 
-If you don't need custom configurations, you can instantiate the decorator with its defaults by passing an empty config object.
+If you don't need custom configurations, you can use the decorator with its defaults by passing an empty config object.
 
 ```python
 import requests
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 
 # Create it with default settings
-config = ResilientConfig()
+config = SmoothConfig()
 
-@resilient_api(config)
+@smooth_api(config)
 def get_user_data(user_id: str):
     res = requests.get(f"https://api.example.com/users/{user_id}")
     res.raise_for_status() # Always raise so the decorator knows it failed!
@@ -57,11 +57,11 @@ except Exception as e:
 You can override any of the defaults to suit your application's needs, such as adding a fallback object.
 
 ```python
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 import requests
 
-config = ResilientConfig(
+config = SmoothConfig(
     backoff=BackoffConfig(
         base_delay=0.1,    # seconds to wait before first retry
         max_delay=30.0,    # cap on exponential growth
@@ -77,7 +77,7 @@ config = ResilientConfig(
     retry_on=[429, 500, 502, 503, 504]
 )
 
-@resilient_api(config)
+@smooth_api(config)
 def get_user_data(user_id: str):
     res = requests.get(f"https://api.example.com/users/{user_id}")
     res.raise_for_status()
@@ -92,12 +92,12 @@ data = get_user_data("456", fallback={"status": "override"})
 By default, non-retryable client errors (e.g. `400`, `401`, `403`, `404`, `405`) bubble up and raise exceptions immediately. If you want to intercept these client errors:
 
 ```python
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 
 def my_callback(status: int, message: str):
     print(f"Error hook: Received client error {status}")
 
-config = ResilientConfig(
+config = SmoothConfig(
     fallback_on_non_retryable=True,
     # Optional: Custom error hook function
     on_non_retryable_error=my_callback,
@@ -108,7 +108,7 @@ config = ResilientConfig(
 
 * **Default Warning**: If `fallback_on_non_retryable` is `True` and no custom `on_non_retryable_error` is defined, it will write a warning message to `sys.stderr`.
 * **Graceful Return**: If no `fallback` is configured, it returns a mock `Response` wrapper with `status_code`, `.json()` returning `{"error": True, "status": status, "message": "..."}`, and `.ok` returning `False`. Code downstream can check `res.status_code` or call `res.json()` without raising exceptions.
-```
+
 
 ### Async Support
 
@@ -117,7 +117,7 @@ The decorator automatically detects if your function is a coroutine and uses `as
 ```python
 import httpx
 
-@resilient_api(config)
+@smooth_api(config)
 async def get_user_data_async(user_id: str):
     async with httpx.AsyncClient() as client:
         res = await client.get(f"https://api.example.com/users/{user_id}")
@@ -133,12 +133,12 @@ When multiple identical async requests are made concurrently, SmoothAPI can exec
 
 ```python
 import httpx
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 from smooth_api.config import DeduplicationConfig
 
-config = ResilientConfig(deduplication=DeduplicationConfig())
+config = SmoothConfig(deduplication=DeduplicationConfig())
 
-@resilient_api(config)
+@smooth_api(config)
 async def get_user(user_id: int):
     async with httpx.AsyncClient() as client:
         res = await client.get(f"https://api.example.com/users/{user_id}")
@@ -163,13 +163,13 @@ def my_key(*args, **kwargs):
     # Deduplicate by second argument (resource type)
     return str(args[1]) if len(args) > 1 else str(args[0])
 
-config = ResilientConfig(deduplication=DeduplicationConfig(key_fn=my_key))
+config = SmoothConfig(deduplication=DeduplicationConfig(key_fn=my_key))
 ```
 
 **Opt out of deduplication** for specific calls:
 
 ```python
-config = ResilientConfig(
+config = SmoothConfig(
     deduplication=DeduplicationConfig(
         key_fn=lambda *a, **k: None  # Return None to skip dedup
     )
