@@ -24,7 +24,7 @@ export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
     options?: RequestInit
   ): Promise<Response | T> {
     // Fallback to local origin to support relative paths
-    const domain = new URL(url.toString(), typeof window !== 'undefined' ? window.location.origin : 'http://localhost').hostname;
+    const domain = new URL(url.toString(), typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost').hostname;
 
     // Block before any network IO if the circuit is OPEN.
     if (!breaker.canRequest(domain)) {

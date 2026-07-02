@@ -168,10 +168,10 @@ describe('non-retryable error fallback & alerts', () => {
     });
 
     const originalFetch = globalThis.fetch;
-    let alertCalled = false;
-    const mockAlert = () => { alertCalled = true; };
-    const originalWindow = (globalThis as any).window;
-    (globalThis as any).window = { alert: mockAlert };
+    let errorCalled = false;
+    const mockError = () => { errorCalled = true; };
+    
+    const originalError = console.error; console.error = mockError;
 
     globalThis.fetch = async () => new Response(null, { status: 404, statusText: 'Not Found' });
 
@@ -179,10 +179,10 @@ describe('non-retryable error fallback & alerts', () => {
       const res = await resilientFetch(`${BASE}/some-url`);
       assert.ok(res instanceof Response);
       assert.equal(res.status, 404);
-      assert.equal(alertCalled, false);
+      assert.equal(errorCalled, false);
     } finally {
       globalThis.fetch = originalFetch;
-      (globalThis as any).window = originalWindow;
+      console.error = originalError;
     }
   });
 
@@ -194,9 +194,9 @@ describe('non-retryable error fallback & alerts', () => {
 
     const originalFetch = globalThis.fetch;
     let alertedMessage = '';
-    const mockAlert = (msg: string) => { alertedMessage = msg; };
-    const originalWindow = (globalThis as any).window;
-    (globalThis as any).window = { alert: mockAlert };
+    const mockError = (msg: string) => { alertedMessage = msg; };
+    
+    const originalError = console.error; console.error = mockError;
 
     globalThis.fetch = async () => new Response(null, { status: 405, statusText: 'Method Not Allowed' });
 
@@ -212,7 +212,7 @@ describe('non-retryable error fallback & alerts', () => {
       assert.ok(alertedMessage.includes('405 Method Not Allowed'));
     } finally {
       globalThis.fetch = originalFetch;
-      (globalThis as any).window = originalWindow;
+      console.error = originalError;
     }
   });
 
@@ -225,20 +225,20 @@ describe('non-retryable error fallback & alerts', () => {
     });
 
     const originalFetch = globalThis.fetch;
-    let alertCalled = false;
-    const mockAlert = () => { alertCalled = true; };
-    const originalWindow = (globalThis as any).window;
-    (globalThis as any).window = { alert: mockAlert };
+    let errorCalled = false;
+    const mockError = () => { errorCalled = true; };
+    
+    const originalError = console.error; console.error = mockError;
 
     globalThis.fetch = async () => new Response(null, { status: 404, statusText: 'Not Found' });
 
     try {
       const res = await resilientFetch(`${BASE}/some-url`);
       assert.deepEqual(res, fallbackVal);
-      assert.equal(alertCalled, true);
+      assert.equal(errorCalled, true);
     } finally {
       globalThis.fetch = originalFetch;
-      (globalThis as any).window = originalWindow;
+      console.error = originalError;
     }
   });
 
@@ -253,10 +253,10 @@ describe('non-retryable error fallback & alerts', () => {
     });
 
     const originalFetch = globalThis.fetch;
-    let alertCalled = false;
-    const mockAlert = () => { alertCalled = true; };
-    const originalWindow = (globalThis as any).window;
-    (globalThis as any).window = { alert: mockAlert };
+    let errorCalled = false;
+    const mockError = () => { errorCalled = true; };
+    
+    const originalError = console.error; console.error = mockError;
 
     globalThis.fetch = async () => new Response(null, { status: 403, statusText: 'Forbidden' });
 
@@ -264,14 +264,14 @@ describe('non-retryable error fallback & alerts', () => {
       const res : any = await resilientFetch(`${BASE}/some-url`);
       assert.ok(res instanceof Response);
       assert.equal(res.status, 403);
-      assert.equal(alertCalled, false);
+      assert.equal(errorCalled, false);
       assert.ok(callbackArgs !== null);
       const args = callbackArgs as { status: number; msg: string };
       assert.equal(args.status, 403);
       assert.ok(args.msg.includes('403 Forbidden'));
     } finally {
       globalThis.fetch = originalFetch;
-      (globalThis as any).window = originalWindow;
+      console.error = originalError;
     }
   });
 });
