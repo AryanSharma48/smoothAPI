@@ -139,6 +139,11 @@ def smooth_api(config: SmoothConfig):
             return wrapper
 
         else:
+            if deduplicator is not None:
+                import warnings
+                # Sync deduplication requires a thread-safe lock manager, which is currently unsupported
+                warnings.warn("Synchronous deduplication is not supported. Deduplication will be ignored for this function.", UserWarning, stacklevel=2)
+
             @functools.wraps(fn)
             def wrapper(*args, **kwargs):  # type: ignore[misc]
                 fallback = kwargs.pop('fallback', config.fallback)

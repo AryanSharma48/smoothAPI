@@ -23,7 +23,8 @@ export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
     url: string | URL,
     options?: RequestInit
   ): Promise<Response | T> {
-    const domain = new URL(url).hostname;
+    // Fallback to local origin to support relative paths
+    const domain = new URL(url.toString(), typeof window !== 'undefined' ? window.location.origin : 'http://localhost').hostname;
 
     // Block before any network IO if the circuit is OPEN.
     if (!breaker.canRequest(domain)) {
@@ -58,8 +59,6 @@ export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
               const message = `Non-retryable HTTP error: ${response.status}${response.statusText ? ' ' + response.statusText : ''}`;
               if (globalConfig.onNonRetryableError) {
                 globalConfig.onNonRetryableError(response.status, message);
-              } else if (typeof window !== 'undefined') {
-                window.alert(message);
               } else {
                 console.error(message);
               }
