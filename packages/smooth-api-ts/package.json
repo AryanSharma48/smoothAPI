@@ -1,6 +1,6 @@
 {
   "name": "@codingaryan/smoothapi",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "API protection library — exponential backoff and circuit breaker for fetch",
   "type": "module",
   "main": "./dist/index.js",

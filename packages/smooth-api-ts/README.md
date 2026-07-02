@@ -109,7 +109,7 @@ const fetchWithRetry = createSmoothFetch({
 });
 ```
 
-* **Default Alerting**: If `fallbackOnNonRetryable` is `true` and no custom `onNonRetryableError` is provided, running in a browser environment will trigger a standard `window.alert("Non-retryable HTTP error: [status]")`. In backend/Node environments, it logs the warning to `console.error`.
+* **Default Alerting**: If `fallbackOnNonRetryable` is `true` and no custom `onNonRetryableError` is provided, it logs the warning to `console.error`.
 * **Graceful Return**: If no custom `fallback` is configured, it returns a mock `Response` wrapper with the status code and a JSON error body: `{ error: true, status: 404, message: "..." }`. Callers can safely call `.json()`, `.status`, or `.ok` on it without crashing.
 
 ### Request Deduplication
@@ -168,6 +168,7 @@ const fetchWithRetry = createSmoothFetch({
 2. **Circuit Check:** Before making a network request, the breaker checks the state. If it's `OPEN`, the request is blocked instantly (returning your fallback, or throwing a `CircuitOpenError`).
 3. **Execution & Retries:** If the response status is in your `retryOn` list, it's counted as a failure and retried with backoff.
 4. **Recovery:** After `cooldownMs`, the breaker enters `HALF_OPEN` state. The next request acts as a probe. If it succeeds, the circuit closes. If it fails, it snaps back to `OPEN` immediately.
+5. **Memory Management:** The circuit breaker cache is capped at a strict 1,000 domains limit. When exceeded, it automatically sweeps and removes `CLOSED` circuits with zero failures to prevent memory leaks in highly dynamic environments.
 
 ## License
 

@@ -16,6 +16,7 @@ export class CircuitBreakerState {
 
     private getOrCreate(domain: string): CircuitEntry {
     if (!this.map.has(domain)) {
+        this.cleanup();
         this.map.set(domain, {
         state: 'CLOSED',
         failureCount: 0,
@@ -63,6 +64,14 @@ export class CircuitBreakerState {
         return this.getOrCreate(domain).state;
     }
     
-
+    private cleanup(): void {
+        // Enforce a strict domain limit to bound memory usage
+        if (this.map.size <= 1000) return;
+        for (const [key, entry] of this.map.entries()) {
+            if (entry.state === "CLOSED" && entry.failureCount === 0) {
+                this.map.delete(key);
+            }
+        }
+    }
 }
 

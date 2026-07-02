@@ -25,12 +25,24 @@ class CircuitBreakerState:
     # No lock needed here
     def _get_or_create(self, domain: str) -> CircuitEntry:
         if domain not in self._map:
+            self._cleanup()
             self._map[domain] = CircuitEntry(
                 state='CLOSED',
                 failure_count=0,
                 last_failure_time=0.0,
             )
         return self._map[domain]
+
+    def _cleanup(self) -> None:
+        # Enforce a strict domain limit to bound memory usage
+        if len(self._map) <= 1000:
+            return
+        keys_to_delete = [
+            k for k, v in self._map.items()
+            if v.state == 'CLOSED' and v.failure_count == 0
+        ]
+        for k in keys_to_delete:
+            del self._map[k]
 
     def can_request(self, domain: str) -> bool:
         with self._lock:

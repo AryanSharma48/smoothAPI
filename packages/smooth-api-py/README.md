@@ -187,6 +187,7 @@ config = SmoothConfig(
 2. **Circuit Check:** Before execution, the breaker checks the state. If it's `OPEN`, the request is blocked instantly (returning your fallback, or raising `RuntimeError`).
 3. **Execution & Retries:** If an exception is raised, it attempts to extract the HTTP status code (supports `requests` and `httpx`). If the status is in `retry_on`, it's counted as a failure and the thread sleeps with backoff.
 4. **Recovery:** After `cooldown_ms`, the breaker enters `HALF_OPEN`. The next execution acts as a probe. If it succeeds, the circuit closes. If it fails, it snaps back to `OPEN` immediately.
+5. **Memory Management:** The circuit breaker cache is capped at 1,000 domains. When exceeded, `CLOSED` circuits with zero failures are swept to prevent memory leaks in dynamic environments.
 
 ## License
 
