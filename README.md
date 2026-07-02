@@ -22,7 +22,7 @@ A zero-dependency, dual-language API shielding and fault-tolerance library, impl
 
 `SmoothAPI` wraps your HTTP calls with two patterns:
 
-1. **Exponential Backoff with Full Jitter** — automatically retries failed requests with randomized delays so clients don't hammer a recovering server.
+1. **Exponential Backoff with Equal Jitter** — automatically retries failed requests with randomized delays (guaranteeing at least half the delay) so clients don't hammer a recovering server.
 2. **Finite State Machine Circuit Breaker** — tracks failures per domain and trips a circuit to block further requests before they even hit the network, with automatic half-open probing for recovery.
 
 ### Features
@@ -31,8 +31,8 @@ A zero-dependency, dual-language API shielding and fault-tolerance library, impl
 - **Sync & Async Support (Python):** Seamlessly works with `asyncio`, `requests`, and `httpx`.
 - **Graceful Fallbacks:** Return default or cached data instantly when the circuit is open, bypassing network IO entirely.
 - **Smart Retries:** Automatically detect HTTP status codes to retry on transient errors (e.g., 429, 500, 502, 503, 504).
-- **Request Deduplication** Automatically detect multiple requests for same external API, merging them into one and saving compute.
- 
+- **Request Deduplication:** Automatically detect multiple requests for same external API, merging them into one and saving compute (Python requires async functions).
+- **Automatic Memory Management:** Circuit breaker state is capped at 1,000 domains and automatically sweeps healthy circuits to prevent memory leaks in dynamic environments.
 ---
 
 ## Workspace Layout
@@ -170,7 +170,7 @@ By default, client errors (status codes `400` to `499` not in `retryOn` / `retry
     fallback: { error: 'stale data' }
   });
   ```
-  *If `fallbackOnNonRetryable` is `true` in a browser and no custom callback is set, it triggers a browser `alert()` popup by default.*
+  *If `fallbackOnNonRetryable` is `true` and no custom callback is set, it logs a warning to `console.error` by default.*
 
 * **Python:**
   ```python
