@@ -44,12 +44,18 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
           let currentOptions = options;
           let controller: AbortController | undefined;
+          let abortListener: (() => void) | undefined;
 
-          if (globalConfig.timeoutMs) {
+          if (
+            typeof globalConfig.timeoutMs === 'number' &&
+            Number.isFinite(globalConfig.timeoutMs) &&
+            globalConfig.timeoutMs > 0
+          ) {
             controller = new AbortController();
             if (options?.signal) {
               const userSignal = options.signal;
-              userSignal.addEventListener('abort', () => controller?.abort(userSignal.reason));
+              abortListener = () => controller?.abort(userSignal.reason);
+              userSignal.addEventListener('abort', abortListener);
               if (userSignal.aborted) {
                 controller.abort(userSignal.reason);
               }
@@ -104,12 +110,13 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             return response;
           } catch (err) {
             lastError = err;
-            breaker.recordFailure(domain);
 
-            // Do not retry if the user explicitly aborted the request
+            // Do not retry or record failure if the user explicitly aborted the request
             if (options?.signal?.aborted) {
               throw err;
             }
+
+            breaker.recordFailure(domain);
 
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {
@@ -117,6 +124,9 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             }
           } finally {
             if (timeoutId) clearTimeout(timeoutId);
+            if (abortListener && options?.signal) {
+              options.signal.removeEventListener('abort', abortListener);
+            }
           }
         }
 

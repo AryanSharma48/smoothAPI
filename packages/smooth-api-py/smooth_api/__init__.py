@@ -86,7 +86,7 @@ def smooth_api(config: SmoothConfig):
 
                     for attempt in range(config.backoff.max_retries + 1):
                         try:
-                            if config.timeout_ms:
+                            if config.timeout_ms is not None:
                                 result = await asyncio.wait_for(fn(*args, **kwargs), timeout=config.timeout_ms / 1000.0)
                             else:
                                 result = await fn(*args, **kwargs)

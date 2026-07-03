@@ -53,9 +53,13 @@ export interface SmoothFetchConfig<T = unknown> {
   /**
    * Maximum duration in milliseconds before a request attempt is aborted.
    * Applied per-attempt. If aborted, the request is considered a failure and may be retried.
+   * Must be a positive finite number.
    */
   timeoutMs?: number;
 }
+
+/** @deprecated use SmoothFetchConfig instead */
+export type ResilientFetchConfig<T = unknown> = SmoothFetchConfig<T>;
 
 // Thrown when the circuit is OPEN and no fallback is configured.
 export class CircuitOpenError extends Error {
