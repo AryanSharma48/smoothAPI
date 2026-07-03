@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smoothapi-py"
-version = "1.2.3"
+version = "1.3.0"
 description = "API protection library — exponential backoff and circuit breaker"
 readme = "README.md"
 requires-python = ">=3.10"

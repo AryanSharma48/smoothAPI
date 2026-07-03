@@ -17,6 +17,7 @@ npm install @codingaryan/smoothapi
 - **Smart Retries:** Automatically retries on specific HTTP status codes (e.g., 429, 500, 502, 503, 504) while throwing immediately on client errors (400, 401, 404).
 - **Graceful Fallbacks:** Optionally serve cached or default data instantly when the circuit is `OPEN`.
 - **Request Deduplication:** Automatically couples concurrent identical requests into a single network call.
+- **Request Timeouts:** Configurable timeouts to automatically abort requests that hang indefinitely.
 
 ## Usage
 
@@ -69,7 +70,9 @@ const fetchWithRetry = createSmoothFetch({
   // Optional: Return this instead of throwing when the circuit is OPEN
   fallback: { error: "Service degraded, returning stale data." },
   // Optional: Custom status codes to retry on
-  retryOn: [429, 500, 502, 503, 504]
+  retryOn: [429, 500, 502, 503, 504],
+  // Optional: Abort a request attempt if it takes longer than 5000ms
+  timeoutMs: 5000
 });
 
 async function main() {
