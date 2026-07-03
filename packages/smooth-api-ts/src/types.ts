@@ -13,7 +13,7 @@ export type DeduplicationKeyFn = (
 export interface DeduplicationConfig {
   /**
    * Custom function to compute the deduplication key.
-   * Receives the same (url, options) passed to resilientFetch.
+   * Receives the same (url, options) passed to smoothFetch.
    * Defaults to the stringified URL (method-agnostic).
    */
   keyFn?: DeduplicationKeyFn;
@@ -38,7 +38,7 @@ export interface CircuitBreakerConfig {
 }
 
 // T types the fallback payload so callers get inference at the use site.
-export interface ResilientFetchConfig<T = unknown> {
+export interface SmoothFetchConfig<T = unknown> {
   backoff?: Partial<BackoffConfig>;
   circuitBreaker?: Partial<CircuitBreakerConfig>;
   fallback?: T;    // returned immediately on an OPEN circuit, no network IO
@@ -50,6 +50,11 @@ export interface ResilientFetchConfig<T = unknown> {
    * Pass an empty object `{}` to activate with the default key function.
    */
   deduplication?: DeduplicationConfig;
+  /**
+   * Maximum duration in milliseconds before a request attempt is aborted.
+   * Applied per-attempt. If aborted, the request is considered a failure and may be retried.
+   */
+  timeoutMs?: number;
 }
 
 // Thrown when the circuit is OPEN and no fallback is configured.

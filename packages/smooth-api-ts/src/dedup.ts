@@ -61,8 +61,8 @@ export class RequestDeduplicator {
    * otherwise attach to the existing Promise.  In either case the caller
    * receives `Response.clone()` so body streams are independent.
    *
-   * @param url     - Same value passed to the outer resilientFetch.
-   * @param options - Same value passed to the outer resilientFetch.
+   * @param url     - Same value passed to the outer smoothFetch.
+   * @param options - Same value passed to the outer smoothFetch.
    * @param fetcher - A thunk that performs the actual network call.
    */
   execute<R>(

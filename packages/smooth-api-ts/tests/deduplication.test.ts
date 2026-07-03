@@ -33,14 +33,14 @@ describe('Request Deduplication', () => {
     globalThis.fetch = makeStubFetch(() => new Response('{}', { status: 200 }), counter);
 
     try {
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
       });
 
       await Promise.all([
-        resilientFetch('http://example.com/users/1'),
-        resilientFetch('http://example.com/users/1'),
-        resilientFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/1'),
       ]);
 
       assert.equal(counter.calls, 3, 'Without deduplication, each call hits the network');
@@ -64,15 +64,15 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
 
       const results = await Promise.all([
-        resilientFetch('http://example.com/users/1'),
-        resilientFetch('http://example.com/users/1'),
-        resilientFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/1'),
       ]);
 
       assert.equal(counter.calls, 1, 'Exactly one network call should be made for 3 concurrent identical requests');
@@ -96,14 +96,14 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
 
       await Promise.all([
-        resilientFetch('http://example.com/users/1'),
-        resilientFetch('http://example.com/users/2'),
+        smoothFetch('http://example.com/users/1'),
+        smoothFetch('http://example.com/users/2'),
       ]);
 
       assert.equal(counter.calls, 2, 'Different URLs must each trigger their own network call');
@@ -122,15 +122,15 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
 
       // First call — completes before the second.
-      await resilientFetch('http://example.com/data');
+      await smoothFetch('http://example.com/data');
       // Second call — should trigger a new network request.
-      await resilientFetch('http://example.com/data');
+      await smoothFetch('http://example.com/data');
 
       assert.equal(counter.calls, 2, 'Sequential requests should each hit the network');
     } finally {
@@ -146,15 +146,15 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {},
       });
 
       const results = await Promise.allSettled([
-        resilientFetch('http://example.com/flaky'),
-        resilientFetch('http://example.com/flaky'),
-        resilientFetch('http://example.com/flaky'),
+        smoothFetch('http://example.com/flaky'),
+        smoothFetch('http://example.com/flaky'),
+        smoothFetch('http://example.com/flaky'),
       ]);
 
       for (const result of results) {
@@ -179,7 +179,7 @@ describe('Request Deduplication', () => {
     try {
       // Custom key returns only the HTTP method — two GETs share the same key
       // and are therefore deduplicated regardless of their URLs.
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {
           keyFn: (_url, options) => (options?.method ?? 'GET').toUpperCase(),
@@ -188,8 +188,8 @@ describe('Request Deduplication', () => {
 
       // Two concurrent GETs to different URLs — same key → deduplicated.
       await Promise.all([
-        resilientFetch('http://example.com/a', { method: 'GET' }),
-        resilientFetch('http://example.com/b', { method: 'GET' }),
+        smoothFetch('http://example.com/a', { method: 'GET' }),
+        smoothFetch('http://example.com/b', { method: 'GET' }),
       ]);
 
       assert.equal(counter.calls, 1, 'Both GETs share a key via custom keyFn → single fetch');
@@ -209,7 +209,7 @@ describe('Request Deduplication', () => {
     };
 
     try {
-      const resilientFetch = createSmoothFetch({
+      const smoothFetch = createSmoothFetch({
         backoff: { maxRetries: 0, baseDelay: 0, maxDelay: 0 },
         deduplication: {
           keyFn: (_url, options) =>
@@ -219,8 +219,8 @@ describe('Request Deduplication', () => {
 
       // Two concurrent POSTs — keyFn returns null, so they bypass deduplication.
       await Promise.all([
-        resilientFetch('http://example.com/users', { method: 'POST' }),
-        resilientFetch('http://example.com/users', { method: 'POST' }),
+        smoothFetch('http://example.com/users', { method: 'POST' }),
+        smoothFetch('http://example.com/users', { method: 'POST' }),
       ]);
 
       assert.equal(counter.calls, 2, 'null key disables deduplication for this pair of POSTs');
