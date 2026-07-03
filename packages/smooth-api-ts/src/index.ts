@@ -1,6 +1,6 @@
 import { CircuitBreakerState } from "./state.js";
 import { calculateBackoff, sleep } from "./utils/backoff.js";
-import { CircuitOpenError, ResilientFetchConfig } from "./types.js";
+import { CircuitOpenError, SmoothFetchConfig } from "./types.js";
 import { RequestDeduplicator } from "./dedup.js";
 
 const BACKOFF_DEFAULTS = {
@@ -11,7 +11,7 @@ const BACKOFF_DEFAULTS = {
 
 const DEFAULT_RETRY_ON = [429, 500, 502, 503, 504];
 
-export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
+export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
   const backoffConfig = { ...BACKOFF_DEFAULTS, ...globalConfig.backoff };
   const retryOn = globalConfig.retryOn ?? DEFAULT_RETRY_ON;
   const breaker = new CircuitBreakerState(globalConfig.circuitBreaker);
@@ -41,8 +41,25 @@ export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
 
       const run = async (): Promise<Response | T> => {
         for (let attempt = 0; attempt <= backoffConfig.maxRetries; attempt++) {
+          let timeoutId: ReturnType<typeof setTimeout> | undefined;
+          let currentOptions = options;
+          let controller: AbortController | undefined;
+
+          if (globalConfig.timeoutMs) {
+            controller = new AbortController();
+            if (options?.signal) {
+              const userSignal = options.signal;
+              userSignal.addEventListener('abort', () => controller?.abort(userSignal.reason));
+              if (userSignal.aborted) {
+                controller.abort(userSignal.reason);
+              }
+            }
+            currentOptions = { ...options, signal: controller.signal };
+            timeoutId = setTimeout(() => controller?.abort(new Error('Request Timeout')), globalConfig.timeoutMs);
+          }
+
           try {
-            const response = await fetch(url, options);
+            const response = await fetch(url, currentOptions);
 
             // fetch() resolves for any HTTP status. Retryable codes need to be
             // treated as failures manually.
@@ -89,10 +106,17 @@ export function createSmoothFetch<T>(globalConfig: ResilientFetchConfig<T>) {
             lastError = err;
             breaker.recordFailure(domain);
 
+            // Do not retry if the user explicitly aborted the request
+            if (options?.signal?.aborted) {
+              throw err;
+            }
+
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {
               await sleep(calculateBackoff(attempt, backoffConfig));
             }
+          } finally {
+            if (timeoutId) clearTimeout(timeoutId);
           }
         }
 

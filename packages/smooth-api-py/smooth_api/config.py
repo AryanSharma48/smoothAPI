@@ -54,3 +54,5 @@ class SmoothConfig:
     on_non_retryable_error: Callable[[int, str], None] | None = None
     # When set, enables request deduplication for async-decorated functions.
     deduplication: Optional[DeduplicationConfig] = None
+    # Maximum duration in milliseconds before a request attempt is aborted.
+    timeout_ms: Optional[int] = None

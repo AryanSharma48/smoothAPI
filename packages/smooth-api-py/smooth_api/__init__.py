@@ -86,7 +86,10 @@ def smooth_api(config: SmoothConfig):
 
                     for attempt in range(config.backoff.max_retries + 1):
                         try:
-                            result = await fn(*args, **kwargs)
+                            if config.timeout_ms:
+                                result = await asyncio.wait_for(fn(*args, **kwargs), timeout=config.timeout_ms / 1000.0)
+                            else:
+                                result = await fn(*args, **kwargs)
                             breaker.record_success(domain)
                             return result
                         except asyncio.CancelledError:
@@ -143,6 +146,9 @@ def smooth_api(config: SmoothConfig):
                 import warnings
                 # Sync deduplication requires a thread-safe lock manager, which is currently unsupported
                 warnings.warn("Synchronous deduplication is not supported. Deduplication will be ignored for this function.", UserWarning, stacklevel=2)
+                
+            if config.timeout_ms is not None:
+                raise NotImplementedError("timeout_ms is not supported for synchronous decorators. Please use your HTTP client's native timeout support.")
 
             @functools.wraps(fn)
             def wrapper(*args, **kwargs):  # type: ignore[misc]
@@ -197,6 +203,8 @@ def smooth_api(config: SmoothConfig):
     return decorator
 
 
+__all__ = ['smooth_api', 'SmoothConfig', 'DeduplicationConfig', 'resilient_api', 'ResilientConfig']
+
 import warnings
 
 def resilient_api(*args, **kwargs):
@@ -207,7 +215,5 @@ class ResilientConfig(SmoothConfig):
     def __init__(self, *args, **kwargs):
         warnings.warn("'ResilientConfig' is deprecated, use 'SmoothConfig' instead", DeprecationWarning, stacklevel=2)
         super().__init__(*args, **kwargs)
-
-__all__ = ['smooth_api', 'SmoothConfig', 'DeduplicationConfig', 'resilient_api', 'ResilientConfig']
 
 from .config import DeduplicationConfig  # re-export for convenience
