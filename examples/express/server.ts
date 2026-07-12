@@ -20,8 +20,9 @@ Can create a smooth fetch instance with default options:
     - Circuit Failure Threshold: Trips after 3 consecutive failures
     - Circuit Cooldown: Stays open for 10 seconds before probing
     - Status Codes to Retry: 429, 500, 502, 503, and 504
+    - Timeout: 5000 milliseconds
 */
-const defaultSmoothFetch = createSmoothFetch({});
+const defaultSmoothFetch = createSmoothFetch({ timeoutMs: 5000 });
 
 /*
 Or could create a smooth fetch instance with custom options
@@ -61,11 +62,15 @@ app.get('/', (_req, res) => {
 app.get('/retry-demo', async (_req, res) => {
     // This route targets the sandbox's flaky /unstable-data endpoint.
     // SmoothAPI will retry transient failures and return a successful response
-    // when the upstream recovers, or fall back if retries are exhausted.
+    // when the upstream recovers, or return an error if retries are exhausted.
     try {
         // Drop-in replacement for native fetch, using DEFAULT options
         const result = await defaultSmoothFetch(`${SANDBOX_URL}/unstable-data`) as any;
         
+        if (!result.ok) {
+            return res.status(502).json({ error: `Upstream failed with status ${result.status}` });
+        }
+
         const data = await result.json().catch(() => null);
         return res.json({ 
             source: 'upstream-response', 
@@ -87,6 +92,10 @@ app.get('/circuit-demo', async (_req, res) => {
     try {
         // Drop-in replacement for native fetch, using CUSTOM options
         const result = await customSmoothFetch(`${SANDBOX_URL}/always-fail`);
+
+        if ('ok' in result && !result.ok) {
+            return res.status(502).json({ error: `Upstream failed with status ${(result as any).status}` });
+        }
 
         // After initial failure, circuit-breaker will OPEN, and SmoothAPI will return the configured fallback value
         if ('error' in result) {

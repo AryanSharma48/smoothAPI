@@ -94,11 +94,7 @@ Demonstrates SmoothAPI's circuit breaker and fallback behavior by calling the sa
 GET http://localhost:3001/always-fail
 ```
 
-After repeated failures, the circuit breaker opens and returns the configured fallback response immediately without making another network request. The route also includes a `circuitState` object so you can see the current breaker state in the response.
-
-### GET /circuit-state
-
-Returns the current demo circuit state, including whether the breaker is `CLOSED`, `OPEN`, or `HALF_OPEN`, plus the failure count and the next probe time.
+After repeated failures, the circuit breaker opens and returns the configured fallback response immediately without making another network request.
 
 ---
 
