@@ -70,6 +70,89 @@ def test_retry_respects_retry_on_codes():
     assert call_count[0] >= 1
 
 
+def test_retry_respects_retry_after_header_sync():
+    """Retry-After header on 429 should override backoff calculation."""
+    config = SmoothConfig(
+        backoff=BackoffConfig(base_delay=10.0, max_delay=10.0, max_retries=1),
+        circuit_breaker=CircuitBreakerConfig(failure_threshold=10, cooldown_ms=60_000),
+        retry_on=[429],
+    )
+
+    call_count = [0]
+    
+    class MockResponse:
+        status_code = 429
+        headers = {"Retry-After": "0.1"}
+        reason = "Too Many Requests"
+
+    class MockResponseSuccess:
+        status_code = 200
+        headers = {}
+        reason = "OK"
+        
+        def json(self):
+            return {"success": True}
+
+    @smooth_api(config)
+    def get_data():
+        call_count[0] += 1
+        if call_count[0] == 1:
+            err = requests.exceptions.HTTPError("429")
+            err.response = MockResponse()
+            raise err
+        
+        return MockResponseSuccess()
+
+    start_time = time.time()
+    get_data()
+    duration = time.time() - start_time
+    
+    assert call_count[0] == 2
+    assert 0.1 <= duration < 5.0
+
+
+@pytest.mark.asyncio
+async def test_retry_respects_retry_after_header_async():
+    """Retry-After header on 429 should override backoff calculation for async functions."""
+    config = SmoothConfig(
+        backoff=BackoffConfig(base_delay=10.0, max_delay=10.0, max_retries=1),
+        circuit_breaker=CircuitBreakerConfig(failure_threshold=10, cooldown_ms=60_000),
+        retry_on=[429],
+    )
+
+    call_count = [0]
+    
+    class MockResponse:
+        status_code = 429
+        headers = {"Retry-After": "0.1"}
+        reason = "Too Many Requests"
+
+    class MockResponseSuccess:
+        status_code = 200
+        headers = {}
+        reason = "OK"
+        
+        def json(self):
+            return {"success": True}
+
+    @smooth_api(config)
+    async def get_data_async():
+        call_count[0] += 1
+        if call_count[0] == 1:
+            err = requests.exceptions.HTTPError("429")
+            err.response = MockResponse()
+            raise err
+        
+        return MockResponseSuccess()
+
+    start_time = time.time()
+    await get_data_async()
+    duration = time.time() - start_time
+    
+    assert call_count[0] == 2
+    assert 0.1 <= duration < 5.0
+
+
 # ─── Circuit breaker ──────────────────────────────────────────────────────────
 
 def test_circuit_trips_and_returns_fallback():

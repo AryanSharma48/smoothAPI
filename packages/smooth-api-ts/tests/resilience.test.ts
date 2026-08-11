@@ -25,6 +25,40 @@ describe('retry logic', () => {
     const res = await smoothFetch(`${BASE}/unstable-data`) as Response;
     assert.ok(res.ok || res.status < 500, 'should eventually get a non-500 response');
   });
+
+  it('respects Retry-After header for 429 status', async () => {
+    const smoothFetch = createSmoothFetch({
+      backoff: { baseDelay: 10, maxDelay: 50, maxRetries: 1 },
+      circuitBreaker: { failureThreshold: 10, cooldownMs: 60_000 },
+      retryOn: [429],
+    });
+
+    const originalFetch = globalThis.fetch;
+    let callCount = 0;
+    globalThis.fetch = async () => {
+      callCount++;
+      if (callCount === 1) {
+        return new Response(null, { 
+          status: 429, 
+          headers: { 'Retry-After': '1' } 
+        });
+      }
+      return new Response(null, { status: 200 });
+    };
+
+    try {
+      const start = Date.now();
+      const res = await smoothFetch(`${BASE}/some-url`) as Response;
+      const duration = Date.now() - start;
+      
+      assert.equal(res.status, 200);
+      assert.equal(callCount, 2);
+      // Wait time should be at least 1000ms (1 second) due to Retry-After: 1
+      assert.ok(duration >= 1000, `Expected delay >= 1000ms, got ${duration}ms`);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
 
 describe('circuit breaker', () => {

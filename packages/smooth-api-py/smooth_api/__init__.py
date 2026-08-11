@@ -28,6 +28,20 @@ def _get_status_code(err: Exception) -> int | None:
     return None
 
 
+def _get_retry_after_delay(err: Exception) -> float | None:
+    if hasattr(err, "response") and err.response is not None:
+        if hasattr(err.response, "headers"):
+            retry_after = err.response.headers.get("Retry-After")
+            if retry_after is not None:
+                try:
+                    delay = float(retry_after)
+                    if delay > 0:
+                        return delay
+                except ValueError:
+                    pass
+    return None
+
+
 class MockResponse:
     def __init__(self, status_code: int, content: dict, reason: str = ""):
         self.status_code = status_code
@@ -125,7 +139,12 @@ def smooth_api(config: SmoothConfig):
                             breaker.record_failure(domain)
                             last_err = err
                             if attempt < config.backoff.max_retries:
-                                await asyncio.sleep(calculate_backoff(attempt, config.backoff))
+                                delay = calculate_backoff(attempt, config.backoff)
+                                if status == 429:
+                                    retry_after_delay = _get_retry_after_delay(err)
+                                    if retry_after_delay is not None:
+                                        delay = retry_after_delay
+                                await asyncio.sleep(delay)
                                 continue
                                 
                             # If retries are exhausted and it's an HTTP error, return the response instead of raising
@@ -190,7 +209,12 @@ def smooth_api(config: SmoothConfig):
                         breaker.record_failure(domain)
                         last_err = err
                         if attempt < config.backoff.max_retries:
-                            sleep_backoff(calculate_backoff(attempt, config.backoff))
+                            delay = calculate_backoff(attempt, config.backoff)
+                            if status == 429:
+                                retry_after_delay = _get_retry_after_delay(err)
+                                if retry_after_delay is not None:
+                                    delay = retry_after_delay
+                            sleep_backoff(delay)
                             continue
                             
                         if status is not None and hasattr(err, 'response'):
