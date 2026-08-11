@@ -223,7 +223,7 @@ pytest tests/ -v
 ### Core Reliability
 - [ ] Request timeout support
 - [ ] AbortController integration
-- [ ] Retry-After header support
+- [x] Retry-After header support
 - [ ] Custom retry strategies
 
 ### Observability

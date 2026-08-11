@@ -72,7 +72,17 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             if (retryOn.includes(response.status)) {
               breaker.recordFailure(domain);
               if (attempt < backoffConfig.maxRetries) {
-                await sleep(calculateBackoff(attempt, backoffConfig));
+                let delayMs = calculateBackoff(attempt, backoffConfig);
+                if (response.status === 429) {
+                  const retryAfter = response.headers.get('Retry-After');
+                  if (retryAfter) {
+                    const parsed = parseInt(retryAfter, 10);
+                    if (!Number.isNaN(parsed) && parsed > 0) {
+                      delayMs = parsed * 1000;
+                    }
+                  }
+                }
+                await sleep(delayMs);
                 continue;
               }
               return response;
