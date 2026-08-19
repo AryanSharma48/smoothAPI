@@ -17,4 +17,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-opened-msg: "Hey @{fc-author}, thanks for opening your first issue! Welcome to the SmoothAPI community!"
           pr-opened-msg: "Hey @{fc-author}, thanks for your first pull request! We'll review this as soon as possible."
-          labels: "first-time-contributor"
+          labels: "First-Time Contributor"
