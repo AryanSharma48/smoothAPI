@@ -1,0 +1,18 @@
+website:
+  - changed-files:
+    - any-glob-to-any-file: 'website/**/*'
+
+docs:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'website/src/app/docs/**/*'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+
+examples:
+  - changed-files:
+    - any-glob-to-any-file: 'examples/**/*'
+
+packages:
+  - changed-files:
+    - any-glob-to-any-file: 'packages/**/*'
