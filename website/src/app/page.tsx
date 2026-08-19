@@ -319,9 +319,9 @@ export default function Home() {
                   Create a custom resilient fetch instance and use it as a drop-in replacement for native `fetch`:
                 </p>
                 <pre className="p-5 rounded-xl font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed">
-{`import { createResilientFetch } from '@codingaryan/smoothapi';
+{`import { createSmoothFetch } from '@codingaryan/smoothapi';
 
-const fetchWithRetry = createResilientFetch({
+const fetchWithRetry = createSmoothFetch({
   backoff: {
     baseDelay: 100,      // ms
     maxRetries: 3        // retry 3 times
@@ -340,18 +340,18 @@ const response = await fetchWithRetry('https://api.example.com/unstable');`}
             ) : (
               <div className="space-y-4">
                 <p className="text-slate-300 text-sm">
-                  Wrap any request functions using the `resilient_api` decorator to catch exceptions and manage backoff:
+                  Wrap any request functions using the `smooth_api` decorator to catch exceptions and manage backoff:
                 </p>
                 <pre className="p-5 rounded-xl font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed">
 {`import requests
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 
-config = ResilientConfig(
+config = SmoothConfig(
     fallback={"status": "degraded", "data": []},
     fallback_on_non_retryable=True
 )
 
-@resilient_api(config)
+@smooth_api(config)
 def get_data():
     res = requests.get('https://api.example.com/unstable')
     res.raise_for_status() # Raise exception so decorator can intercept!
@@ -391,6 +391,20 @@ data = get_data()`}
                 <h3 className="text-xl font-bold text-slate-200 mb-2">Graceful Client-Error Fallbacks</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">
                   Support for `fallbackOnNonRetryable` / `fallback_on_non_retryable`. Safely intercept non-retryable client-side HTTP codes (like 404, 403, 400) and return custom data, show browser alerts, or fire custom notification callbacks instead of throwing app-breaking crashes.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-rose-500 pl-4 py-1">
+                <h3 className="text-xl font-bold text-slate-200 mb-2">Request Deduplication</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Automatically detects multiple concurrent identical requests and coalesces them into a single network call. Once the shared call completes, the response is delivered to all waiting callers, saving bandwidth and compute.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-rose-500 pl-4 py-1">
+                <h3 className="text-xl font-bold text-slate-200 mb-2">Request Timeouts</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Configurable timeouts to automatically abort requests that hang indefinitely, triggering a retry or failing fast instead of holding connections open endlessly.
                 </p>
               </div>
 
@@ -511,6 +525,18 @@ data = get_data()`}
                     <td className="py-3.5 px-4 font-mono text-slate-400">function</td>
                     <td className="py-3.5 px-4 font-mono text-slate-400">undefined</td>
                     <td className="py-3.5 px-4 text-slate-300">Custom callback fired when a client-error occurs. Disables default browser alerts.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3.5 px-4 font-mono font-bold text-rose-300">timeoutMs / timeout_ms</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-400">number</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-400">undefined</td>
+                    <td className="py-3.5 px-4 text-slate-300">Maximum time (in ms) to wait for a request before aborting and retrying.</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3.5 px-4 font-mono font-bold text-rose-300">deduplication</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-400">object</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-400">undefined</td>
+                    <td className="py-3.5 px-4 text-slate-300">Configuration object to enable coalescing concurrent identical requests.</td>
                   </tr>
                 </tbody>
               </table>
