@@ -4,6 +4,10 @@ export default function InstallationPage() {
   return (
     <div>
       <h2 className="text-3xl font-bold mb-6">Installation</h2>
+      <p className="text-slate-400 mb-6">
+        Choose the appropriate installation method for your language environment. 
+        Ensure you have the latest version of Node.js or Python installed before proceeding.
+      </p>
       <div className="space-y-6">
         <div>
           <h4 className="text-slate-300 font-semibold mb-2">TypeScript/JavaScript (NPM):</h4>
