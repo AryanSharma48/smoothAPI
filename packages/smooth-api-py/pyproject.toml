@@ -4,13 +4,18 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smoothapi-py"
-version = "1.3.1"
+version = "1.3.2"
 description = "API protection library — exponential backoff and circuit breaker"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-keywords = ["resilience", "circuit-breaker", "retry", "backoff", "http"]
+keywords = ["robustness", "circuit-breaker", "retry", "backoff", "http"]
 dependencies = []
+
+[project.urls]
+Homepage = "https://smoothapi.org"
+Issues = "https://github.com/AryanSharma48/smoothAPI/issues"
+Repository = "https://github.com/AryanSharma48/smoothAPI.git"
 
 [project.optional-dependencies]
 dev = [
