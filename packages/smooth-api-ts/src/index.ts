@@ -155,4 +155,11 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 }
 
 /** @deprecated use createSmoothFetch instead */
-export const createResilientFetch = createSmoothFetch;
+export const createResilientFetch = (...args: Parameters<typeof createSmoothFetch>) => {
+  if (typeof console !== "undefined" && console.warn) {
+    console.warn(
+      "[smoothAPI] createResilientFetch is deprecated; use createSmoothFetch instead.",
+    );
+  }
+  return createSmoothFetch(...args);
+};
