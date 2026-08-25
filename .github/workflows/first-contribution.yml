@@ -15,6 +15,12 @@ jobs:
       - uses: plbstl/first-contribution@v4.3.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-opened-msg: "Hey @{fc-author}, thanks for opening your first issue! Welcome to the SmoothAPI community!"
-          pr-opened-msg: "Hey @{fc-author}, thanks for your first pull request! We'll review this as soon as possible."
+          issue-opened-msg: |
+            Hi there! Thanks for opening your first issue! We'll get back to you shortly.
+            
+            While you wait, feel free to join our [Discord community](https://discord.gg/2NabXnQzmv) to chat with us.
+          pr-opened-msg: |
+            Hi there! Thanks for your first pull request! We'll review it shortly.
+            
+            While it's getting reviewed, feel free to join our [Discord community](https://discord.gg/2NabXnQzmv) for suggestions and chat.
           labels: "First-Time Contributor"
