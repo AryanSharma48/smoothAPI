@@ -1,6 +1,6 @@
 {
   "name": "@codingaryan/smoothapi",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "API protection library — exponential backoff and circuit breaker for fetch",
   "type": "module",
   "main": "./dist/index.js",
@@ -27,8 +27,17 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AryanSharma48/smoothAPI.git",
+    "directory": "packages/smooth-api-ts"
+  },
+  "bugs": {
+    "url": "https://github.com/AryanSharma48/smoothAPI/issues"
+  },
+  "homepage": "https://smoothapi.org",
   "keywords": [
-    "resilience",
+    "robustness",
     "circuit-breaker",
     "retry",
     "backoff",

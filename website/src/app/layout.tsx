@@ -8,7 +8,7 @@ const sansFont = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SmoothAPI - Resilient Fetch & Backoff",
+  title: "SmoothAPI",
   description: "Zero-dependency, dual-language API self-healing and fault-tolerance library. Implemented natively in TypeScript and Python with exponential backoff and circuit breaking.",
   icons: {
     icon: "/icon.svg",

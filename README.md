@@ -1,5 +1,13 @@
 <p align="center">
-  <a href="https://smoothapi.org"><img src="public/logo.svg" alt="SmoothAPI logo" width="650" />
+  <a href="https://smoothapi.org"><img src="public/logo.svg" alt="SmoothAPI logo" width="650" /></a>
+</p>
+
+<p align="center">
+  A zero-dependency resilience library for TypeScript and Python that makes unreliable APIs safer.
+</p>
+
+<p align="center">
+  <b>Retries · Backoff · Circuit Breaking · Deduplication · Fallbacks</b>
 </p>
 
 <p align="center">
@@ -10,47 +18,101 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6b7280?style=flat-square" alt="License"></a>
 </p>
 
-A failing third-party API can bring down your entire application, leading to cascading service failures, degraded user experience, and lost revenue. How do you protect your systems and keep them shielded, even when downstream dependencies are completely unresponsive or failing?
+---
 
-Enter **SmoothAPI**. SmoothAPI stops third-party API crashes from breaking your app. It wraps your HTTP calls with secure patterns, catches network errors instantly, spaces out retries so recovering servers can breathe, and serves safe backup data the millisecond a service goes completely dead.
+## Why SmoothAPI?
 
-A zero-dependency, dual-language API shielding and fault-tolerance library, implemented natively in **TypeScript** (`@codingaryan/smoothapi` on NPM) and **Python** (`smoothapi-py` on PyPI).
+Downstream APIs fail unexpectedly, causing cascading breaks and degraded user experiences across your application. **SmoothAPI** gives applications controlled retries, backoff, circuit breaking, request deduplication, and fallbacks—so transient or repeated network failures don't unnecessarily cascade through your app.
 
 ---
 
-## What it does
+## Quick Start
 
-`SmoothAPI` wraps your HTTP calls with two patterns:
+### TypeScript / JavaScript
 
-1. **Exponential Backoff with Equal Jitter** — automatically retries failed requests with randomized delays (guaranteeing at least half the delay) so clients don't hammer a recovering server.
-2. **Finite State Machine Circuit Breaker** — tracks failures per domain and trips a circuit to block further requests before they even hit the network, with automatic half-open probing for recovery.
+Get started in 3 lines using smart defaults (3 retries, exponential backoff with equal jitter, status code retries):
 
-### Features
-- **Zero Dependencies:** Keeps your bundle and environment clean.
-- **Dual Language Support:** Native implementations for both TypeScript/JavaScript and Python.
-- **Sync & Async Support (Python):** Seamlessly works with `asyncio`, `requests`, and `httpx`.
-- **Graceful Fallbacks:** Return default or cached data instantly when the circuit is open, bypassing network IO entirely.
-- **Smart Retries:** Automatically detect HTTP status codes to retry on transient errors (e.g., 429, 500, 502, 503, 504).
-- **Request Deduplication:** Automatically detect multiple requests for same external API, merging them into one and saving compute (Python requires async functions).
-- **Automatic Memory Management:** Circuit breaker state is capped at 1,000 domains and automatically sweeps healthy circuits to prevent memory leaks in dynamic environments.
+```ts
+import { createSmoothFetch } from '@codingaryan/smoothapi';
+
+const fetch = createSmoothFetch({});
+const response = await fetch('https://api.example.com/data');
+```
+
+**Need custom retries, timeouts, or circuit breaking?**
+
+```ts
+import { createSmoothFetch } from '@codingaryan/smoothapi';
+
+const fetch = createSmoothFetch({
+  backoff: { baseDelay: 100, maxDelay: 5000, maxRetries: 3 },
+  circuitBreaker: { failureThreshold: 3, cooldownMs: 10000 },
+  fallback: { data: 'cached fallback' },
+  retryOn: [429, 500, 502, 503, 504],
+});
+
+const response = await fetch('https://api.example.com/data');
+```
+
+> **Using Python?** → See the [Python Package Documentation](./packages/smooth-api-py/README.md) or jump to [Installation](#python).
+
 ---
 
-## Workspace Layout
+## What SmoothAPI Gives You
 
-```
-smooth-api/
-├── examples/                   # Browser examples showing the usade of SmoothAPI
-├── packages/
-│   ├── smooth-api-ts/          # TypeScript NPM package (@codingaryan/smoothapi)
-│   └── smooth-api-py/          # Python PyPI package (smoothapi-py)
-├── sandbox/                    # Shared chaos test server (Express, port 3001)
-├── website/                    # Documentation website for SmoothAPI
-├── README.md
-├── CONTRIBUTING.md
-└── .gitignore
+- **Automatic retries** with exponential backoff & equal jitter to avoid hammering recovering servers
+- **Circuit breaking** to block requests to repeatedly failing downstream services
+- **Request deduplication** to merge identical concurrent HTTP requests and save compute resources
+- **Graceful fallbacks** to return safe data when services fail completely
+- **Zero runtime dependencies** to keep your bundle footprint light and environment secure
+
+---
+
+## Installation
+
+### TypeScript / Node.js
+```bash
+npm install @codingaryan/smoothapi
 ```
 
-### Flow Overview
+### Python
+```bash
+pip install smoothapi-py
+```
+
+---
+
+## Documentation
+
+- **[TypeScript Documentation](./packages/smooth-api-ts/README.md):** Full API reference, TypeScript types, and configuration options.
+- **[Python Documentation](./packages/smooth-api-py/README.md):** Python-specific API reference, decorator usage (`@smooth_api`), and async support.
+- **[SmoothAPI Website](https://smoothapi.org):** Interactive documentation, guides, and architectural concepts.
+
+---
+
+## Examples
+
+Explore production-grade examples in the [`/examples`](./examples) directory:
+
+- **Basic Retries & Backoff:** Standard HTTP wrapper setup.
+- **Circuit Breakers & Fallbacks:** Gracefully handling downstream outages.
+- **Request Deduplication:** Merging concurrent API calls.
+- **Chaos Testing:** Testing fault tolerance against the built-in [Express Chaos Server](./sandbox).
+
+---
+
+## Design Philosophy
+
+- **Zero-Dependency Footprint:** No sub-dependencies added to your project.
+- **Dual-Language Parity:** Identical resilience behavior in TypeScript and Python.
+- **Drop-in HTTP Layer:** Wraps existing request flows without forcing architectural rewrites.
+- **Type Safety First:** First-class TypeScript types and Python type hints out of the box.
+
+---
+
+## How It Works
+
+SmoothAPI sits cleanly between your client code and downstream APIs, handling failure modes transparently:
 
 ```mermaid
 sequenceDiagram
@@ -66,129 +128,39 @@ sequenceDiagram
 
 ---
 
-## Quickstart
+## Contributing
 
-### TypeScript
+Contributions are welcome! Whether it's fixing bugs, improving documentation, adding examples, or implementing new features, every contribution helps improve SmoothAPI.
 
-> **Read the full documentation:** [TypeScript Package README](./packages/smooth-api-ts/README.md)
+### Want to Use SmoothAPI?
+- **[Quick Start](#quick-start):** Get running in 3 lines.
+- **[Documentation](#documentation):** Full TypeScript & Python API references.
+- **[Examples](#examples):** Explore browser demos & chaos testing server.
 
-**Install:**
-```bash
-npm install @codingaryan/smoothapi
-```
-
-**Basic Usage (Defaults):**
-```ts
-import { createSmoothFetch } from '@codingaryan/smoothapi';
-
-const fetch = createSmoothFetch({});
-
-const res = await fetch('https://api.example.com/data');
-```
-
-**Advanced Usage (Custom):**
-```ts
-import { createSmoothFetch } from '@codingaryan/smoothapi';
-
-const fetch = createSmoothFetch({
-  backoff: { baseDelay: 100, maxDelay: 5000, maxRetries: 3 },
-  circuitBreaker: { failureThreshold: 3, cooldownMs: 10000 },
-  fallback: { data: 'cached fallback' },
-  retryOn: [429, 500, 502, 503, 504],
-});
-
-const res = await fetch('https://api.example.com/data');
-```
-
-### Python
-
-> **Read the full documentation:** [Python Package README](./packages/smooth-api-py/README.md)
-
-**Install:**
-```bash
-pip install smoothapi-py
-```
-
-**Basic Usage (Defaults):**
-```python
-from smooth_api import smooth_api, SmoothConfig
-import requests
-
-config = SmoothConfig()
-
-@smooth_api(config)
-def get_data():
-    res = requests.get('https://api.example.com/data')
-    res.raise_for_status()
-    return res.json()
-```
-
-**Advanced Usage (Custom):**
-```python
-from smooth_api import smooth_api, SmoothConfig
-import requests
-
-config = SmoothConfig(
-    backoff={"base_delay": 0.1, "max_delay": 30.0, "max_retries": 3},
-    circuit_breaker={"failure_threshold": 3, "cooldown_ms": 10000},
-    fallback={'data': 'cached fallback'},
-    retry_on=[429, 500, 502, 503, 504]
-)
-
-@smooth_api(config)
-def get_data():
-    res = requests.get('https://api.example.com/data')
-    res.raise_for_status()
-    return res.json()
-
-# You can also override fallbacks at runtime per-call:
-result = get_data(fallback={'data': 'dynamic override fallback'})
-```
-
-**Default Settings provided automatically:**
-- **Retries**: 3 attempts
-- **Backoff Base Delay**: 100 milliseconds
-- **Circuit Failure Threshold**: Trips after 3 consecutive failures
-- **Circuit Cooldown**: Stays open for 10 seconds before probing
-- **Status Codes to Retry**: `429`, `500`, `502`, `503`, and `504`
-
-*Note: The Python package fully supports async functions and `httpx` out of the box.*
+### Want to Contribute?
+- **[Contribution Guidelines](./CONTRIBUTING.md):** Review guidelines before opening a pull request.
+- **[Good First Issues](https://github.com/AryanSharma48/smoothAPI/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):** Open issues labeled `good first issue` or `help wanted`.
+- **[Discord Community](https://discord.gg/2NabXnQzmv):** Connect directly with maintainers and other contributors.
 
 ---
 
-## Client Error Handling & Graceful Fallbacks
+## Development
 
-By default, client errors (status codes `400` to `499` not in `retryOn` / `retry_on`) immediately fail and bypass retries. You can handle them gracefully using `fallbackOnNonRetryable` (TS) or `fallback_on_non_retryable` (Python):
+Instructions for contributors working directly on the SmoothAPI codebase.
 
-* **TypeScript:**
-  ```ts
-  const fetch = createSmoothFetch({
-    fallbackOnNonRetryable: true,
-    // Optional custom callback (replaces default window.alert/console.error)
-    onNonRetryableError: (status, message) => console.warn(message),
-    // Optional fallback (otherwise returns a mock Response wrapper)
-    fallback: { error: 'stale data' }
-  });
-  ```
-  *If `fallbackOnNonRetryable` is `true` and no custom callback is set, it logs a warning to `console.error` by default.*
+### Workspace Layout
 
-* **Python:**
-  ```python
-  config = SmoothConfig(
-      fallback_on_non_retryable=True,
-      # Optional custom callback (replaces default stderr warning)
-      on_non_retryable_error=lambda status, msg: print(msg),
-      # Optional fallback (otherwise returns a MockResponse wrapper)
-      fallback={'error': 'stale data'}
-  )
-  ```
-  *If `fallback_on_non_retryable` is `True` and no custom callback is set, it prints a warning to `sys.stderr` by default.*
+```
+smooth-api/
+├── examples/                   # Browser examples showing usage of SmoothAPI
+├── packages/
+│   ├── smooth-api-ts/          # TypeScript NPM package (@codingaryan/smoothapi)
+│   └── smooth-api-py/          # Python PyPI package (smoothapi-py)
+├── sandbox/                    # Shared chaos test server (Express, port 3001)
+└── website/                    # Documentation website for SmoothAPI
+```
 
----
-
-## Running the Sandbox
-
-The sandbox provides an Express server with chaotic endpoints to test protection using SmoothAPI.
+### Run the Chaos Sandbox
 
 ```bash
 cd sandbox
@@ -197,19 +169,18 @@ node server.js
 # Listening on http://localhost:3001
 ```
 
----
+### Run Tests
 
-## Running Tests
+> **Note:** Ensure the Chaos Sandbox server is running in the background (`node server.js` in `/sandbox`) before running tests.
 
-### TypeScript
+**TypeScript:**
 ```bash
 cd packages/smooth-api-ts
 npm install
-npm run build
 npm test
 ```
 
-### Python
+**Python:**
 ```bash
 cd packages/smooth-api-py
 pip install -e ".[dev]"
@@ -221,24 +192,25 @@ pytest tests/ -v
 ## Roadmap
 
 ### Core Reliability
-- [ ] Request timeout support
-- [ ] AbortController integration
+- [x] Exponential backoff with equal jitter
+- [x] Finite state machine circuit breaker
 - [x] Retry-After header support
+- [ ] Request timeout & AbortController support
 - [ ] Custom retry strategies
 
 ### Observability
-- [ ] Event hooks
-- [ ] Metrics hooks
+- [ ] Event & metric hooks
 - [ ] OpenTelemetry integration
 - [ ] Structured logging support
 
 ### Ecosystem
+- [x] Dual language support (TypeScript + Python)
 - [x] Next.js example project
 - [x] Express integration examples
 - [x] Browser examples
 - [ ] Benchmark suite
 
-### Advanced Security and Performance
+### Advanced Security & Performance
 - [x] Request deduplication
 - [ ] Redis-backed circuit breaker state
 - [ ] Bulkhead pattern support
@@ -247,19 +219,12 @@ pytest tests/ -v
 
 ---
 
-## Contributing
+## Security
 
-Contributions are welcome! Join our [Discord Server](https://discord.gg/2NabXnQzmv) to connect with the maintainers and other contributors.
-
-Whether it's fixing bugs, improving documentation, adding examples, or implementing new features, every contribution helps improve SmoothAPI.
-
-Before opening a pull request, please read the contribution guidelines in [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-If you're looking to get started, check out issues labeled `good first issue` or `help wanted`.
+If you discover a potential security vulnerability within SmoothAPI, please do not open a public issue. Review our [Security Policy](./SECURITY.md) or report it confidentially per the policy instructions.
 
 ---
 
 ## License
 
-MIT
-
+[MIT](./LICENSE)
