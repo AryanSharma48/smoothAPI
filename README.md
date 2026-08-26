@@ -171,6 +171,8 @@ node server.js
 
 ### Run Tests
 
+> **Note:** Ensure the Chaos Sandbox server is running in the background (`node server.js` in `/sandbox`) before running tests.
+
 **TypeScript:**
 ```bash
 cd packages/smooth-api-ts
