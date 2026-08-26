@@ -45,16 +45,21 @@ const customSmoothFetch = createSmoothFetch({
         timeoutMs: 5000
 });
 
+const dedupSmoothFetch = createSmoothFetch({
+    deduplication: {}
+});
+
 app.use(express.json());
 
 app.get('/', (_req, res) => {
     // The root endpoint of the example express server.
     res.json({ 
         message: 'Welcome to the SmoothAPI Express Example!',
-        description: 'Demonstrates retries, circuit breakers, and fallback handling using SmoothAPI.',
+        description: 'Demonstrates retries, circuit breakers, fallback handling, and request deduplication using SmoothAPI.',
         endpoints: {
             retry_demo: '/retry-demo',
             circuit_demo: '/circuit-demo',
+            dedup_demo: '/dedup-demo',
         },
     });
 });
@@ -107,6 +112,31 @@ app.get('/circuit-demo', async (_req, res) => {
         // (strictly speaking, this won't happen in this example since the upstream always fails)
         const data = await result.json().catch(() => null);
         return res.json({ source: 'upstream-response', status: result.status, data });
+    } catch (error) {
+        return res.status(502).json({
+            error: error instanceof Error ? error.message : String(error),
+        });
+    }
+});
+
+app.get('/dedup-demo', async (_req, res) => {
+    try {
+        const [response1, response2, response3] = await Promise.all([
+            dedupSmoothFetch(`${SANDBOX_URL}/health`),
+            dedupSmoothFetch(`${SANDBOX_URL}/health`),
+            dedupSmoothFetch(`${SANDBOX_URL}/health`),
+        ]);
+
+        const [data1, data2, data3] = await Promise.all([
+            response1.json(),
+            response2.json(),
+            response3.json(),
+        ]);
+
+        return res.json({
+            message: 'Three identical requests were made concurrently.',
+            results: [data1, data2, data3],
+        });
     } catch (error) {
         return res.status(502).json({
             error: error instanceof Error ? error.message : String(error),
