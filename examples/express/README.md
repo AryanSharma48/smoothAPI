@@ -7,6 +7,7 @@ This example demonstrates how to integrate SmoothAPI into an Express.js applicat
 - Automatic retries for transient failures
 - Circuit breaker protection
 - Graceful fallback responses
+- Request deduplication for concurrent identical requests
 - Express.js integration using SmoothAPI
 
 ---
@@ -96,6 +97,17 @@ GET http://localhost:3001/always-fail
 
 After repeated failures, the circuit breaker opens and returns the configured fallback response immediately without making another network request.
 
+### GET /dedup-demo
+
+Demonstrates SmoothAPI's request deduplication by making three identical
+requests concurrently using `Promise.all()`.
+
+All three requests target the same sandbox URL:
+
+```text
+GET http://localhost:3001/health
+```
+
 ---
 
 ## Example Requests
@@ -106,6 +118,7 @@ You can test the endpoints with curl:
 curl http://localhost:3002/health
 curl http://localhost:3002/retry-demo
 curl http://localhost:3002/circuit-demo
+curl http://localhost:3002/dedup-demo
 ```
 
 Or you could open the endpoints on any browser

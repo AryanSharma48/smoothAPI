@@ -1,0 +1,68 @@
+name: Deploy Website
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+
+jobs:
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        working-directory: ./website
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          else
+            vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+          fi
+
+      - name: Build Project Artifacts
+        working-directory: ./website
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            vercel build --prod --token=$VERCEL_TOKEN
+          else
+            vercel build --token=$VERCEL_TOKEN
+          fi
+
+      - name: Deploy Project Artifacts to Vercel
+        working-directory: ./website
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          else
+            vercel deploy --prebuilt --token=$VERCEL_TOKEN
+          fi
