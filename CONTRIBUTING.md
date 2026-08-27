@@ -118,6 +118,45 @@ The server runs on `http://localhost:3001` and provides `/health`, `/chaos`, and
 
 ---
 
+### Documentation Website (`website`)
+
+1. **Install dependencies**:
+   ```bash
+   cd website
+   npm install
+   ```
+
+2. **Format and build**:
+   Verify formatting and ensure the production build succeeds:
+   ```bash
+   npm run format:check
+   npm run build
+   ```
+   To automatically fix formatting issues:
+   ```bash
+   npm run format
+   ```
+
+---
+
+## Continuous Integration (CI) Expectations
+
+SmoothAPI uses path-aware CI workflows to keep feedback fast and low-friction for contributors:
+
+- **TypeScript changes**: Runs build, typecheck, and test suite.
+- **Python changes**: Runs pytest suite across supported Python versions.
+- **Website changes**: Runs website dependency install, formatting check (`npm run format:check`), and Next.js build (`npm run build`).
+
+> [!NOTE]
+> CI workflows automatically skip jobs for packages or components that were not modified in your Pull Request.
+
+### Contributor Access & Deployments
+- External contributors **do NOT need** Vercel access, Vercel team membership, or deployment credentials.
+- Automatic Git-triggered Vercel preview deployments are disabled on Pull Requests.
+- Maintainers handle production deployments manually via maintainer-triggered GitHub Actions after code review.
+
+---
+
 ## Coding Standards & Quality
 
 To keep the repository clean, please adhere to these guidelines:
@@ -152,3 +191,4 @@ We encourage semantic/structured commit messages to help automate release notes 
 4. Run the full test suite with the local sandbox running.
 5. Update documentation if you are changing or introducing features.
 6. Open a Pull Request pointing to the `main` branch. Provide a clear description of the problem solved, changes made, and proof of testing.
+
