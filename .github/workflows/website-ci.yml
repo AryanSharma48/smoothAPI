@@ -27,7 +27,7 @@ jobs:
 
       - name: Install website dependencies
         working-directory: ./website
-        run: npm ci
+        run: npm install
 
       - name: Check website formatting
         working-directory: ./website
