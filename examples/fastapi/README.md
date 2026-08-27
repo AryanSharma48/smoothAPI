@@ -1,6 +1,6 @@
 # SmoothAPI FastAPI Example
 
-This example demonstrates how to integrate **SmoothAPI** into a FastAPI application to make outbound API requests more resilient using retries, circuit breakers, and fallback responses.
+This example demonstrates how to integrate **SmoothAPI** into a FastAPI application to make outbound API requests more robust using retries, circuit breakers, and fallback responses.
 
 ## Features
 
