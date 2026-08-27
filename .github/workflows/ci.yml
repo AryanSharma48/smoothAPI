@@ -7,7 +7,30 @@ on:
     branches: [ "main" ]
 
 jobs:
+  changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    outputs:
+      typescript: ${{ steps.filter.outputs.typescript }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            typescript:
+              - 'packages/smooth-api-ts/**'
+              - 'sandbox/**'
+              - '.github/workflows/ci.yml'
+            python:
+              - 'packages/smooth-api-py/**'
+              - 'sandbox/**'
+              - '.github/workflows/ci.yml'
+
   typescript-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.typescript == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +66,8 @@ jobs:
           npm test
 
   python-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -83,3 +108,4 @@ jobs:
       - name: Run Python tests
         working-directory: ./packages/smooth-api-py
         run: pytest tests/ -v
+
