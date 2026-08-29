@@ -84,6 +84,8 @@ pip install smoothapi-py
 
 ## Documentation
 
+Not sure if SmoothAPI is right for your project? → [When should I use SmoothAPI?](./docs/when-to-use.md)
+
 - **[TypeScript Documentation](./packages/smooth-api-ts/README.md):** Full API reference, TypeScript types, and configuration options.
 - **[Python Documentation](./packages/smooth-api-py/README.md):** Python-specific API reference, decorator usage (`@smooth_api`), and async support.
 - **[SmoothAPI Website](https://smoothapi.org):** Interactive documentation, guides, and architectural concepts.
