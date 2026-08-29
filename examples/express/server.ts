@@ -121,10 +121,10 @@ app.get('/circuit-demo', async (_req, res) => {
 
 app.get('/dedup-demo', async (_req, res) => {
     try {
-        const [response1, response2, response3] = await Promise.all([
-            dedupSmoothFetch(`${SANDBOX_URL}/health`),
-            dedupSmoothFetch(`${SANDBOX_URL}/health`),
-            dedupSmoothFetch(`${SANDBOX_URL}/health`),
+        const [response1 , response2, response3] = await Promise.all([
+            dedupSmoothFetch(`${SANDBOX_URL}/health`) as any,
+            dedupSmoothFetch(`${SANDBOX_URL}/health`) as any,
+            dedupSmoothFetch(`${SANDBOX_URL}/health`) as any,
         ]);
 
         const [data1, data2, data3] = await Promise.all([
