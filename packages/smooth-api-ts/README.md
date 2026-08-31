@@ -165,6 +165,39 @@ const fetchWithRetry = createSmoothFetch({
 * **Error Propagation**: If the network call fails, all waiting callers receive the same error.
 * **Settlement**: Once a request completes, the next call to the same URL triggers a fresh network request.
 
+### AbortController Support
+
+SmoothAPI natively supports `AbortController`, seamlessly propagating cancellation signals through both the active network request and any ongoing exponential backoff delays.
+
+```typescript
+import { createSmoothFetch } from '@codingaryan/smoothapi';
+
+const fetchWithRetry = createSmoothFetch({
+  backoff: { maxRetries: 3 }
+});
+
+const controller = new AbortController();
+
+// Cancel the request (or any ongoing retry delays) after 2 seconds
+setTimeout(() => {
+  controller.abort();
+}, 2000);
+
+try {
+  const response = await fetchWithRetry('https://api.example.com/data', {
+    signal: controller.signal
+  });
+  console.log(await response.json());
+} catch (err) {
+  if (err.name === 'AbortError') {
+    console.error("Request cancelled by the user.");
+  }
+}
+```
+
+- **Immediate Halting:** If `controller.abort()` is called while the library is waiting between retries (sleeping), the sleep is immediately interrupted, preventing unnecessary delays.
+- **Pre-aborted Signals:** If the signal is already aborted before the fetch is called, the library immediately throws without making any network requests.
+
 ## How It Works
 
 1. **Host Extraction:** The domain is automatically extracted from the URL. The circuit breaker state is isolated per host (e.g., `api.github.com` failing won't trip the circuit for `api.stripe.com`).

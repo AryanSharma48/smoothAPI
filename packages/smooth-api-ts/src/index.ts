@@ -41,6 +41,10 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
       const run = async (): Promise<Response | T> => {
         for (let attempt = 0; attempt <= backoffConfig.maxRetries; attempt++) {
+          if (options?.signal?.aborted) {
+            throw options.signal.reason || new Error("Aborted");
+          }
+
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
           let currentOptions = options;
           let controller: AbortController | undefined;
@@ -82,7 +86,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                     }
                   }
                 }
-                await sleep(delayMs);
+                await sleep(delayMs, options?.signal);
                 continue;
               }
               return response;
@@ -130,7 +134,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {
-              await sleep(calculateBackoff(attempt, backoffConfig));
+              await sleep(calculateBackoff(attempt, backoffConfig), options?.signal);
             }
           } finally {
             if (timeoutId) clearTimeout(timeoutId);

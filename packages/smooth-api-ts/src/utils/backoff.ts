@@ -9,6 +9,28 @@ export function calculateBackoff( attempt: number, config: BackoffConfig ): numb
     return jitter; 
 }
 
-export function sleep( ms: number): Promise<void> { 
-    return new Promise(resolve => setTimeout(resolve, ms));
+export function sleep(ms: number, signal?: AbortSignal | null): Promise<void> { 
+    return new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+            return reject(signal.reason || new Error("Aborted"));
+        }
+        
+        let timeoutId: ReturnType<typeof setTimeout>;
+        
+        const abortHandler = () => {
+            clearTimeout(timeoutId);
+            reject(signal?.reason || new Error("Aborted"));
+        };
+
+        if (signal) {
+            signal.addEventListener('abort', abortHandler, { once: true });
+        }
+
+        timeoutId = setTimeout(() => {
+            if (signal) {
+                signal.removeEventListener('abort', abortHandler);
+            }
+            resolve();
+        }, ms);
+    });
 }
