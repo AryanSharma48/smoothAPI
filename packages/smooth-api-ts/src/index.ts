@@ -41,8 +41,10 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
       const run = async (): Promise<Response | T> => {
         for (let attempt = 0; attempt <= backoffConfig.maxRetries; attempt++) {
+          // Pre-flight abort check
           if (options?.signal?.aborted) {
-            throw options.signal.reason || new Error("Aborted");
+            // Match native fetch behavior for unhandled aborts
+            throw options.signal.reason || new DOMException("The operation was aborted.", "AbortError");
           }
 
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -122,8 +124,14 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
             breaker.recordSuccess(domain);
             return response;
-          } catch (err) {
+          } catch (err: any) {
             lastError = err;
+
+            // DO NOT RETRY if the error is an AbortError.
+            // If the user cancelled the request, we must immediately halt and bubble up the error.
+            if (err?.name === 'AbortError') {
+                throw err;
+            }
 
             // Do not retry or record failure if the user explicitly aborted the request
             if (options?.signal?.aborted) {
