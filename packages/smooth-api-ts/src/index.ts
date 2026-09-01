@@ -126,10 +126,10 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             return response;
           } catch (err: any) {
             lastError = err;
-
-            // DO NOT RETRY if the error is an AbortError.
-            // If the user cancelled the request, we must immediately halt and bubble up the error.
-            if (err?.name === 'AbortError') {
+            // If it's an AbortError but not from our internal timeout, don't retry.
+            // (We know it's our timeout if controller is aborted and the user's signal isn't).
+            const isInternalTimeout = controller?.signal?.aborted && !options?.signal?.aborted;
+            if (err?.name === 'AbortError' && !isInternalTimeout) {
                 throw err;
             }
 
