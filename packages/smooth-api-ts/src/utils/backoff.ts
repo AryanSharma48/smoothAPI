@@ -12,14 +12,17 @@ export function calculateBackoff( attempt: number, config: BackoffConfig ): numb
 export function sleep(ms: number, signal?: AbortSignal | null): Promise<void> { 
     return new Promise((resolve, reject) => {
         if (signal?.aborted) {
-            return reject(signal.reason || new Error("Aborted"));
+            // Use DOMException with "AbortError" name to match native fetch behavior.
+            // This ensures standard error handling (e.g. err.name === 'AbortError') works correctly.
+            return reject(signal.reason || new DOMException("The operation was aborted.", "AbortError"));
         }
         
         let timeoutId: ReturnType<typeof setTimeout>;
         
         const abortHandler = () => {
             clearTimeout(timeoutId);
-            reject(signal?.reason || new Error("Aborted"));
+            // Match native fetch behavior by throwing a DOMException if no custom reason is provided.
+            reject(signal?.reason || new DOMException("The operation was aborted.", "AbortError"));
         };
 
         if (signal) {
