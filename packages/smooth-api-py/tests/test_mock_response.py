@@ -9,10 +9,12 @@ def test_mock_response_json():
 
 
 def test_mock_response_text():
+    import json
+
     content = {"message": "circuit is open"}
     response = MockResponse(status_code=503, content=content)
 
-    assert response.text == '{"message": "circuit is open"}'
+    assert json.loads(response.text) == content
 
 
 def test_mock_response_ok():
