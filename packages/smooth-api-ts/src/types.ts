@@ -54,6 +54,16 @@ export interface CircuitStateChangeEvent {
   failureCount: number;
 }
 
+/**
+ * Custom predicate function to determine if an attempt should be retried.
+ * Receives either (response, undefined) on HTTP completion or (undefined, error) on network/catch errors.
+ * Returning `true` triggers the backoff/retry loop; returning `false` bypasses retries immediately.
+ */
+export type ShouldRetryPredicate = (
+  response?: Response,
+  error?: unknown
+) => boolean | Promise<boolean>;
+
 // T types the fallback payload so callers get inference at the use site.
 export interface SmoothFetchConfig<T = unknown> {
   backoff?: Partial<BackoffConfig>;
@@ -62,6 +72,12 @@ export interface SmoothFetchConfig<T = unknown> {
   retryOn?: number[]; // defaults applied in index.ts
   fallbackOnNonRetryable?: boolean;
   onNonRetryableError?: (status: number, message: string) => void;
+  /**
+   * Optional custom predicate to determine whether an attempt should be retried.
+   * If provided, evaluated alongside or in place of retryOn status checks.
+   * Return true to retry, or false to bypass retries immediately.
+   */
+  shouldRetry?: ShouldRetryPredicate;
   /**
    * When set, enables request deduplication.
    * Pass an empty object `{}` to activate with the default key function.

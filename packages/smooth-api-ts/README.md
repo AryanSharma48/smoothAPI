@@ -116,6 +116,36 @@ const fetchWithRetry = createSmoothFetch({
 * **Default Alerting**: If `fallbackOnNonRetryable` is `true` and no custom `onNonRetryableError` is provided, it logs the warning to `console.error`.
 * **Graceful Return**: If no custom `fallback` is configured, it returns a mock `Response` wrapper with the status code and a JSON error body: `{ error: true, status: 404, message: "..." }`. Callers can safely call `.json()`, `.status`, or `.ok` on it without crashing.
 
+### Custom `shouldRetry` Predicate
+
+By default, SmoothAPI retries requests matching status codes in `retryOn` (defaults to `[429, 500, 502, 503, 504]`). You can configure a custom `shouldRetry` predicate function to handle application-level errors (such as GraphQL 200 responses with error payloads) or bypass retries for specific errors:
+
+```typescript
+import { createSmoothFetch } from '@codingaryan/smoothapi';
+
+const fetchWithRetry = createSmoothFetch({
+  shouldRetry: async (response, error) => {
+    // 1. Retry GraphQL error responses even if HTTP status is 200
+    if (response?.status === 200) {
+      const data = await response.json().catch(() => null);
+      if (data?.errors?.length) return true;
+    }
+
+    // 2. Bypass retries for non-transient 500s or specific network errors
+    if (response?.status === 500) {
+      return false;
+    }
+
+    // 3. Fallback to default retry condition
+    return response ? [429, 502, 503, 504].includes(response.status) : true;
+  }
+});
+```
+
+* **Body Preservation**: On HTTP responses, `response` passed to `shouldRetry` is an internal clone, preserving the original response stream so your application code can still read `.json()` or `.text()`.
+* **Async & Sync Support**: The predicate can return `boolean` or `Promise<boolean>`.
+* **Fail-Safe**: If `shouldRetry` throws an error, SmoothAPI logs the error safely to `console.error` and falls back to standard retry logic instead of crashing.
+
 ### Request Deduplication
 
 When multiple identical requests are made concurrently, SmoothAPI will execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services and prevents exausting computing resources.
