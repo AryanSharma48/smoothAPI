@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import inspect
 from urllib.parse import urlparse
 
 from .config import SmoothConfig
@@ -81,7 +82,7 @@ def smooth_api(config: SmoothConfig):
             else None
         )
 
-        if asyncio.iscoroutinefunction(fn):
+        if inspect.iscoroutinefunction(fn):
             @functools.wraps(fn)
             async def wrapper(*args, **kwargs):
                 # Runtime fallback overrides the config-level fallback.
