@@ -12,7 +12,7 @@ npm install @codingaryan/smoothapi
 
 ## Features
 
-- **Exponential Backoff with Full Jitter:** Prevents the "thundering herd" problem by randomizing retry delays.
+- **Exponential Backoff with Configurable Jitter:** Prevents the "thundering herd" problem by randomizing retry delays using `full`, `equal`, `decorrelated`, or `none` strategies.
 - **Circuit Breaker (FSM):** Isolated per-domain state machine (`CLOSED` → `OPEN` → `HALF_OPEN`).
 - **Smart Retries:** Automatically retries on specific HTTP status codes (e.g., 429, 500, 502, 503, 504) while throwing immediately on client errors (400, 401, 404).
 - **Graceful Fallbacks:** Optionally serve cached or default data instantly when the circuit is `OPEN`.
@@ -47,6 +47,7 @@ async function main() {
 **Default Settings provided automatically:**
 - **Retries**: 3 attempts
 - **Backoff Base Delay**: 100 milliseconds
+- **Jitter Strategy**: `equal`
 - **Circuit Failure Threshold**: Trips after 3 consecutive failures
 - **Circuit Cooldown**: Stays open for 10 seconds before probing
 - **Status Codes to Retry**: `429`, `500`, `502`, `503`, and `504`
@@ -62,8 +63,13 @@ const fetchWithRetry = createSmoothFetch({
   backoff: {
     baseDelay: 100,      // ms to wait before first retry
     maxDelay: 30000,     // cap on exponential growth
+<<<<<<< HEAD
     maxRetries: 3        // max number of retry attempts
     jitter: 'equal',     // 'equal' (default) | 'full' | 'decorrelated' | 'none'
+=======
+    maxRetries: 3,       // max number of retry attempts
+    jitter: 'equal'      // 'none' | 'full' | 'equal' | 'decorrelated' (default: 'equal')
+>>>>>>> fc393e0 (Move prevDelay assignment after Retry-After check and update README)
   },
   circuitBreaker: {
     failureThreshold: 3, // trip OPEN after 3 consecutive failures
@@ -94,6 +100,26 @@ async function main() {
     console.error("Request failed completely:", err);
   }
 }
+```
+
+### Jitter Strategies
+
+To prevent the "thundering herd" problem, SmoothAPI applies randomized jitter to the exponential backoff delay. You can choose from four strategies via `backoff.jitter`:
+
+- **`equal`** (default): `half + random(0, half)`. Guarantees at least half the capped delay, with some randomness.
+- **`full`**: `random(0, capped)`. Maximum randomness, delay can be anywhere from 0 to the capped value.
+- **`none`**: Deterministic exponential delay (`baseDelay * 2^attempt`, capped at `maxDelay`). No randomness — useful for predictable testing.
+- **`decorrelated`**: `min(maxDelay, random(baseDelay, prevDelay * 3))`. Uses the previous delay to compute the next one, spreading out retries further over time (AWS-recommended strategy for high-concurrency scenarios).
+
+```typescript
+const fetchWithRetry = createSmoothFetch({
+  backoff: {
+    baseDelay: 100,
+    maxDelay: 30000,
+    maxRetries: 3,
+    jitter: 'equal'
+  }
+});
 ```
 
 ### Client Error Handling & Alerts
