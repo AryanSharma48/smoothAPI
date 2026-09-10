@@ -107,9 +107,9 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                          const parsed = parseInt(retryAfter, 10);
                       if (!Number.isNaN(parsed) && parsed > 0) {
                          delayMs = parsed * 1000;
-                                       }
-                                }
-                                }
+                       }
+                     }
+                   }
                    prevDelay = delayMs;
 
                 if (globalConfig.onRetry) {
