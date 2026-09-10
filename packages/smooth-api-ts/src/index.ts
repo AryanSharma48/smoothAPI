@@ -1,8 +1,10 @@
 import { CircuitBreakerState } from "./state.js";
 import { calculateBackoff, sleep } from "./utils/backoff.js";
-import { CircuitOpenError, SmoothFetchConfig } from "./types.js";
+import { CircuitOpenError, SmoothFetchConfig, ShouldRetryPredicate } from "./types.js";
 import { RequestDeduplicator } from "./dedup.js";
 
+export * from "./types.js";
+export type { ShouldRetryPredicate } from "./types.js";
 
 const BACKOFF_DEFAULTS = {
   baseDelay: 100,
@@ -23,6 +25,30 @@ function safeInvoke<T>(fn: ((arg: T) => void | Promise<void>) | undefined, arg: 
     }
   } catch (err) {
     console.error('[smoothAPI] Error in lifecycle hook:', err);
+  }
+}
+
+async function evaluateShouldRetry(
+  predicate: ShouldRetryPredicate | undefined,
+  response?: Response,
+  error?: unknown,
+  fallback: boolean = false
+): Promise<boolean> {
+  if (!predicate) return fallback;
+  try {
+    let clonedResponse: Response | undefined;
+    if (response) {
+      try {
+        clonedResponse = typeof response.clone === 'function' ? response.clone() : response;
+      } catch {
+        clonedResponse = response;
+      }
+    }
+    const result = await predicate(clonedResponse, error);
+    return Boolean(result);
+  } catch (err) {
+    console.error('[smoothAPI] Error in shouldRetry predicate:', err);
+    return fallback;
   }
 }
 
@@ -93,9 +119,14 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
           try {
             const response = await fetch(url, currentOptions);
 
-            // fetch() resolves for any HTTP status. Retryable codes need to be
+            const defaultRetryable = retryOn.includes(response.status);
+            const isRetryable = globalConfig.shouldRetry
+              ? await evaluateShouldRetry(globalConfig.shouldRetry, response, undefined, defaultRetryable)
+              : defaultRetryable;
+
+            // fetch() resolves for any HTTP status. Retryable codes or custom predicates need to be
             // treated as failures manually.
-            if (retryOn.includes(response.status)) {
+            if (isRetryable) {
               breaker.recordFailure(domain);
               if (attempt < backoffConfig.maxRetries) {
                 let delayMs = calculateBackoff(attempt, backoffConfig);
@@ -168,6 +199,14 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             // Do not retry or record failure if the user explicitly aborted the request
             if (options?.signal?.aborted) {
               throw err;
+            }
+
+            if (globalConfig.shouldRetry) {
+              const should = await evaluateShouldRetry(globalConfig.shouldRetry, undefined, err, true);
+              if (!should) {
+                breaker.recordFailure(domain);
+                throw err;
+              }
             }
 
             breaker.recordFailure(domain);
