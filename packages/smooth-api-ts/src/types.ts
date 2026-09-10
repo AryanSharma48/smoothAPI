@@ -37,6 +37,23 @@ export interface CircuitBreakerConfig {
   cooldownMs: number;       // time in OPEN before probing with HALF_OPEN
 }
 
+export interface RetryContext {
+  attempt: number;
+  maxRetries: number;
+  delayMs: number;
+  error?: Error;
+  status?: number;
+  url: string;
+  domain: string;
+}
+
+export interface CircuitStateChangeEvent {
+  domain: string;
+  from: CircuitState;
+  to: CircuitState;
+  failureCount: number;
+}
+
 // T types the fallback payload so callers get inference at the use site.
 export interface SmoothFetchConfig<T = unknown> {
   backoff?: Partial<BackoffConfig>;
@@ -56,6 +73,8 @@ export interface SmoothFetchConfig<T = unknown> {
    * Must be a positive finite number.
    */
   timeoutMs?: number;
+  onRetry?: (context: RetryContext) => void | Promise<void>;
+  onCircuitStateChange?: (event: CircuitStateChangeEvent) => void | Promise<void>;
 }
 
 /** @deprecated use SmoothFetchConfig instead */

@@ -3,6 +3,7 @@ import { calculateBackoff, sleep } from "./utils/backoff.js";
 import { CircuitOpenError, SmoothFetchConfig } from "./types.js";
 import { RequestDeduplicator } from "./dedup.js";
 
+
 const BACKOFF_DEFAULTS = {
   baseDelay: 100,
   maxDelay: 30_000,
@@ -11,10 +12,29 @@ const BACKOFF_DEFAULTS = {
 
 const DEFAULT_RETRY_ON = [429, 500, 502, 503, 504];
 
+function safeInvoke<T>(fn: ((arg: T) => void | Promise<void>) | undefined, arg: T): void {
+  if (!fn) return;
+  try {
+    const result = fn(arg);
+    if (result && typeof (result as any).catch === 'function') {
+      (result as any).catch((err: unknown) => {
+        console.error('[smoothAPI] Error in lifecycle hook:', err);
+      });
+    }
+  } catch (err) {
+    console.error('[smoothAPI] Error in lifecycle hook:', err);
+  }
+}
+
 export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
   const backoffConfig = { ...BACKOFF_DEFAULTS, ...globalConfig.backoff };
   const retryOn = globalConfig.retryOn ?? DEFAULT_RETRY_ON;
-  const breaker = new CircuitBreakerState(globalConfig.circuitBreaker);
+  const breaker = new CircuitBreakerState(
+    globalConfig.circuitBreaker,
+    globalConfig.onCircuitStateChange 
+      ? (event) => safeInvoke(globalConfig.onCircuitStateChange, event)
+      : undefined
+  );
   const deduplicator = globalConfig.deduplication
     ? new RequestDeduplicator(globalConfig.deduplication.keyFn)
     : null;
@@ -88,6 +108,18 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                     }
                   }
                 }
+
+                if (globalConfig.onRetry) {
+                  safeInvoke(globalConfig.onRetry, {
+                    attempt: attempt + 1,
+                    maxRetries: backoffConfig.maxRetries,
+                    delayMs,
+                    status: response.status,
+                    url: url.toString(),
+                    domain,
+                  });
+                }
+
                 await sleep(delayMs, options?.signal);
                 continue;
               }
@@ -142,7 +174,18 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {
-              await sleep(calculateBackoff(attempt, backoffConfig), options?.signal);
+              const delayMs = calculateBackoff(attempt, backoffConfig);
+              if (globalConfig.onRetry) {
+                safeInvoke(globalConfig.onRetry, {
+                  attempt: attempt + 1,
+                  maxRetries: backoffConfig.maxRetries,
+                  delayMs,
+                  error: err instanceof Error ? err : new Error(String(err)),
+                  url: url.toString(),
+                  domain,
+                });
+              }
+              await sleep(delayMs, options?.signal);
             }
           } finally {
             if (timeoutId) clearTimeout(timeoutId);

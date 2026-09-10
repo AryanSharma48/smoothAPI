@@ -18,6 +18,7 @@ npm install @codingaryan/smoothapi
 - **Graceful Fallbacks:** Optionally serve cached or default data instantly when the circuit is `OPEN`.
 - **Request Deduplication:** Automatically couples concurrent identical requests into a single network call.
 - **Request Timeouts:** Configurable timeouts to automatically abort requests that hang indefinitely.
+- **Lifecycle Event Hooks:** Listen to retry attempts and circuit state transitions for logging or telemetry.
 
 ## Usage
 
@@ -164,6 +165,29 @@ const fetchWithRetry = createSmoothFetch({
 * **Default Behavior**: Deduplicates by URL only (method-agnostic). Concurrent GETs to the same URL are merged.
 * **Error Propagation**: If the network call fails, all waiting callers receive the same error.
 * **Settlement**: Once a request completes, the next call to the same URL triggers a fresh network request.
+
+### Lifecycle Event Hooks
+
+You can pass callback functions to listen to key events during the request lifecycle. This is particularly useful for logging, metrics, and telemetry.
+
+```typescript
+import { createSmoothFetch } from '@codingaryan/smoothapi';
+
+const fetchWithRetry = createSmoothFetch({
+  onRetry: (context) => {
+    // Fired before a request is retried
+    console.warn(`[Attempt ${context.attempt}/${context.maxRetries}] Retrying ${context.domain} in ${context.delayMs}ms. Status: ${context.status}`);
+  },
+  onCircuitStateChange: (event) => {
+    // Fired when the circuit breaker transitions states
+    console.warn(`Circuit for ${event.domain} changed from ${event.from} to ${event.to}. Failures: ${event.failureCount}`);
+  }
+});
+```
+
+- **`onRetry(context)`**: Receives `{ attempt, maxRetries, delayMs, status?, error?, url, domain }`. It fires immediately before the delay sleep begins.
+- **`onCircuitStateChange(event)`**: Receives `{ domain, from, to, failureCount }`. It fires exactly when the state transitions (`CLOSED` → `OPEN` → `HALF_OPEN` → `CLOSED`).
+- **Fail-Safe**: If your hook throws an exception, SmoothAPI catches and logs it internally, ensuring it never crashes your request pipeline.
 
 ### AbortController Support
 
