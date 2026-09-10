@@ -10,13 +10,14 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: write
     steps:
       - name: Apply path-based labels
         if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened'
         uses: actions/labeler@v5
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          sync-labels: true
+          sync-labels: false
 
       - name: Add Needs Review label
         if: github.event.pull_request.draft == false && (github.event.action == 'opened' || github.event.action == 'ready_for_review')
@@ -29,3 +30,30 @@ jobs:
               repo: context.repo.repo,
               labels: ['Needs Review']
             })
+
+      - name: Encourage contributors with 3+ Good First Issue PRs
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const author = context.payload.pull_request.user.login;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Search PRs by this author containing good first issue label
+            const query = `repo:${owner}/${repo} is:pr author:${author} label:"good first issue"`;
+            const { data } = await github.rest.search.issuesAndPullRequests({ q: query });
+
+            if (data.total_count >= 3) {
+              const commentBody = `👋 Hey @${author}! Thanks for your continued contributions! 🚀\n\n` +
+                `We noticed you've already tackled several beginner-friendly tasks. Since you're now familiar with the codebase, ` +
+                `we encourage you to level up and take on some of our more **core features, bug fixes, or architecture challenges**!\n\n` +
+                `Check out our open issues tagged with \`help wanted\` or reach out in our [Discord community](https://discord.gg/2NabXnQzmv) if you'd like to collaborate on a bigger roadmap item. Keep up the great work! ✨`;
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
