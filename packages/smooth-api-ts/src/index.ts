@@ -100,7 +100,6 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
               breaker.recordFailure(domain);
               if (attempt < backoffConfig.maxRetries) {
                 let delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
-                prevDelay = delayMs;
                 if (response.status === 429) {
                   const retryAfter = response.headers.get('Retry-After');
                   if (retryAfter) {
@@ -110,6 +109,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                     }
                   }
                 }
+                prevDelay = delayMs;
 
                 if (globalConfig.onRetry) {
                   safeInvoke(globalConfig.onRetry, {
