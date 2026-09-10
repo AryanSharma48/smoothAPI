@@ -86,6 +86,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
       let lastError: unknown;
 
       const run = async (): Promise<Response | T> => {
+        let prevDelay: number | undefined;
         for (let attempt = 0; attempt <= backoffConfig.maxRetries; attempt++) {
           // Pre-flight abort check
           if (options?.signal?.aborted) {
@@ -128,17 +129,19 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             // treated as failures manually.
             if (isRetryable) {
               breaker.recordFailure(domain);
+
               if (attempt < backoffConfig.maxRetries) {
-                let delayMs = calculateBackoff(attempt, backoffConfig);
-                if (response.status === 429) {
-                  const retryAfter = response.headers.get('Retry-After');
-                  if (retryAfter) {
-                    const parsed = parseInt(retryAfter, 10);
-                    if (!Number.isNaN(parsed) && parsed > 0) {
-                      delayMs = parsed * 1000;
-                    }
-                  }
-                }
+                let delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
+                  if (response.status === 429) {
+                    const retryAfter = response.headers.get('Retry-After');
+                      if (retryAfter) {
+                         const parsed = parseInt(retryAfter, 10);
+                      if (!Number.isNaN(parsed) && parsed > 0) {
+                         delayMs = parsed * 1000;
+                       }
+                     }
+                   }
+                   prevDelay = delayMs;
 
                 if (globalConfig.onRetry) {
                   safeInvoke(globalConfig.onRetry, {
@@ -213,7 +216,8 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {
-              const delayMs = calculateBackoff(attempt, backoffConfig);
+              const delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
+              prevDelay = delayMs;
               if (globalConfig.onRetry) {
                 safeInvoke(globalConfig.onRetry, {
                   attempt: attempt + 1,

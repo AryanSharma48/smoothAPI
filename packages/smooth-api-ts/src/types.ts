@@ -30,6 +30,7 @@ export interface BackoffConfig {
   baseDelay: number;  // ms, doubles each attempt before jitter
   maxDelay: number;   // ceiling on the pre-jitter exponential
   maxRetries: number;
+  jitter?: 'full' | 'equal' | 'decorrelated' | 'none';
 }
 
 export interface CircuitBreakerConfig {
