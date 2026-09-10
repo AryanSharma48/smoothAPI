@@ -63,6 +63,7 @@ const fetchWithRetry = createSmoothFetch({
     baseDelay: 100,      // ms to wait before first retry
     maxDelay: 30000,     // cap on exponential growth
     maxRetries: 3        // max number of retry attempts
+    jitter: 'equal',     // 'equal' (default) | 'full' | 'decorrelated' | 'none'
   },
   circuitBreaker: {
     failureThreshold: 3, // trip OPEN after 3 consecutive failures
