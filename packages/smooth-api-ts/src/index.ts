@@ -60,6 +60,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
       let lastError: unknown;
 
       const run = async (): Promise<Response | T> => {
+        let prevDelay: number | undefined;
         for (let attempt = 0; attempt <= backoffConfig.maxRetries; attempt++) {
           // Pre-flight abort check
           if (options?.signal?.aborted) {
@@ -98,7 +99,8 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             if (retryOn.includes(response.status)) {
               breaker.recordFailure(domain);
               if (attempt < backoffConfig.maxRetries) {
-                let delayMs = calculateBackoff(attempt, backoffConfig);
+                let delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
+                prevDelay = delayMs;
                 if (response.status === 429) {
                   const retryAfter = response.headers.get('Retry-After');
                   if (retryAfter) {
@@ -174,7 +176,8 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {
-              const delayMs = calculateBackoff(attempt, backoffConfig);
+              const delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
+              prevDelay = delayMs;
               if (globalConfig.onRetry) {
                 safeInvoke(globalConfig.onRetry, {
                   attempt: attempt + 1,
