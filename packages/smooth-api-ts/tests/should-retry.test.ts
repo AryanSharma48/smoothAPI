@@ -2,12 +2,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSmoothFetch, ShouldRetryPredicate } from '../src/index.js';
 
-const BASE = 'http://localhost:3001';
-
-async function reset() {
-  await fetch(`${BASE}/reset`);
-}
-
 const fastBackoff = { maxRetries: 2, baseDelay: 10, maxDelay: 50 };
 
 describe('shouldRetry predicate', () => {
@@ -51,26 +45,25 @@ describe('shouldRetry predicate', () => {
     }
   });
 
-  it('bypasses retry when shouldRetry returns false even for a 500 error', async () => {
-    await reset();
+    it('bypasses retry when shouldRetry returns false even for a 500 error', async () => {
     let retryCalls = 0;
+    const originalFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = async () => new Response('Server Error', { status: 500 });
 
-    const smoothFetch = createSmoothFetch({
-      backoff: fastBackoff,
-      onRetry: () => { retryCalls++; },
-      shouldRetry: (response) => {
-        // Explicitly bypass retries for 500 status
-        if (response?.status === 500) {
-          return false;
-        }
-        return true;
-      },
-    });
+      const smoothFetch = createSmoothFetch({
+        backoff: fastBackoff,
+        onRetry: () => { retryCalls++; },
+        shouldRetry: (response) => response?.status !== 500,
+      });
 
-    const res = await smoothFetch(`${BASE}/always-fail`);
-    assert.ok(res instanceof Response);
-    assert.strictEqual(res.status, 500);
-    assert.strictEqual(retryCalls, 0, 'Should not trigger any retries');
+      const res = await smoothFetch('http://example.com/always-fail');
+      assert.ok(res instanceof Response);
+      assert.strictEqual(res.status, 500);
+      assert.strictEqual(retryCalls, 0, 'Should not trigger any retries');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('supports asynchronous predicates returning Promise<boolean>', async () => {
