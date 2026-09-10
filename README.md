@@ -54,7 +54,24 @@ const fetch = createSmoothFetch({
 const response = await fetch('https://api.example.com/data');
 ```
 
-> **Using Python?** → See the [Python Package Documentation](./packages/smooth-api-py/README.md) or jump to [Installation](#python).
+### Python
+
+Decorate synchronous (`requests`) or asynchronous (`httpx`) HTTP calls with `@smooth_api`:
+
+```python
+import httpx
+from smooth_api import smooth_api, SmoothConfig
+
+config = SmoothConfig()
+
+@smooth_api(config)
+async def fetch_user(client: httpx.AsyncClient, user_id: str):
+    res = await client.get(f"https://api.example.com/users/{user_id}")
+    res.raise_for_status()
+    return res.json()
+```
+
+> **Full Python guide & async examples?** → See the [Python Package Documentation](./packages/smooth-api-py/README.md).
 
 ---
 

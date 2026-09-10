@@ -113,20 +113,58 @@ config = SmoothConfig(
 * **Graceful Return**: If no `fallback` is configured, it returns a mock `Response` wrapper with `status_code`, `.json()` returning `{"error": True, "status": status, "message": "..."}`, and `.ok` returning `False`. Code downstream can check `res.status_code` or call `res.json()` without raising exceptions.
 
 
-### Async Support
+### Async Support (httpx)
 
-The decorator automatically detects if your function is a coroutine and uses `asyncio.sleep` instead of blocking the thread:
+When building high-concurrency or non-blocking applications (such as FastAPI, Starlette, or `asyncio` workflows), blocking the main thread with synchronous HTTP libraries like `requests` degrades throughput. SmoothAPI natively supports asynchronous requests using [`httpx`](https://www.python-httpx.org/).
+
+The `@smooth_api` decorator automatically detects coroutine functions (`async def`), executes non-blocking `asyncio.sleep` during backoff retry intervals, and enables async-only features such as [Request Deduplication](#request-deduplication-async-only) and `timeout_ms`.
+
+#### Copy-Pasteable Example with `httpx.AsyncClient`
 
 ```python
+import asyncio
 import httpx
+from smooth_api import smooth_api, SmoothConfig
+from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
+# 1. Configure SmoothAPI
+config = SmoothConfig(
+    backoff=BackoffConfig(
+        base_delay=0.1,    # seconds before first retry
+        max_delay=5.0,     # max backoff delay cap
+        max_retries=3      # retry up to 3 times
+    ),
+    circuit_breaker=CircuitBreakerConfig(
+        failure_threshold=3, # trip OPEN after 3 consecutive failures
+        cooldown_ms=10_000   # stay OPEN for 10 seconds before probing
+    ),
+    retry_on=[429, 500, 502, 503, 504],
+    timeout_ms=5000  # Abort if a request attempt hangs longer than 5000ms (Async Only)
+)
+
+# 2. Decorate your async function
 @smooth_api(config)
-async def get_user_data_async(user_id: str):
+async def get_user_data_async(client: httpx.AsyncClient, user_id: str):
+    res = await client.get(f"https://api.example.com/users/{user_id}")
+    res.raise_for_status()  # Always raise so SmoothAPI detects HTTP error codes
+    return res.json()
+
+# 3. Execute and properly await in an async context
+async def main():
     async with httpx.AsyncClient() as client:
-        res = await client.get(f"https://api.example.com/users/{user_id}")
-        res.raise_for_status()
-        return res.json()
+        try:
+            data = await get_user_data_async(client, "123")
+            print("Successfully retrieved data:", data)
+        except Exception as e:
+            print("Request failed after all retries or circuit opened:", e)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
+
+**When to use Async vs. Sync:**
+* **Use Async (`httpx.AsyncClient`)**: In async web frameworks (FastAPI, aiohttp, Starlette), microservices handling high I/O concurrency, or when using request deduplication or request timeouts (`timeout_ms`).
+* **Use Sync (`requests`)**: In synchronous scripts, CLI tools, worker tasks (e.g. Celery sync workers), or simple linear pipelines without an active `asyncio` event loop.
 
 ### Request Deduplication (Async Only)
 
