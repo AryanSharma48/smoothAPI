@@ -1,7 +1,41 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Literal, Optional
+
+CircuitState = Literal['CLOSED', 'OPEN', 'HALF_OPEN']
+
+
+@dataclass
+class CircuitStateChangeEvent:
+    domain: str
+    from_state: CircuitState
+    to_state: CircuitState
+    failure_count: int
+
+    @property
+    def from_(self) -> CircuitState:
+        return self.from_state
+
+    @property
+    def to(self) -> CircuitState:
+        return self.to_state
+
+
+@dataclass
+class RetryContext:
+    attempt: int
+    max_retries: int
+    delay_ms: float
+    domain: str
+    url: str = ""
+    status: Optional[int] = None
+    error: Optional[Exception] = None
+
+    @property
+    def delay(self) -> float:
+        """Delay in seconds."""
+        return self.delay_ms / 1000.0
 
 
 @dataclass
@@ -56,3 +90,14 @@ class SmoothConfig:
     deduplication: Optional[DeduplicationConfig] = None
     # Maximum duration in milliseconds before a request attempt is aborted.
     timeout_ms: Optional[int] = None
+    # Lifecycle event hooks
+    on_retry: Optional[Callable[[RetryContext], Any]] = None
+    on_circuit_state_change: Optional[Callable[[CircuitStateChangeEvent], Any]] = None
+    onRetry: Optional[Callable[[RetryContext], Any]] = None
+    onCircuitStateChange: Optional[Callable[[CircuitStateChangeEvent], Any]] = None
+
+    def __post_init__(self):
+        if self.on_retry is None and self.onRetry is not None:
+            self.on_retry = self.onRetry
+        if self.on_circuit_state_change is None and self.onCircuitStateChange is not None:
+            self.on_circuit_state_change = self.onCircuitStateChange

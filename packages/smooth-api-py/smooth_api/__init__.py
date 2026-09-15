@@ -5,7 +5,13 @@ import functools
 import inspect
 from urllib.parse import urlparse
 
-from .config import SmoothConfig
+from .config import (
+    CircuitState,
+    CircuitStateChangeEvent,
+    DeduplicationConfig,
+    RetryContext,
+    SmoothConfig,
+)
 from .dedup import RequestDeduplicator
 from .state import CircuitBreakerState
 from .utils import calculate_backoff, sleep_backoff
@@ -19,6 +25,31 @@ try:
     from httpx import HTTPStatusError as HttpxHTTPStatusError
 except ImportError:
     HttpxHTTPStatusError = None  # type: ignore[assignment,misc]
+
+
+def _safe_invoke(fn: Any, arg: Any) -> None:
+    if fn is None:
+        return
+    try:
+        res = fn(arg)
+        if inspect.iscoroutine(res):
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(res)
+            except RuntimeError:
+                asyncio.run(res)
+    except Exception as ex:
+        import sys
+        sys.stderr.write(f"[smoothAPI] Error in lifecycle hook: {ex}\n")
+
+
+def _extract_url(args: tuple, kwargs: dict) -> str:
+    if args and isinstance(args[0], str):
+        return args[0]
+    if "url" in kwargs and isinstance(kwargs["url"], str):
+        return kwargs["url"]
+    return ""
+
 
 
 def _get_status_code(err: Exception) -> int | None:
@@ -69,7 +100,7 @@ class MockResponse:
 def smooth_api(config: SmoothConfig):
     def decorator(fn):
         # One breaker per decorated function, shared across all calls to fn.
-        breaker = CircuitBreakerState(config.circuit_breaker)
+        breaker = CircuitBreakerState(config.circuit_breaker, config.on_circuit_state_change)
 
         # fn.__qualname__ is the circuit key. Each decorated function gets its
         # own domain entry in the breaker map, isolated from all others.
@@ -145,6 +176,17 @@ def smooth_api(config: SmoothConfig):
                                     retry_after_delay = _get_retry_after_delay(err)
                                     if retry_after_delay is not None:
                                         delay = retry_after_delay
+                                if config.on_retry:
+                                    ctx = RetryContext(
+                                        attempt=attempt + 1,
+                                        max_retries=config.backoff.max_retries,
+                                        delay_ms=delay * 1000.0,
+                                        status=status,
+                                        error=err,
+                                        url=_extract_url(args, kwargs),
+                                        domain=domain,
+                                    )
+                                    _safe_invoke(config.on_retry, ctx)
                                 await asyncio.sleep(delay)
                                 continue
                                 
@@ -215,6 +257,17 @@ def smooth_api(config: SmoothConfig):
                                 retry_after_delay = _get_retry_after_delay(err)
                                 if retry_after_delay is not None:
                                     delay = retry_after_delay
+                            if config.on_retry:
+                                ctx = RetryContext(
+                                    attempt=attempt + 1,
+                                    max_retries=config.backoff.max_retries,
+                                    delay_ms=delay * 1000.0,
+                                    status=status,
+                                    error=err,
+                                    url=_extract_url(args, kwargs),
+                                    domain=domain,
+                                )
+                                _safe_invoke(config.on_retry, ctx)
                             sleep_backoff(delay)
                             continue
                             
@@ -228,7 +281,16 @@ def smooth_api(config: SmoothConfig):
     return decorator
 
 
-__all__ = ['smooth_api', 'SmoothConfig', 'DeduplicationConfig', 'resilient_api', 'ResilientConfig']
+__all__ = [
+    'smooth_api',
+    'SmoothConfig',
+    'DeduplicationConfig',
+    'RetryContext',
+    'CircuitStateChangeEvent',
+    'CircuitState',
+    'resilient_api',
+    'ResilientConfig',
+]
 
 import warnings
 
