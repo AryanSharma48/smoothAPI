@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'smoothapi Next.js example',
-  description: 'Resilient fetch demo against the chaos sandbox',
+  title: 'Next.js App Router API Robustness Demo',
+  description: 'Robust fetch demo against the chaos sandbox',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

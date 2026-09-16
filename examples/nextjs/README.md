@@ -2,36 +2,39 @@
 
 A minimal [Next.js](https://nextjs.org/) (App Router, TypeScript) example showing
 how to use `@codingaryan/smoothapi` to make calls to an unreliable third-party
-API resilient. Real upstream services fail intermittently, rate-limit, and go
-down; this example wraps `fetch` with retries, a fallback value, and a circuit
-breaker so your route handlers degrade gracefully instead of erroring out.
+API robust. Real upstream services fail intermittently, rate-limit, and go
+down completely. This example shows how to use SmoothAPI with Next.js App Router API Routes to protect your app.
 
-It demonstrates two route handlers against the project's chaos **sandbox**
-server:
+## Endpoints in this example
 
-- `/api/resilient` — retry + fallback against `/unstable-data`.
-- `/api/circuit-demo` — circuit breaker against `/always-fail`.
+- `/api/unstable-data` — simulates an upstream service that fails randomly.
+- `/api/always-fail` — simulates an upstream service that is completely down.
+- `/api/robust` — retry + fallback against `/unstable-data`.
+- `/api/circuit-demo` — trips the circuit breaker against `/always-fail`.
 
----
+## How it works
 
-## Prerequisites & Setup
+### `/api/robust` — retry + fallback
 
-### 1. Start the sandbox server
+This route points `createSmoothFetch` at `/unstable-data`, which returns a
+503 randomly.
 
-The example calls the chaos sandbox on `http://localhost:3001`. From the repo
-root:
+1. It catches the 503 error.
+2. It backs off exponentially and retries.
+3. If it succeeds, you get the data.
+4. If it fails 3 times, you get the fallback data: `{ status: "degraded", ... }`
 
-```bash
-cd sandbox
-npm install
-node server.js
-```
+### `/api/circuit-demo` — circuit breaker
 
-Leave this terminal running.
+This route points `createSmoothFetch` at `/always-fail`, which always returns
+a 503 error.
 
-### 2. Run the example
+1. The first 3 requests will be retried (and fail).
+2. The circuit breaker trips `OPEN`.
+3. The 4th and subsequent requests immediately return the fallback without even trying the network!
+4. After the cooldown period (10s), it enters `HALF_OPEN` and tests the endpoint again.
 
-In a second terminal:
+## Running the example
 
 ```bash
 cd examples/nextjs
@@ -39,14 +42,16 @@ npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000) and use the two buttons,
-or call the routes directly with the curl commands below.
+Then visit `http://localhost:3000` to interact with the API routes.
 
+Alternatively, you can test it directly via curl:
+
+```bash
+curl http://localhost:3000/api/robust
+```
 ---
 
 ## Walkthrough
-
-### `/api/resilient` — retry + fallback
 
 This route points `createResilientFetch` at `/unstable-data`, which returns a
 mix of `200`, `429`, and `500` responses. With the default retry settings, a

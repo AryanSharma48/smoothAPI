@@ -15,7 +15,7 @@ All types of contributions are welcome:
 
 ## Repository Layout
 
-SmoothAPI is a dual-language API resilience and fault-tolerance library. The workspace is organized as follows:
+SmoothAPI is a dual-language API robustness and fault-tolerance library. The workspace is organized as follows:
 
 ```text
 smooth-api/
