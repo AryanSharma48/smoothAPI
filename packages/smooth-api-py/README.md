@@ -222,6 +222,30 @@ config = SmoothConfig(
 * **Settlement**: Once a call completes, the next call with the same key triggers a fresh execution.
 * **Sync Functions**: Deduplication only works with async-decorated functions. Sync functions are unaffected.
 
+### Lifecycle Event Hooks
+
+SmoothAPI supports lifecycle event hooks to easily attach logging, metrics, alerting, or telemetry:
+
+* **`on_retry`**: Invoked before sleeping on a retryable failure. Receives a `RetryContext` with attempt number, maximum retries, calculated delay (`delay` in seconds, `delay_ms` in milliseconds), HTTP status code (if available), error exception (if available), url, and function domain.
+* **`on_circuit_state_change`**: Invoked whenever the circuit breaker transitions between states (`CLOSED`, `OPEN`, `HALF_OPEN`). Receives a `CircuitStateChangeEvent` with `domain`, `from_state`, `to_state`, and `failure_count`.
+
+```python
+from smooth_api import smooth_api, SmoothConfig, RetryContext, CircuitStateChangeEvent
+
+def log_retry(ctx: RetryContext):
+    print(f"[Retry] Attempt {ctx.attempt}/{ctx.max_retries} for {ctx.domain} (status: {ctx.status}). Retrying in {ctx.delay_ms:.0f}ms")
+
+def log_circuit_transition(event: CircuitStateChangeEvent):
+    print(f"[Circuit] {event.domain}: {event.from_state} -> {event.to_state} (failures: {event.failure_count})")
+
+config = SmoothConfig(
+    on_retry=log_retry,
+    on_circuit_state_change=log_circuit_transition,
+)
+```
+
+Both synchronous functions and `async def` coroutines are supported as hooks. All hooks execute with built-in fail-safe protection, ensuring that any exceptions raised inside user-defined callback functions never crash your request pipeline.
+
 ## How It Works
 
 1. **Isolation:** The circuit breaker state is isolated per decorated function (`fn.__qualname__`).
