@@ -5,7 +5,7 @@ from typing import Any, Dict
 from fastapi import FastAPI
 import httpx
 
-from smooth_api import resilient_api, ResilientConfig
+from smooth_api import smooth_api, SmoothConfig
 from smooth_api.config import BackoffConfig, CircuitBreakerConfig
 
 # Shared HTTP client for connection pooling
@@ -25,7 +25,7 @@ app = FastAPI(
 
 SANDBOX_URL = os.getenv("SANDBOX_URL", "http://localhost:3001")
 
-retry_config = ResilientConfig(
+retry_config = SmoothConfig(
     backoff=BackoffConfig(
         base_delay=0.1,
         max_delay=5.0,
@@ -34,7 +34,7 @@ retry_config = ResilientConfig(
     retry_on=[429, 500, 502, 503, 504],
 )
 
-circuit_config = ResilientConfig(
+circuit_config = SmoothConfig(
     backoff=BackoffConfig(
         base_delay=0.1,
         max_delay=5.0,
@@ -68,7 +68,7 @@ async def root() -> Dict[str, Any]:
     }
 
 
-@resilient_api(retry_config)
+@smooth_api(retry_config)
 async def fetch_unstable_data() -> Any:
     response = await http_client.get(f"{SANDBOX_URL}/unstable-data")
     response.raise_for_status()
@@ -92,7 +92,7 @@ async def retry_demo() -> Dict[str, Any]:
     }
 
 
-@resilient_api(circuit_config)
+@smooth_api(circuit_config)
 async def fetch_failing_data() -> Any:
     response = await http_client.get(f"{SANDBOX_URL}/always-fail")
     response.raise_for_status()
