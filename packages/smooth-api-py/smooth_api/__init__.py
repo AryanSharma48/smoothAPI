@@ -3,14 +3,17 @@ from __future__ import annotations
 import asyncio
 import functools
 import inspect
+import time
 from typing import Any
 
 from .config import (
     CircuitState,
     CircuitStateChangeEvent,
     DeduplicationConfig,
+    FailureContext,
     RetryContext,
     SmoothConfig,
+    SuccessContext,
 )
 from .dedup import RequestDeduplicator
 from .state import CircuitBreakerState
@@ -48,7 +51,7 @@ def _safe_invoke(fn: Any, arg: Any) -> None:
         sys.stderr.write(f"[smoothAPI] Error in lifecycle hook: {ex}\n")
 
 
-def _extract_url(args: tuple, kwargs: dict) -> str:
+def _extract_url(args: tuple, kwargs: dict, obj: Any = None) -> str:
     if "url" in kwargs and isinstance(kwargs["url"], str):
         return kwargs["url"]
     for arg in args:
@@ -56,6 +59,13 @@ def _extract_url(args: tuple, kwargs: dict) -> str:
             return arg
     if args and isinstance(args[0], str):
         return args[0]
+    if obj is not None:
+        if hasattr(obj, "url") and getattr(obj, "url", None):
+            return str(obj.url)
+        if hasattr(obj, "response") and getattr(obj.response, "url", None):
+            return str(obj.response.url)
+        if hasattr(obj, "request") and getattr(obj.request, "url", None):
+            return str(obj.request.url)
     return ""
 
 
@@ -126,10 +136,21 @@ def smooth_api(config: SmoothConfig):
         if inspect.iscoroutinefunction(fn):
             @functools.wraps(fn)
             async def wrapper(*args, **kwargs):
+                start_time = time.perf_counter()
+                url = _extract_url(args, kwargs)
                 # Runtime fallback overrides the config-level fallback.
                 fallback = kwargs.pop('fallback', config.fallback)
 
                 if not breaker.can_request(domain):
+                    if config.on_failure:
+                        _safe_invoke(config.on_failure, FailureContext(
+                            url=url,
+                            domain=domain,
+                            attempts=0,
+                            duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                            error=RuntimeError(f'Circuit breaker is OPEN for: {domain}'),
+                            is_circuit_open=True,
+                        ))
                     if fallback is not None:
                         return fallback
                     raise RuntimeError(f'Circuit breaker is OPEN for: {domain}')
@@ -139,25 +160,63 @@ def smooth_api(config: SmoothConfig):
                 # or attach to an already-running Future.
                 async def _execute():
                     last_err: Exception | None = None
+                    attempt_count = 0
 
                     for attempt in range(config.backoff.max_retries + 1):
+                        attempt_count = attempt + 1
                         try:
                             if config.timeout_ms is not None:
                                 result = await asyncio.wait_for(fn(*args, **kwargs), timeout=config.timeout_ms / 1000.0)
                             else:
                                 result = await fn(*args, **kwargs)
+
+                            status = getattr(result, "status_code", None)
+                            res_url = url or _extract_url(args, kwargs, result)
+                            if status is not None and status >= 400:
+                                if config.on_failure:
+                                    _safe_invoke(config.on_failure, FailureContext(
+                                        url=res_url,
+                                        domain=domain,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=result,
+                                        error=RuntimeError(f"HTTP {status}"),
+                                        is_circuit_open=False,
+                                    ))
+                            else:
+                                if config.on_success:
+                                    _safe_invoke(config.on_success, SuccessContext(
+                                        url=res_url,
+                                        domain=domain,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=result,
+                                    ))
+
                             breaker.record_success(domain)
                             return result
-                        except asyncio.CancelledError:
+                        except asyncio.CancelledError as err:
                             # CancelledError is a BaseException (Python 3.8+) and
                             # escapes `except Exception`.  We still need to record
                             # the failure so sustained cancellation (e.g. client
                             # timeouts) is counted toward tripping the circuit,
                             # then re-raise so the cancellation propagates normally.
                             breaker.record_failure(domain)
+                            if config.on_failure:
+                                _safe_invoke(config.on_failure, FailureContext(
+                                    url=url or _extract_url(args, kwargs, err),
+                                    domain=domain,
+                                    attempts=attempt_count,
+                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                    error=err,
+                                    is_circuit_open=False,
+                                ))
                             raise
                         except Exception as err:
                             status = _get_status_code(err)
+                            err_url = url or _extract_url(args, kwargs, err)
                             # Non-retryable HTTP errors (e.g. 400, 401, 404) bubble up immediately.
                             if status is not None and status not in config.retry_on:
                                 if config.fallback_on_non_retryable:
@@ -170,6 +229,19 @@ def smooth_api(config: SmoothConfig):
                                         sys.stderr.write(f"{message}\n")
                                     
                                     breaker.record_success(domain)
+
+                                    if config.on_failure:
+                                        _safe_invoke(config.on_failure, FailureContext(
+                                            url=err_url,
+                                            domain=domain,
+                                            attempts=attempt_count,
+                                            duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                            status=status,
+                                            response=getattr(err, 'response', None),
+                                            error=err,
+                                            is_circuit_open=False,
+                                        ))
+
                                     if fallback is not None:
                                         return fallback
                                     return MockResponse(
@@ -177,6 +249,17 @@ def smooth_api(config: SmoothConfig):
                                         content={"error": True, "status": status, "message": message},
                                         reason=reason
                                     )
+                                if config.on_failure:
+                                    _safe_invoke(config.on_failure, FailureContext(
+                                        url=err_url,
+                                        domain=domain,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=getattr(err, 'response', None),
+                                        error=err,
+                                        is_circuit_open=False,
+                                    ))
                                 raise
                             breaker.record_failure(domain)
                             last_err = err
@@ -193,7 +276,7 @@ def smooth_api(config: SmoothConfig):
                                         delay_ms=delay * 1000.0,
                                         status=status,
                                         error=err,
-                                        url=_extract_url(args, kwargs),
+                                        url=err_url,
                                         domain=domain,
                                     )
                                     _safe_invoke(config.on_retry, ctx)
@@ -202,8 +285,29 @@ def smooth_api(config: SmoothConfig):
                                 
                             # If retries are exhausted and it's an HTTP error, return the response instead of raising
                             if status is not None and hasattr(err, 'response'):
+                                if config.on_failure:
+                                    _safe_invoke(config.on_failure, FailureContext(
+                                        url=err_url,
+                                        domain=domain,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=err.response,
+                                        error=err,
+                                        is_circuit_open=False,
+                                    ))
                                 return err.response
 
+                    if config.on_failure:
+                        _safe_invoke(config.on_failure, FailureContext(
+                            url=url or _extract_url(args, kwargs, last_err),
+                            domain=domain,
+                            attempts=attempt_count,
+                            duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                            error=last_err,
+                            status=_get_status_code(last_err) if last_err else None,
+                            is_circuit_open=False,
+                        ))
                     raise last_err  # type: ignore[misc]
 
                 if deduplicator is not None:
@@ -224,22 +328,61 @@ def smooth_api(config: SmoothConfig):
 
             @functools.wraps(fn)
             def wrapper(*args, **kwargs):  # type: ignore[misc]
+                start_time = time.perf_counter()
+                url = _extract_url(args, kwargs)
                 fallback = kwargs.pop('fallback', config.fallback)
 
                 if not breaker.can_request(domain):
+                    if config.on_failure:
+                        _safe_invoke(config.on_failure, FailureContext(
+                            url=url,
+                            domain=domain,
+                            attempts=0,
+                            duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                            error=RuntimeError(f'Circuit breaker is OPEN for: {domain}'),
+                            is_circuit_open=True,
+                        ))
                     if fallback is not None:
                         return fallback
                     raise RuntimeError(f'Circuit breaker is OPEN for: {domain}')
 
                 last_err: Exception | None = None
+                attempt_count = 0
 
                 for attempt in range(config.backoff.max_retries + 1):
+                    attempt_count = attempt + 1
                     try:
                         result = fn(*args, **kwargs)
+                        status = getattr(result, "status_code", None)
+                        res_url = url or _extract_url(args, kwargs, result)
+                        if status is not None and status >= 400:
+                            if config.on_failure:
+                                _safe_invoke(config.on_failure, FailureContext(
+                                    url=res_url,
+                                    domain=domain,
+                                    attempts=attempt_count,
+                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                    status=status,
+                                    response=result,
+                                    error=RuntimeError(f"HTTP {status}"),
+                                    is_circuit_open=False,
+                                ))
+                        else:
+                            if config.on_success:
+                                _safe_invoke(config.on_success, SuccessContext(
+                                    url=res_url,
+                                    domain=domain,
+                                    attempts=attempt_count,
+                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                    status=status,
+                                    response=result,
+                                ))
+
                         breaker.record_success(domain)
                         return result
                     except Exception as err:
                         status = _get_status_code(err)
+                        err_url = url or _extract_url(args, kwargs, err)
                         if status is not None and status not in config.retry_on:
                             if config.fallback_on_non_retryable:
                                 import sys
@@ -251,6 +394,19 @@ def smooth_api(config: SmoothConfig):
                                     sys.stderr.write(f"{message}\n")
                                 
                                 breaker.record_success(domain)
+
+                                if config.on_failure:
+                                    _safe_invoke(config.on_failure, FailureContext(
+                                        url=err_url,
+                                        domain=domain,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=getattr(err, 'response', None),
+                                        error=err,
+                                        is_circuit_open=False,
+                                    ))
+
                                 if fallback is not None:
                                     return fallback
                                 return MockResponse(
@@ -258,6 +414,17 @@ def smooth_api(config: SmoothConfig):
                                     content={"error": True, "status": status, "message": message},
                                     reason=reason
                                 )
+                            if config.on_failure:
+                                _safe_invoke(config.on_failure, FailureContext(
+                                    url=err_url,
+                                    domain=domain,
+                                    attempts=attempt_count,
+                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                    status=status,
+                                    response=getattr(err, 'response', None),
+                                    error=err,
+                                    is_circuit_open=False,
+                                ))
                             raise
                         breaker.record_failure(domain)
                         last_err = err
@@ -274,7 +441,7 @@ def smooth_api(config: SmoothConfig):
                                     delay_ms=delay * 1000.0,
                                     status=status,
                                     error=err,
-                                    url=_extract_url(args, kwargs),
+                                    url=err_url,
                                     domain=domain,
                                 )
                                 _safe_invoke(config.on_retry, ctx)
@@ -282,8 +449,29 @@ def smooth_api(config: SmoothConfig):
                             continue
                             
                         if status is not None and hasattr(err, 'response'):
+                            if config.on_failure:
+                                _safe_invoke(config.on_failure, FailureContext(
+                                    url=err_url,
+                                    domain=domain,
+                                    attempts=attempt_count,
+                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                    status=status,
+                                    response=err.response,
+                                    error=err,
+                                    is_circuit_open=False,
+                                ))
                             return err.response
 
+                if config.on_failure:
+                    _safe_invoke(config.on_failure, FailureContext(
+                        url=url or _extract_url(args, kwargs, last_err),
+                        domain=domain,
+                        attempts=attempt_count,
+                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                        error=last_err,
+                        status=_get_status_code(last_err) if last_err else None,
+                        is_circuit_open=False,
+                    ))
                 raise last_err  # type: ignore[misc]
 
             return wrapper
@@ -298,6 +486,8 @@ __all__ = [
     'RetryContext',
     'CircuitStateChangeEvent',
     'CircuitState',
+    'SuccessContext',
+    'FailureContext',
     'resilient_api',
     'ResilientConfig',
 ]

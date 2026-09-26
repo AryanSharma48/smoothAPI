@@ -69,11 +69,23 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
     url: string | URL,
     options?: RequestInit
   ): Promise<Response | T> {
+    const startTime = Date.now();
+    const urlStr = url.toString();
     // Fallback to local origin to support relative paths
-    const domain = new URL(url.toString(), typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost').hostname;
+    const domain = new URL(urlStr, typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost').hostname;
 
     // Block before any network IO if the circuit is OPEN.
     if (!breaker.canRequest(domain)) {
+      if (globalConfig.onFailure) {
+        safeInvoke(globalConfig.onFailure, {
+          url: urlStr,
+          domain,
+          attempts: 0,
+          durationMs: Date.now() - startTime,
+          error: new CircuitOpenError(domain),
+          isCircuitOpen: true,
+        });
+      }
       if (globalConfig.fallback !== undefined) {
         return globalConfig.fallback as T;
       }
@@ -87,11 +99,23 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
       const run = async (): Promise<Response | T> => {
         let prevDelay: number | undefined;
+        let attemptCount = 0;
         for (let attempt = 0; attempt <= backoffConfig.maxRetries; attempt++) {
+          attemptCount = attempt + 1;
           // Pre-flight abort check
           if (options?.signal?.aborted) {
-            // Match native fetch behavior for unhandled aborts
-            throw options.signal.reason || new DOMException("The operation was aborted.", "AbortError");
+            const abortErr = options.signal.reason || new DOMException("The operation was aborted.", "AbortError");
+            if (globalConfig.onFailure) {
+              safeInvoke(globalConfig.onFailure, {
+                url: urlStr,
+                domain,
+                attempts: attemptCount - 1,
+                durationMs: Date.now() - startTime,
+                error: abortErr,
+                isCircuitOpen: false,
+              });
+            }
+            throw abortErr;
           }
 
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -132,16 +156,16 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
               if (attempt < backoffConfig.maxRetries) {
                 let delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
-                  if (response.status === 429) {
-                    const retryAfter = response.headers.get('Retry-After');
-                      if (retryAfter) {
-                         const parsed = parseInt(retryAfter, 10);
-                      if (!Number.isNaN(parsed) && parsed > 0) {
-                         delayMs = parsed * 1000;
-                       }
-                     }
-                   }
-                   prevDelay = delayMs;
+                if (response.status === 429) {
+                  const retryAfter = response.headers.get('Retry-After');
+                  if (retryAfter) {
+                    const parsed = parseInt(retryAfter, 10);
+                    if (!Number.isNaN(parsed) && parsed > 0) {
+                      delayMs = parsed * 1000;
+                    }
+                  }
+                }
+                prevDelay = delayMs;
 
                 if (globalConfig.onRetry) {
                   safeInvoke(globalConfig.onRetry, {
@@ -149,13 +173,26 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                     maxRetries: backoffConfig.maxRetries,
                     delayMs,
                     status: response.status,
-                    url: url.toString(),
+                    url: urlStr,
                     domain,
                   });
                 }
 
                 await sleep(delayMs, options?.signal);
                 continue;
+              }
+
+              if (globalConfig.onFailure) {
+                safeInvoke(globalConfig.onFailure, {
+                  url: urlStr,
+                  domain,
+                  attempts: attemptCount,
+                  durationMs: Date.now() - startTime,
+                  status: response.status,
+                  response,
+                  error: new Error(`HTTP ${response.status}: Retries exhausted`),
+                  isCircuitOpen: false,
+                });
               }
               return response;
             }
@@ -169,6 +206,19 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
               }
 
               breaker.recordSuccess(domain);
+
+              if (globalConfig.onFailure) {
+                safeInvoke(globalConfig.onFailure, {
+                  url: urlStr,
+                  domain,
+                  attempts: attemptCount,
+                  durationMs: Date.now() - startTime,
+                  status: response.status,
+                  response,
+                  error: new Error(message),
+                  isCircuitOpen: false,
+                });
+              }
 
               if (globalConfig.fallback !== undefined) {
                 return globalConfig.fallback as T;
@@ -189,6 +239,33 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             }
 
             breaker.recordSuccess(domain);
+
+            if (response.status >= 400) {
+              if (globalConfig.onFailure) {
+                safeInvoke(globalConfig.onFailure, {
+                  url: urlStr,
+                  domain,
+                  attempts: attemptCount,
+                  durationMs: Date.now() - startTime,
+                  status: response.status,
+                  response,
+                  error: new Error(`HTTP ${response.status}${response.statusText ? ' ' + response.statusText : ''}`),
+                  isCircuitOpen: false,
+                });
+              }
+            } else {
+              if (globalConfig.onSuccess) {
+                safeInvoke(globalConfig.onSuccess, {
+                  url: urlStr,
+                  domain,
+                  attempts: attemptCount,
+                  durationMs: Date.now() - startTime,
+                  status: response.status,
+                  response,
+                });
+              }
+            }
+
             return response;
           } catch (err: any) {
             lastError = err;
@@ -196,11 +273,31 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             // (We know it's our timeout if controller is aborted and the user's signal isn't).
             const isInternalTimeout = controller?.signal?.aborted && !options?.signal?.aborted;
             if (err?.name === 'AbortError' && !isInternalTimeout) {
-                throw err;
+              if (globalConfig.onFailure) {
+                safeInvoke(globalConfig.onFailure, {
+                  url: urlStr,
+                  domain,
+                  attempts: attemptCount,
+                  durationMs: Date.now() - startTime,
+                  error: err,
+                  isCircuitOpen: false,
+                });
+              }
+              throw err;
             }
 
             // Do not retry or record failure if the user explicitly aborted the request
             if (options?.signal?.aborted) {
+              if (globalConfig.onFailure) {
+                safeInvoke(globalConfig.onFailure, {
+                  url: urlStr,
+                  domain,
+                  attempts: attemptCount,
+                  durationMs: Date.now() - startTime,
+                  error: err,
+                  isCircuitOpen: false,
+                });
+              }
               throw err;
             }
 
@@ -208,6 +305,16 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
               const should = await evaluateShouldRetry(globalConfig.shouldRetry, undefined, err, true);
               if (!should) {
                 breaker.recordFailure(domain);
+                if (globalConfig.onFailure) {
+                  safeInvoke(globalConfig.onFailure, {
+                    url: urlStr,
+                    domain,
+                    attempts: attemptCount,
+                    durationMs: Date.now() - startTime,
+                    error: err,
+                    isCircuitOpen: false,
+                  });
+                }
                 throw err;
               }
             }
@@ -224,7 +331,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                   maxRetries: backoffConfig.maxRetries,
                   delayMs,
                   error: err instanceof Error ? err : new Error(String(err)),
-                  url: url.toString(),
+                  url: urlStr,
                   domain,
                 });
               }
@@ -238,6 +345,16 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
           }
         }
 
+        if (globalConfig.onFailure) {
+          safeInvoke(globalConfig.onFailure, {
+            url: urlStr,
+            domain,
+            attempts: attemptCount,
+            durationMs: Date.now() - startTime,
+            error: lastError,
+            isCircuitOpen: false,
+          });
+        }
         throw lastError;
       };
 

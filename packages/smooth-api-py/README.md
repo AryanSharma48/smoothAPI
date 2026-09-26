@@ -226,11 +226,26 @@ config = SmoothConfig(
 
 SmoothAPI supports lifecycle event hooks to easily attach logging, metrics, alerting, or telemetry:
 
+* **`on_success`**: Invoked on successful execution (HTTP status < 400). Receives a `SuccessContext` with `url`, `domain`, `attempts`, `duration_ms` (and `.duration` in seconds), `status`, and `response`.
+* **`on_failure`**: Invoked on terminal failures (HTTP 4xx/5xx, exhausted retries, or when circuit is `OPEN`). Receives a `FailureContext` with `url`, `domain`, `attempts`, `duration_ms`, `error`, `status`, `response`, and `is_circuit_open`.
 * **`on_retry`**: Invoked before sleeping on a retryable failure. Receives a `RetryContext` with attempt number, maximum retries, calculated delay (`delay` in seconds, `delay_ms` in milliseconds), HTTP status code (if available), error exception (if available), url, and function domain.
 * **`on_circuit_state_change`**: Invoked whenever the circuit breaker transitions between states (`CLOSED`, `OPEN`, `HALF_OPEN`). Receives a `CircuitStateChangeEvent` with `domain`, `from_state`, `to_state`, and `failure_count`.
 
 ```python
-from smooth_api import smooth_api, SmoothConfig, RetryContext, CircuitStateChangeEvent
+from smooth_api import (
+    smooth_api,
+    SmoothConfig,
+    RetryContext,
+    CircuitStateChangeEvent,
+    SuccessContext,
+    FailureContext,
+)
+
+def log_success(ctx: SuccessContext):
+    print(f"[Success] {ctx.domain} completed in {ctx.duration_ms:.1f}ms ({ctx.attempts} attempts)")
+
+def log_failure(ctx: FailureContext):
+    print(f"[Failure] {ctx.domain} failed after {ctx.attempts} attempts. Circuit open: {ctx.is_circuit_open}")
 
 def log_retry(ctx: RetryContext):
     print(f"[Retry] Attempt {ctx.attempt}/{ctx.max_retries} for {ctx.domain} (status: {ctx.status}). Retrying in {ctx.delay_ms:.0f}ms")
@@ -239,12 +254,14 @@ def log_circuit_transition(event: CircuitStateChangeEvent):
     print(f"[Circuit] {event.domain}: {event.from_state} -> {event.to_state} (failures: {event.failure_count})")
 
 config = SmoothConfig(
+    on_success=log_success,
+    on_failure=log_failure,
     on_retry=log_retry,
     on_circuit_state_change=log_circuit_transition,
 )
 ```
 
-Both synchronous functions and `async def` coroutines are supported as hooks. All hooks execute with built-in fail-safe protection, ensuring that any exceptions raised inside user-defined callback functions never crash your request pipeline.
+Both synchronous functions and `async def` coroutines are supported as hooks (supporting both `snake_case` and `camelCase` aliases). All hooks execute with built-in fail-safe protection, ensuring that any exceptions raised inside user-defined callback functions never crash your request pipeline.
 
 ## How It Works
 

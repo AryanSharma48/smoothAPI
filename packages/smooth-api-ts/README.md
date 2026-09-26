@@ -226,6 +226,14 @@ You can pass callback functions to listen to key events during the request lifec
 import { createSmoothFetch } from '@codingaryan/smoothapi';
 
 const fetchWithRetry = createSmoothFetch({
+  onSuccess: (context) => {
+    // Fired on successful completion (HTTP 2xx)
+    console.log(`[smoothAPI] ${context.url} succeeded in ${context.durationMs}ms after ${context.attempts} attempt(s)`);
+  },
+  onFailure: (context) => {
+    // Fired on terminal error, exhausted retries, 4xx/5xx, or OPEN circuit
+    console.error(`[smoothAPI] ${context.url} failed after ${context.attempts} attempt(s). Circuit open: ${context.isCircuitOpen}`);
+  },
   onRetry: (context) => {
     // Fired before a request is retried
     console.warn(`[Attempt ${context.attempt}/${context.maxRetries}] Retrying ${context.domain} in ${context.delayMs}ms. Status: ${context.status}`);
@@ -237,8 +245,10 @@ const fetchWithRetry = createSmoothFetch({
 });
 ```
 
-- **`onRetry(context)`**: Receives `{ attempt, maxRetries, delayMs, status?, error?, url, domain }`. It fires immediately before the delay sleep begins.
-- **`onCircuitStateChange(event)`**: Receives `{ domain, from, to, failureCount }`. It fires exactly when the state transitions (`CLOSED` → `OPEN` → `HALF_OPEN` → `CLOSED`).
+- **`onSuccess(context)`**: Receives `{ url, domain, attempts, durationMs, status, response }`. Fires on HTTP 2xx completions.
+- **`onFailure(context)`**: Receives `{ url, domain, attempts, durationMs, error?, status?, response?, isCircuitOpen }`. Fires on terminal failures (5xx/4xx, exhausted retries, or `CircuitOpenError`).
+- **`onRetry(context)`**: Receives `{ attempt, maxRetries, delayMs, status?, error?, url, domain }`. Fires immediately before the delay sleep begins.
+- **`onCircuitStateChange(event)`**: Receives `{ domain, from, to, failureCount }`. Fires exactly when the state transitions (`CLOSED` → `OPEN` → `HALF_OPEN` → `CLOSED`).
 - **Fail-Safe**: If your hook throws an exception, SmoothAPI catches and logs it internally, ensuring it never crashes your request pipeline.
 
 ### AbortController Support

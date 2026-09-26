@@ -214,11 +214,11 @@ pytest tests/ -v
 - [x] Exponential backoff with equal jitter
 - [x] Finite state machine circuit breaker
 - [x] Retry-After header support
-- [ ] Request timeout & AbortController support
-- [ ] Custom retry strategies
+- [x] Request timeout & AbortController support
+- [x] Custom retry strategies (`shouldRetry`)
 
 ### Observability
-- [ ] Event & metric hooks
+- [x] Event & metric hooks (`onRetry`, `onCircuitStateChange`, `onSuccess`, `onFailure`)
 - [ ] OpenTelemetry integration
 - [ ] Structured logging support
 
