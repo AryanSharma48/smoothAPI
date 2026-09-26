@@ -48,7 +48,7 @@ or call the routes directly with the curl commands below.
 
 ### `/api/resilient` — retry + fallback
 
-This route points `createResilientFetch` at `/unstable-data`, which returns a
+This route points `createSmoothFetch` at `/unstable-data`, which returns a
 mix of `200`, `429`, and `500` responses. With the default retry settings, a
 retryable status (`429`/`500`/...) causes the client to back off and try again
 (up to the default number of retries). Because `/unstable-data` never fails
@@ -72,7 +72,7 @@ library does **not** fall back to its browser `alert()` behavior on the server.
 
 ### `/api/circuit-demo` — circuit breaker
 
-This route points `createResilientFetch` at `/always-fail`, which always returns
+This route points `createSmoothFetch` at `/always-fail`, which always returns
 `500`, with `failureThreshold: 3` and a short `cooldownMs` so the demo is quick.
 
 Call it repeatedly and watch the behavior change:
