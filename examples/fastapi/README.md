@@ -5,6 +5,8 @@ This example demonstrates how to integrate **SmoothAPI** into a FastAPI applicat
 ## Features
 
 - Automatic retries for transient failures
+- Exponential backoff with jitter and retry metrics
+- Request timeout protection (`timeout_ms`)
 - Circuit breaker protection
 - Graceful fallback responses
 - Async FastAPI integration using `httpx`
@@ -99,6 +101,34 @@ GET http://localhost:3001/always-fail
 ```
 
 After repeated failures, the circuit breaker opens and returns the configured fallback response immediately without making another network request.
+
+---
+
+### `GET /timeout-demo`
+
+Demonstrates request timeout handling with automatic aborts and fallback recovery:
+
+Target endpoint:
+
+```
+GET http://localhost:3001/delayed?ms=2500
+```
+
+Requests that exceed `timeout_ms=1000` are aborted and retried, eventually resolving to the configured fallback response safely.
+
+---
+
+### `GET /backoff-demo`
+
+Demonstrates exponential backoff with retry context tracking:
+
+Target endpoint:
+
+```
+GET http://localhost:3001/unstable-data
+```
+
+Inspects the attempt history and delays calculated by SmoothAPI's exponential backoff algorithm.
 
 ---
 

@@ -108,6 +108,26 @@ All three requests target the same sandbox URL:
 GET http://localhost:3001/health
 ```
 
+### GET /timeout-demo
+
+Demonstrates per-request timeouts (`timeoutMs: 1000`) and graceful fallback recovery when downstream endpoints hang:
+
+```text
+GET http://localhost:3001/delayed?ms=2500
+```
+
+Each attempt aborts after 1000ms. Once retries are exhausted, SmoothAPI safely returns the fallback payload.
+
+### GET /backoff-demo
+
+Demonstrates exponential backoff with equal jitter and real-time attempt tracking:
+
+```text
+GET http://localhost:3001/unstable-data
+```
+
+Returns the retry timeline and delay metrics recorded by the `onRetry` hook.
+
 ---
 
 ## Example Requests
@@ -119,6 +139,8 @@ curl http://localhost:3002/health
 curl http://localhost:3002/retry-demo
 curl http://localhost:3002/circuit-demo
 curl http://localhost:3002/dedup-demo
+curl http://localhost:3002/timeout-demo
+curl http://localhost:3002/backoff-demo
 ```
 
 Or you could open the endpoints on any browser

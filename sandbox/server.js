@@ -75,6 +75,16 @@ app.get('/always-fail', (_req, res) => {
   return res.status(500).json({ error: 'Service Unavailable' });
 });
 
+// Simulates a slow or hanging upstream endpoint.
+// Accepts optional ?ms= query parameter (defaults to 3000ms).
+// Useful for verifying per-request timeout aborts and retry behaviors.
+app.get('/delayed', async (req, res) => {
+  const delayMs = Math.max(0, parseInt(req.query.ms, 10) || 3000);
+  console.log(`[sandbox] /delayed -> sleeping ${delayMs}ms`);
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
+  return res.status(200).json({ success: true, delayedMs: delayMs });
+});
+
 app.listen(PORT, () => {
   console.log(`[sandbox] listening on http://localhost:${PORT}`);
 });

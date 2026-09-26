@@ -49,17 +49,49 @@ const dedupSmoothFetch = createSmoothFetch({
     deduplication: {}
 });
 
+// Timeout integration: aborts individual attempts exceeding 1000ms, retrying with backoff
+const timeoutSmoothFetch = createSmoothFetch({
+    timeoutMs: 1000,
+    backoff: {
+        baseDelay: 200,
+        maxRetries: 2,
+    },
+    fallback: {
+        source: 'fallback',
+        message: 'Upstream timed out after retries. Graceful fallback returned.'
+    },
+    onRetry: (context) => {
+        console.log(`[timeout-demo] Attempt #${context.attempt} timed out. Retrying in ${context.delayMs}ms...`);
+    }
+});
+
+// Backoff integration: demonstrates exponential backoff with equal jitter and retry inspection
+const backoffSmoothFetch = createSmoothFetch({
+    backoff: {
+        baseDelay: 250,
+        maxDelay: 4000,
+        maxRetries: 3,
+        jitter: 'equal' // exponential backoff with equal jitter to prevent thundering herds
+    },
+    retryOn: [429, 500, 502, 503, 504],
+    onRetry: (context) => {
+        console.log(`[backoff-demo] Retry attempt #${context.attempt}/${context.maxRetries} after delay of ${context.delayMs}ms for ${context.url}`);
+    }
+});
+
 app.use(express.json());
 
 app.get('/', (_req, res) => {
     // The root endpoint of the example express server.
     res.json({ 
         message: 'Welcome to the SmoothAPI Express Example!',
-        description: 'Demonstrates retries, circuit breakers, fallback handling, and request deduplication using SmoothAPI.',
+        description: 'Demonstrates retries, circuit breakers, fallback handling, request deduplication, timeouts, and backoff using SmoothAPI.',
         endpoints: {
             retry_demo: '/retry-demo',
             circuit_demo: '/circuit-demo',
             dedup_demo: '/dedup-demo',
+            timeout_demo: '/timeout-demo',
+            backoff_demo: '/backoff-demo',
         },
     });
 });
@@ -140,6 +172,94 @@ app.get('/dedup-demo', async (_req, res) => {
     } catch (error) {
         return res.status(502).json({
             error: error instanceof Error ? error.message : String(error),
+        });
+    }
+});
+
+app.get('/timeout-demo', async (_req, res) => {
+    // This route targets the sandbox's /delayed endpoint with a delay of 2500ms.
+    // Since timeoutSmoothFetch has timeoutMs: 1000, each attempt will abort after 1000ms.
+    // After exhausting retries, it returns the configured graceful fallback.
+    const startTime = Date.now();
+    try {
+        const result = await timeoutSmoothFetch(`${SANDBOX_URL}/delayed?ms=2500`);
+        const duration = Date.now() - startTime;
+
+        if (result instanceof Response) {
+            const data = await result.json().catch(() => null);
+            return res.json({
+                feature: 'timeoutMs',
+                source: 'upstream-response',
+                durationMs: duration,
+                data
+            });
+        }
+
+        return res.json({
+            feature: 'timeoutMs',
+            source: 'fallback',
+            durationMs: duration,
+            note: 'Requests timed out (>1000ms) and were safely recovered via fallback',
+            data: result
+        });
+    } catch (error) {
+        return res.status(504).json({
+            feature: 'timeoutMs',
+            durationMs: Date.now() - startTime,
+            error: error instanceof Error ? error.message : String(error)
+        });
+    }
+});
+
+app.get('/backoff-demo', async (_req, res) => {
+    // Demonstrates exponential backoff with equal jitter and retry inspection.
+    // Targets the flaky /unstable-data endpoint.
+    const retryHistory: Array<{ attempt: number; delayMs: number }> = [];
+    const trackingFetch = createSmoothFetch({
+        backoff: {
+            baseDelay: 200,
+            maxDelay: 3000,
+            maxRetries: 3,
+            jitter: 'equal'
+        },
+        retryOn: [429, 500, 502, 503, 504],
+        onRetry: (ctx) => {
+            retryHistory.push({ attempt: ctx.attempt, delayMs: ctx.delayMs });
+        }
+    });
+
+    const startTime = Date.now();
+    try {
+        const result = await trackingFetch(`${SANDBOX_URL}/unstable-data`);
+        const duration = Date.now() - startTime;
+
+        if (result instanceof Response) {
+            const data = await result.json().catch(() => null);
+            return res.json({
+                feature: 'backoff_with_jitter',
+                status: result.status,
+                totalDurationMs: duration,
+                retriesPerformed: retryHistory.length,
+                retryHistory,
+                data
+            });
+        }
+
+        return res.json({
+            feature: 'backoff_with_jitter',
+            source: 'fallback',
+            totalDurationMs: duration,
+            retriesPerformed: retryHistory.length,
+            retryHistory,
+            data: result
+        });
+    } catch (error) {
+        return res.status(502).json({
+            feature: 'backoff_with_jitter',
+            totalDurationMs: Date.now() - startTime,
+            retriesPerformed: retryHistory.length,
+            retryHistory,
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });

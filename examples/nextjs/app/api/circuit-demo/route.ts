@@ -1,4 +1,4 @@
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
 // This route makes a live request on every call, so opt out of static
 // prerendering at build time.
@@ -10,7 +10,7 @@ const FALLBACK = { data: 'circuit-open fallback' };
 
 // Module-scoped so the breaker state survives across requests. /always-fail
 // never succeeds, so consecutive failures accumulate until the circuit trips.
-const resilientFetch = createResilientFetch<typeof FALLBACK>({
+const circuitFetch = createSmoothFetch<typeof FALLBACK>({
   retryOn: [429, 500, 502, 503, 504],
   circuitBreaker: {
     failureThreshold: 3,
@@ -25,7 +25,7 @@ const resilientFetch = createResilientFetch<typeof FALLBACK>({
 export async function GET() {
   // no-store: bypass Next.js's default fetch cache so every call is a real
   // request — otherwise the breaker would never see repeated failures.
-  const result = await resilientFetch(SANDBOX_URL, { cache: 'no-store' });
+  const result = await circuitFetch(SANDBOX_URL, { cache: 'no-store' });
 
   // A Response means the request reached the network (and retried). The
   // fallback object means the OPEN circuit short-circuited before any IO.

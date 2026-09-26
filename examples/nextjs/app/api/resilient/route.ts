@@ -1,4 +1,4 @@
-import { createResilientFetch } from '@codingaryan/smoothapi';
+import { createSmoothFetch } from '@codingaryan/smoothapi';
 
 // This route makes a live request on every call, so opt out of static
 // prerendering at build time.
@@ -12,7 +12,7 @@ const FALLBACK = { data: 'cached fallback (stale)' };
 
 // Created once at module scope so the circuit-breaker state is shared across
 // requests instead of being reset on every call.
-const resilientFetch = createResilientFetch<typeof FALLBACK>({
+const resilientFetch = createSmoothFetch<typeof FALLBACK>({
   // Keep the default backoff/retry settings.
   retryOn: [429, 500, 502, 503, 504],
   fallback: FALLBACK,

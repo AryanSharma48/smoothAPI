@@ -4,17 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmoothAPI Browser Example</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+        h1 { color: #0f172a; margin-bottom: 8px; }
+        p { color: #64748b; margin-top: 0; }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 16px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0f172a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+        pre {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            min-height: 120px;
+            font-size: 13px;
+        }
+    </style>
 </head>
 <body>
     <h1>SmoothAPI Browser Example</h1>
+    <p>Interactive demonstration of retries, circuit breakers, request timeouts, and exponential backoff.</p>
 
-    <p>Demonstrates retries, circuit breaker behavior, and fallback handling.</p>
+    <div class="button-group">
+        <button id="retry-btn">Retry Demo</button>
+        <button id="circuit-btn">Circuit Breaker Demo</button>
+        <button id="timeout-btn">Timeout Demo (1000ms)</button>
+        <button id="backoff-btn">Custom Backoff Demo</button>
+    </div>
 
-    <button id="retry-btn">Retry Demo</button>
-    <button id="circuit-btn">Circuit Breaker Demo</button>
-
-    <h2>Output</h2>
-    <pre id="output">Click a button to begin...</pre>
+    <h2>Live Output</h2>
+    <pre id="output">Click a button above to run a demo...</pre>
 
     <script type="module" src="./main.ts"></script>
 </body>

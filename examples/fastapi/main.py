@@ -50,6 +50,38 @@ circuit_config = SmoothConfig(
     },
 )
 
+timeout_config = SmoothConfig(
+    backoff=BackoffConfig(
+        base_delay=0.2,
+        max_delay=2.0,
+        max_retries=2,
+    ),
+    timeout_ms=1000,
+    fallback={
+        "source": "fallback",
+        "message": "Request timed out after retries. Graceful fallback returned."
+    },
+)
+
+backoff_history: list[Dict[str, Any]] = []
+
+def record_retry(ctx):
+    backoff_history.append({
+        "attempt": ctx.attempt,
+        "max_retries": ctx.max_retries,
+        "delay_ms": round(ctx.delay_ms, 2)
+    })
+
+backoff_config = SmoothConfig(
+    backoff=BackoffConfig(
+        base_delay=0.2,
+        max_delay=3.0,
+        max_retries=3,
+    ),
+    retry_on=[429, 500, 502, 503, 504],
+    on_retry=record_retry,
+)
+
 
 @app.get(
     "/",
@@ -59,11 +91,13 @@ circuit_config = SmoothConfig(
 async def root() -> Dict[str, Any]:
     return {
         "project": "SmoothAPI FastAPI Example",
-        "description": "Demonstrates retries, circuit breakers, and fallback handling using SmoothAPI.",
+        "description": "Demonstrates retries, circuit breakers, fallback handling, timeouts, and backoff using SmoothAPI.",
         "documentation": "/docs",
         "endpoints": {
             "retry_demo": "/retry-demo",
             "circuit_demo": "/circuit-demo",
+            "timeout_demo": "/timeout-demo",
+            "backoff_demo": "/backoff-demo",
         },
     }
 
@@ -122,5 +156,52 @@ async def circuit_demo() -> Dict[str, Any]:
         "source": "fallback",
         "endpoint": "/always-fail",
         "description": "The circuit breaker is open, so the configured fallback response was returned.",
+        "result": result,
+    }
+
+
+@smooth_api(timeout_config)
+async def fetch_delayed_data() -> Any:
+    response = await http_client.get(f"{SANDBOX_URL}/delayed?ms=2500")
+    response.raise_for_status()
+    return response.json()
+
+
+@app.get(
+    "/timeout-demo",
+    summary="Timeout Handling Example",
+    description="Demonstrates SmoothAPI aborting slow requests and returning fallback data.",
+)
+async def timeout_demo() -> Dict[str, Any]:
+    result = await fetch_delayed_data()
+    return {
+        "feature": "Request Timeouts (timeout_ms)",
+        "endpoint": "/delayed?ms=2500",
+        "timeout_ms": 1000,
+        "description": "Per-attempt timeout aborted slow requests and returned configured fallback.",
+        "result": result,
+    }
+
+
+@smooth_api(backoff_config)
+async def fetch_with_backoff() -> Any:
+    response = await http_client.get(f"{SANDBOX_URL}/unstable-data")
+    response.raise_for_status()
+    return response.json()
+
+
+@app.get(
+    "/backoff-demo",
+    summary="Backoff & Retry Tracking Example",
+    description="Demonstrates exponential backoff retry cycles and records retry metrics.",
+)
+async def backoff_demo() -> Dict[str, Any]:
+    backoff_history.clear()
+    result = await fetch_with_backoff()
+    return {
+        "feature": "Exponential Backoff",
+        "endpoint": "/unstable-data",
+        "retries_performed": len(backoff_history),
+        "retry_history": list(backoff_history),
         "result": result,
     }

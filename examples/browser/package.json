@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@codingaryan/smoothapi": "1.0.0"
+    "@codingaryan/smoothapi": "file:../../packages/smooth-api-ts"
   },
   "devDependencies": {
     "typescript": "^5.4.5",

@@ -68,10 +68,31 @@ This endpoint always returns a failure response.
 
 After enough consecutive failures, the circuit breaker opens and returns the configured fallback immediately without making additional network requests.
 
+## Timeout Demo
+
+The Timeout Demo calls:
+
+```text
+http://localhost:3001/delayed?ms=2500
+```
+
+With `timeoutMs: 1000` configured, each attempt that takes longer than 1000ms is aborted. After retry attempts are exhausted, SmoothAPI returns the safe fallback payload without hanging the UI.
+
+## Custom Backoff Demo
+
+Demonstrates exponential backoff with equal jitter:
+
+```text
+http://localhost:3001/unstable-data
+```
+
+Logs each retry attempt and its calculated jittered delay via the `onRetry` callback in real time.
+
 ## Features Demonstrated
 
 * Automatic retries
-* Exponential backoff
+* Exponential backoff with jitter
+* Request timeout protection (`timeoutMs`)
 * Fallback responses
 * Circuit breaker protection
 * Browser integration with SmoothAPI

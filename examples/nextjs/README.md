@@ -90,6 +90,17 @@ The breaker counts **consecutive** failures and **resets on success**. That's
 why `/unstable-data` can never trip it (a `200` always clears the count), while
 `/always-fail` trips it reliably.
 
+### `/api/timeout` — per-request timeout abort + fallback
+
+This route sets `timeoutMs: 1000` against the sandbox's `/delayed?ms=2500` endpoint.
+Because the server response takes 2500ms, each attempt aborts at 1000ms. After retries
+are exhausted, SmoothAPI safely serves the configured fallback response without hanging.
+
+### `/api/backoff` — exponential backoff with jitter and retry metrics
+
+This route calls `/unstable-data` with `jitter: 'equal'` and tracks each retry attempt's
+delay using the `onRetry` hook, returning the complete retry timeline in the response.
+
 ---
 
 ## Example requests
@@ -100,6 +111,10 @@ curl http://localhost:3000/api/resilient
 
 # Circuit breaker demo — run it several times in a row to see the circuit open
 curl http://localhost:3000/api/circuit-demo
-curl http://localhost:3000/api/circuit-demo
-curl http://localhost:3000/api/circuit-demo
+
+# Timeout demo — aborts after 1000ms and returns fallback
+curl http://localhost:3000/api/timeout
+
+# Backoff demo — returns attempt timeline and jittered delays
+curl http://localhost:3000/api/backoff
 ```
