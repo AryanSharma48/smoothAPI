@@ -265,3 +265,182 @@ def test_on_retry_extracts_url_from_class_method():
     service.fetch(f"{BASE}/always-fail")
     assert len(calls) == 1
     assert calls[0].url == f"{BASE}/always-fail"
+
+
+def test_on_success_sync_clean_200():
+    reset()
+    success_calls = []
+    failure_calls = []
+
+    config = SmoothConfig(
+        on_success=success_calls.append,
+        on_failure=failure_calls.append,
+    )
+
+    @smooth_api(config)
+    def call_health():
+        return requests.get(f"{BASE}/health")
+
+    resp = call_health()
+    assert resp.status_code == 200
+    assert len(success_calls) == 1
+    assert len(failure_calls) == 0
+
+    ctx = success_calls[0]
+    assert ctx.status == 200
+    assert ctx.attempts == 1
+    assert ctx.duration_ms >= 0
+    assert ctx.duration >= 0
+    assert "health" in ctx.url
+
+
+@pytest.mark.asyncio
+async def test_on_success_async_after_retries():
+    reset()
+    success_calls = []
+    retry_calls = []
+
+    config = SmoothConfig(
+        backoff=BackoffConfig(max_retries=3, base_delay=0.01, max_delay=0.05),
+        on_retry=retry_calls.append,
+        on_success=success_calls.append,
+    )
+
+    # First 2 calls hit 200, 3rd hits 500 and retries to 4th (200)
+    requests.get(f"{BASE}/unstable-data")
+    requests.get(f"{BASE}/unstable-data")
+
+    @smooth_api(config)
+    async def call_unstable():
+        resp = requests.get(f"{BASE}/unstable-data")
+        resp.raise_for_status()
+        return resp
+
+    resp = await call_unstable()
+    assert resp.status_code == 200
+    assert len(retry_calls) == 1
+    assert len(success_calls) == 1
+    assert success_calls[0].attempts == 2
+
+
+def test_on_failure_500_when_retries_exhausted():
+    reset()
+    success_calls = []
+    failure_calls = []
+
+    config = SmoothConfig(
+        backoff=BackoffConfig(max_retries=2, base_delay=0.01, max_delay=0.05),
+        on_success=success_calls.append,
+        on_failure=failure_calls.append,
+    )
+
+    @smooth_api(config)
+    def call_fail():
+        resp = requests.get(f"{BASE}/always-fail")
+        resp.raise_for_status()
+        return resp
+
+    resp = call_fail()
+    assert resp.status_code == 500
+    assert len(success_calls) == 0, "on_success must NOT fire for 500"
+    assert len(failure_calls) == 1, "on_failure must fire for 500"
+
+    ctx = failure_calls[0]
+    assert ctx.status == 500
+    assert ctx.attempts == 3  # attempt 0, 1, 2
+    assert ctx.is_circuit_open is False
+    assert ctx.duration_ms >= 0
+
+
+def test_on_failure_circuit_open():
+    reset()
+    failure_calls = []
+
+    config = SmoothConfig(
+        backoff=BackoffConfig(max_retries=0, base_delay=0.01),
+        circuit_breaker=CircuitBreakerConfig(failure_threshold=1, cooldown_ms=5000),
+        on_failure=failure_calls.append,
+    )
+
+    @smooth_api(config)
+    def call_fail():
+        resp = requests.get(f"{BASE}/always-fail")
+        resp.raise_for_status()
+        return resp
+
+    # 1st call trips breaker
+    call_fail()
+    assert len(failure_calls) == 1
+
+    # 2nd call blocked by OPEN circuit
+    with pytest.raises(RuntimeError, match="Circuit breaker is OPEN"):
+        call_fail()
+
+    assert len(failure_calls) == 2
+    second_ctx = failure_calls[1]
+    assert second_ctx.is_circuit_open is True
+    assert second_ctx.isCircuitOpen is True
+    assert second_ctx.attempts == 0
+
+
+def test_on_success_and_failure_exceptions_safe():
+    reset()
+
+    def buggy_success(ctx):
+        raise ValueError("Bug in on_success")
+
+    def buggy_failure(ctx):
+        raise ValueError("Bug in on_failure")
+
+    config = SmoothConfig(
+        backoff=BackoffConfig(max_retries=0, base_delay=0.01),
+        on_success=buggy_success,
+        on_failure=buggy_failure,
+    )
+
+    @smooth_api(config)
+    def call_health():
+        return requests.get(f"{BASE}/health")
+
+    @smooth_api(config)
+    def call_fail():
+        resp = requests.get(f"{BASE}/always-fail")
+        resp.raise_for_status()
+        return resp
+
+    # Should not crash on success hook bug
+    res = call_health()
+    assert res.status_code == 200
+
+    # Should not crash on failure hook bug
+    fail_res = call_fail()
+    assert fail_res.status_code == 500
+
+
+def test_camel_case_hook_aliases():
+    reset()
+    success_calls = []
+    failure_calls = []
+
+    config = SmoothConfig(
+        backoff=BackoffConfig(max_retries=0, base_delay=0.01),
+        onSuccess=success_calls.append,
+        onFailure=failure_calls.append,
+    )
+
+    @smooth_api(config)
+    def call_health():
+        return requests.get(f"{BASE}/health")
+
+    @smooth_api(config)
+    def call_fail():
+        resp = requests.get(f"{BASE}/always-fail")
+        resp.raise_for_status()
+        return resp
+
+    call_health()
+    assert len(success_calls) == 1
+
+    call_fail()
+    assert len(failure_calls) == 1
+

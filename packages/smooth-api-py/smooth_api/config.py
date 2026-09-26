@@ -81,6 +81,42 @@ class DeduplicationConfig:
 
 
 @dataclass
+class SuccessContext:
+    url: str
+    domain: str
+    attempts: int
+    duration_ms: float
+    status: Optional[int] = None
+    response: Optional[Any] = None
+
+    @property
+    def duration(self) -> float:
+        """Duration in seconds."""
+        return self.duration_ms / 1000.0
+
+
+@dataclass
+class FailureContext:
+    url: str
+    domain: str
+    attempts: int
+    duration_ms: float
+    error: Optional[Any] = None
+    status: Optional[int] = None
+    response: Optional[Any] = None
+    is_circuit_open: bool = False
+
+    @property
+    def duration(self) -> float:
+        """Duration in seconds."""
+        return self.duration_ms / 1000.0
+
+    @property
+    def isCircuitOpen(self) -> bool:
+        return self.is_circuit_open
+
+
+@dataclass
 class SmoothConfig:
     backoff: BackoffConfig = field(default_factory=BackoffConfig)
     circuit_breaker: CircuitBreakerConfig = field(default_factory=CircuitBreakerConfig)
@@ -97,11 +133,19 @@ class SmoothConfig:
     # Lifecycle event hooks
     on_retry: Optional[Callable[[RetryContext], Any]] = None
     on_circuit_state_change: Optional[Callable[[CircuitStateChangeEvent], Any]] = None
+    on_success: Optional[Callable[[SuccessContext], Any]] = None
+    on_failure: Optional[Callable[[FailureContext], Any]] = None
     onRetry: Optional[Callable[[RetryContext], Any]] = None
     onCircuitStateChange: Optional[Callable[[CircuitStateChangeEvent], Any]] = None
+    onSuccess: Optional[Callable[[SuccessContext], Any]] = None
+    onFailure: Optional[Callable[[FailureContext], Any]] = None
 
     def __post_init__(self):
         if self.on_retry is None and self.onRetry is not None:
             self.on_retry = self.onRetry
         if self.on_circuit_state_change is None and self.onCircuitStateChange is not None:
             self.on_circuit_state_change = self.onCircuitStateChange
+        if self.on_success is None and self.onSuccess is not None:
+            self.on_success = self.onSuccess
+        if self.on_failure is None and self.onFailure is not None:
+            self.on_failure = self.onFailure

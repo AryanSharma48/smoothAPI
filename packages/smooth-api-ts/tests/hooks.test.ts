@@ -123,4 +123,128 @@ describe('Lifecycle Event Hooks', () => {
     assert.ok(retryCalled, 'onRetry should have been invoked');
     assert.ok(stateChangeCalled, 'onCircuitStateChange should have been invoked');
   });
+
+  it('onSuccess fires on clean 200 response with correct context', async () => {
+    await reset();
+    const mockSuccess = mock.fn();
+    const mockFailure = mock.fn();
+
+    const fetch = createSmoothFetch<Response>({
+      onSuccess: mockSuccess,
+      onFailure: mockFailure,
+    });
+
+    const res = await fetch(`${BASE}/health`) as Response;
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(mockSuccess.mock.calls.length, 1);
+    assert.strictEqual(mockFailure.mock.calls.length, 0);
+
+    const ctx = mockSuccess.mock.calls[0].arguments[0];
+    assert.strictEqual(ctx.status, 200);
+    assert.strictEqual(ctx.attempts, 1);
+    assert.ok(ctx.durationMs >= 0);
+    assert.strictEqual(ctx.domain, 'localhost');
+    assert.ok(ctx.url.includes('/health'));
+  });
+
+  it('onSuccess fires after retries succeed', async () => {
+    await reset();
+    const mockSuccess = mock.fn();
+    const mockRetry = mock.fn();
+
+    const fetch = createSmoothFetch<Response>({
+      backoff: { maxRetries: 3, baseDelay: 10, maxDelay: 50 },
+      onRetry: mockRetry,
+      onSuccess: mockSuccess,
+    });
+
+    // /unstable-data: request 1 (200), request 2 (200), request 3 (500), request 4 (200)
+    // Make 2 calls first so the next call hits 500 and retries
+    await fetch(`${BASE}/unstable-data`); // req 1 -> 200
+    await fetch(`${BASE}/unstable-data`); // req 2 -> 200
+
+    mockSuccess.mock.resetCalls();
+    // req 3 is 500, retries to req 4 which is 200!
+    const res = await fetch(`${BASE}/unstable-data`) as Response;
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(mockRetry.mock.calls.length, 1);
+    assert.strictEqual(mockSuccess.mock.calls.length, 1);
+
+    const ctx = mockSuccess.mock.calls[0].arguments[0];
+    assert.strictEqual(ctx.status, 200);
+    assert.strictEqual(ctx.attempts, 2); // 1 initial + 1 retry
+  });
+
+  it('onFailure fires when retries are exhausted on 500 (500 should be failure)', async () => {
+    await reset();
+    const mockSuccess = mock.fn();
+    const mockFailure = mock.fn();
+
+    const fetch = createSmoothFetch<Response>({
+      backoff: { maxRetries: 2, baseDelay: 10, maxDelay: 50 },
+      onSuccess: mockSuccess,
+      onFailure: mockFailure,
+    });
+
+    const res = await fetch(`${BASE}/always-fail`) as Response;
+    assert.strictEqual(res.status, 500);
+    assert.strictEqual(mockSuccess.mock.calls.length, 0, 'onSuccess must NOT fire for 500');
+    assert.strictEqual(mockFailure.mock.calls.length, 1, 'onFailure must fire for 500');
+
+    const ctx = mockFailure.mock.calls[0].arguments[0];
+    assert.strictEqual(ctx.status, 500);
+    assert.strictEqual(ctx.attempts, 3); // attempt 0, 1, 2
+    assert.strictEqual(ctx.isCircuitOpen, false);
+    assert.ok(ctx.durationMs >= 0);
+  });
+
+  it('onFailure fires on CircuitOpenError without network IO', async () => {
+    await reset();
+    const mockFailure = mock.fn();
+
+    const fetch = createSmoothFetch<Response>({
+      backoff: { maxRetries: 0, baseDelay: 10 },
+      circuitBreaker: { failureThreshold: 1, cooldownMs: 1000 },
+      onFailure: mockFailure,
+    });
+
+    // Trip circuit
+    await fetch(`${BASE}/always-fail`);
+    assert.strictEqual(mockFailure.mock.calls.length, 1);
+
+    // Call again while circuit is OPEN
+    mockFailure.mock.resetCalls();
+    try {
+      await fetch(`${BASE}/always-fail`);
+      assert.fail('Should throw CircuitOpenError');
+    } catch (e: any) {
+      assert.strictEqual(e.name, 'CircuitOpenError');
+    }
+
+    assert.strictEqual(mockFailure.mock.calls.length, 1);
+    const ctx = mockFailure.mock.calls[0].arguments[0];
+    assert.strictEqual(ctx.isCircuitOpen, true);
+    assert.strictEqual(ctx.attempts, 0);
+  });
+
+  it('exceptions in onSuccess and onFailure do not crash the request pipeline', async () => {
+    await reset();
+    const fetch = createSmoothFetch<Response>({
+      onSuccess: () => {
+        throw new Error('User bug in onSuccess');
+      },
+      onFailure: () => {
+        throw new Error('User bug in onFailure');
+      },
+    });
+
+    // Should succeed despite error in onSuccess
+    const res = await fetch(`${BASE}/health`) as Response;
+    assert.strictEqual(res.status, 200);
+
+    // Should return 500 despite error in onFailure
+    const failRes = await fetch(`${BASE}/always-fail`) as Response;
+    assert.strictEqual(failRes.status, 500);
+  });
 });
+

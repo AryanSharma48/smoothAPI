@@ -65,6 +65,29 @@ export type ShouldRetryPredicate = (
   error?: unknown
 ) => boolean | Promise<boolean>;
 
+export interface SuccessContext {
+  url: string;
+  domain: string;
+  attempts: number;
+  durationMs: number;
+  status: number;
+  response: Response;
+}
+
+export interface FailureContext {
+  url: string;
+  domain: string;
+  attempts: number;
+  durationMs: number;
+  error?: unknown;
+  status?: number;
+  response?: Response;
+  isCircuitOpen: boolean;
+}
+
+export type RequestSuccessContext = SuccessContext;
+export type RequestFailureContext = FailureContext;
+
 // T types the fallback payload so callers get inference at the use site.
 export interface SmoothFetchConfig<T = unknown> {
   backoff?: Partial<BackoffConfig>;
@@ -92,6 +115,8 @@ export interface SmoothFetchConfig<T = unknown> {
   timeoutMs?: number;
   onRetry?: (context: RetryContext) => void | Promise<void>;
   onCircuitStateChange?: (event: CircuitStateChangeEvent) => void | Promise<void>;
+  onSuccess?: (context: SuccessContext) => void | Promise<void>;
+  onFailure?: (context: FailureContext) => void | Promise<void>;
 }
 
 /** @deprecated use SmoothFetchConfig instead */
