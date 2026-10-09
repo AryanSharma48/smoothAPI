@@ -46,7 +46,7 @@ jobs:
       - name: Read issue details
         run: |
           gh issue view "$ISSUE" --json title,body > issue.json
-          jq -r '"Fix this bug in smoothapi. Make the smallest change that makes the tests pass.\n\nTitle: \(.title)\n\n\(.body | .[0:1500])"' issue.json > task.txt
+          jq -r '"Fix this bug in smoothapi. Make the smallest possible change (under 25 lines) that fixes the problem or passes tests. Output ONLY search/replace diff blocks. Do NOT rewrite or reprint the entire file.\n\nTitle: \(.title)\n\n\(.body | .[0:1500])"' issue.json > task.txt
           echo "Task description prepared for coding agent."
 
       - name: Create fix branch
@@ -78,8 +78,8 @@ jobs:
             echo "$MODELS"
 
             CHOSEN=""
-            # Prioritize 20b/32b models because 120b is capped at 8,000 TPM on Groq free tier
-            for candidate in "openai/gpt-oss-20b" "qwen/qwen3-32b" "deepseek-r1-distill-llama-70b" "llama-3.1-8b-instant" "openai/gpt-oss-120b"; do
+            # Prioritize coding models (qwen, deepseek) that produce short diffs rather than reprinting entire files
+            for candidate in "qwen/qwen3-32b" "deepseek-r1-distill-llama-70b" "llama-3.1-8b-instant" "openai/gpt-oss-20b"; do
               if echo "$MODELS" | grep -qx "$candidate"; then
                 CHOSEN="$candidate"
                 break
@@ -93,7 +93,7 @@ jobs:
             if [ -n "$CHOSEN" ]; then
               MODEL="groq/$CHOSEN"
             else
-              MODEL="groq/openai/gpt-oss-20b"
+              MODEL="groq/qwen/qwen3-32b"
             fi
           elif [ -n "$GEMINI_API_KEY" ]; then
             MODEL="gemini/gemini-2.5-flash"
@@ -109,6 +109,7 @@ jobs:
               --yes-always \
               --message-file task.txt \
               --auto-test \
+              --edit-format diff \
               --no-git \
               --map-tokens 128 \
               --no-analytics \
