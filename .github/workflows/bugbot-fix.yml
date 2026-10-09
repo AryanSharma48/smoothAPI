@@ -78,8 +78,8 @@ jobs:
             echo "$MODELS"
 
             CHOSEN=""
-            # Prioritize coding models (qwen, deepseek) that produce short diffs rather than reprinting entire files
-            for candidate in "qwen/qwen3-32b" "deepseek-r1-distill-llama-70b" "llama-3.1-8b-instant" "openai/gpt-oss-20b"; do
+            # Prioritize specialized coding model (qwen3.8-27b) detected on Groq
+            for candidate in "qwen/qwen3.8-27b" "deepseek-r1-distill-llama-70b" "openai/gpt-oss-20b" "openai/gpt-oss-120b"; do
               if echo "$MODELS" | grep -qx "$candidate"; then
                 CHOSEN="$candidate"
                 break
@@ -93,7 +93,7 @@ jobs:
             if [ -n "$CHOSEN" ]; then
               MODEL="groq/$CHOSEN"
             else
-              MODEL="groq/qwen/qwen3-32b"
+              MODEL="groq/qwen/qwen3.8-27b"
             fi
           elif [ -n "$GEMINI_API_KEY" ]; then
             MODEL="gemini/gemini-2.5-flash"
@@ -110,8 +110,7 @@ jobs:
               --message-file task.txt \
               --auto-test \
               --edit-format diff \
-              --no-git \
-              --map-tokens 128 \
+              --map-tokens 256 \
               --no-analytics \
               --test-cmd "npm test" && break
             echo "Attempt $i failed, retrying in 20s..."
