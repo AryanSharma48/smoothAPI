@@ -46,7 +46,7 @@ jobs:
       - name: Read issue details
         run: |
           gh issue view "$ISSUE" --json title,body > issue.json
-          jq -r '"Fix this bug in smoothapi. Make the smallest change that makes the tests pass.\n\nTitle: \(.title)\n\n\(.body)"' issue.json > task.txt
+          jq -r '"Fix this bug in smoothapi. Make the smallest change that makes the tests pass.\n\nTitle: \(.title)\n\n\(.body | .[0:1500])"' issue.json > task.txt
           echo "Task description prepared for coding agent."
 
       - name: Create fix branch
@@ -109,7 +109,9 @@ jobs:
               --yes-always \
               --message-file task.txt \
               --auto-test \
-              --map-tokens 512 \
+              --no-git \
+              --map-tokens 128 \
+              --no-analytics \
               --test-cmd "npm test" && break
             echo "Attempt $i failed, retrying in 20s..."
             sleep 20
