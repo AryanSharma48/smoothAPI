@@ -72,7 +72,28 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ -n "$GROQ_API_KEY" ]; then
-            MODEL="groq/llama-3.3-70b-versatile"
+            echo "Querying available Groq models..."
+            MODELS=$(curl -sS https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY" | jq -r '.data[].id' 2>/dev/null || echo "")
+            echo "Detected Groq models:"
+            echo "$MODELS"
+
+            CHOSEN=""
+            for candidate in "openai/gpt-oss-120b" "deepseek-r1-distill-llama-70b" "qwen/qwen3-32b" "openai/gpt-oss-20b" "llama-3.3-70b-versatile" "llama-3.1-8b-instant" "llama3-70b-8192"; do
+              if echo "$MODELS" | grep -qx "$candidate"; then
+                CHOSEN="$candidate"
+                break
+              fi
+            done
+
+            if [ -z "$CHOSEN" ]; then
+              CHOSEN=$(echo "$MODELS" | grep -vE 'whisper|vision|guard' | head -n 1)
+            fi
+
+            if [ -n "$CHOSEN" ]; then
+              MODEL="groq/$CHOSEN"
+            else
+              MODEL="groq/llama-3.1-8b-instant"
+            fi
           elif [ -n "$GEMINI_API_KEY" ]; then
             MODEL="gemini/gemini-2.5-flash"
           else
@@ -80,6 +101,7 @@ jobs:
             exit 1
           fi
           echo "Starting Aider with model: $MODEL"
+
           for i in 1 2 3; do
             echo "--- Coding agent attempt $i ---"
             aider --model "$MODEL" \
