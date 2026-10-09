@@ -129,7 +129,16 @@ jobs:
           """
 
           suspect_files = []
-          subsystem = "python" if any(k in (issue_title + " " + issue_body).lower() for k in ["py", "python", "pytest"]) else "typescript"
+          text_lower = (issue_title + " " + issue_body).lower()
+          is_py = any(k in text_lower for k in ["python", "pytest", "pyproject", ".py"])
+          is_ts = any(k in text_lower for k in ["typescript", "ts", "npm", "jest", "vitest", ".ts"])
+          if is_py and not is_ts:
+              subsystem = "python"
+          elif is_ts and not is_py:
+              subsystem = "typescript"
+          else:
+              subsystem = "both"
+
           root_cause = "Subsystem bug identified from issue description."
           fix_rec = "Make the minimal surgical change to pass unit tests."
 
@@ -138,7 +147,7 @@ jobs:
                   url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"
                   data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode('utf-8')
                   req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-                  with urllib.request.urlopen(req, timeout=12) as resp:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
                       res_json = json.loads(resp.read().decode('utf-8'))
                       text = res_json['candidates'][0]['content']['parts'][0]['text']
                       if "```" in text:
@@ -153,17 +162,45 @@ jobs:
               except Exception as e:
                   print(f"Investigator notice: {e}")
 
-          if not suspect_files:
-              if subsystem == "python":
-                  suspect_files = ["packages/smooth-api-py/smooth_api/utils.py", "packages/smooth-api-py/smooth_api/config.py"]
-              else:
-                  suspect_files = ["packages/smooth-api-ts/src/index.ts", "packages/smooth-api-ts/src/utils/backoff.ts"]
+          # Monorepo source files across subsystems
+          py_src = [
+              "packages/smooth-api-py/smooth_api/__init__.py",
+              "packages/smooth-api-py/smooth_api/config.py",
+              "packages/smooth-api-py/smooth_api/utils.py",
+              "packages/smooth-api-py/smooth_api/dedup.py",
+              "packages/smooth-api-py/smooth_api/state.py"
+          ]
+          ts_src = [
+              "packages/smooth-api-ts/src/index.ts",
+              "packages/smooth-api-ts/src/types.ts",
+              "packages/smooth-api-ts/src/utils/backoff.ts",
+              "packages/smooth-api-ts/src/state.ts",
+              "packages/smooth-api-ts/src/dedup.ts"
+          ]
+
+          # Automatically map relevant test suites based on issue keywords
+          test_files = []
+          if any(k in text_lower for k in ["backoff", "retry", "ratelimit", "429"]):
+              test_files += ["packages/smooth-api-py/tests/test_backoff.py", "packages/smooth-api-ts/tests/backoff.test.ts"]
+          if any(k in text_lower for k in ["timeout", "abort"]):
+              test_files += ["packages/smooth-api-py/tests/test_timeout.py", "packages/smooth-api-ts/tests/timeout.test.ts", "packages/smooth-api-ts/tests/abort.test.ts"]
+          if any(k in text_lower for k in ["dedup", "duplicate"]):
+              test_files += ["packages/smooth-api-py/tests/test_deduplication.py", "packages/smooth-api-ts/tests/deduplication.test.ts"]
+          if any(k in text_lower for k in ["concurrency", "parallel", "race"]):
+              test_files += ["packages/smooth-api-py/tests/test_concurrency.py", "packages/smooth-api-ts/tests/concurrency.test.ts"]
+          if any(k in text_lower for k in ["resilience", "circuit"]):
+              test_files += ["packages/smooth-api-py/tests/test_resilience.py", "packages/smooth-api-ts/tests/resilience.test.ts"]
+          if any(k in text_lower for k in ["hook"]):
+              test_files += ["packages/smooth-api-py/tests/test_hooks.py", "packages/smooth-api-ts/tests/hooks.test.ts"]
+
+          base_targets = py_src + ts_src if subsystem == "both" else (py_src if subsystem == "python" else ts_src)
+          all_targets = list(dict.fromkeys(base_targets + suspect_files + test_files))
 
           with open("investigation_report.md", "w") as f:
-              f.write(f"### 🔍 Investigator Report\n- **Subsystem**: {subsystem}\n- **Root Cause**: {root_cause}\n- **Recommendation**: {fix_rec}\n- **Target Files**: {', '.join(suspect_files)}\n")
+              f.write(f"### 🔍 Investigator Report\n- **Subsystem**: {subsystem}\n- **Root Cause**: {root_cause}\n- **Recommendation**: {fix_rec}\n- **Target Files**: {', '.join(all_targets)}\n")
 
           with open("target_files.txt", "w") as f:
-              f.write(" ".join(suspect_files))
+              f.write(" ".join(all_targets))
 
           with open("subsystem.txt", "w") as f:
               f.write(subsystem)
@@ -171,7 +208,7 @@ jobs:
           with open("root_cause.txt", "w") as f:
               f.write(root_cause)
 
-          print("Investigator completed. Target files:", suspect_files)
+          print("Investigator completed. Target files:", all_targets)
           EOF
           cat investigation_report.md
 
@@ -229,7 +266,7 @@ jobs:
                   url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"
                   data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode('utf-8')
                   req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-                  with urllib.request.urlopen(req, timeout=12) as resp:
+                  with urllib.request.urlopen(req, timeout=30) as resp:
                       res_json = json.loads(resp.read().decode('utf-8'))
                       raw = res_json['candidates'][0]['content']['parts'][0]['text']
                       if "```" in raw:
@@ -252,8 +289,10 @@ jobs:
           with open("repro_test.txt", "w") as f:
               f.write(test_path)
           EOF
-          REPRO_FILE=$(cat repro_test.txt)
-          git add "$REPRO_FILE" || true
+          REPRO_FILE=$(cat repro_test.txt 2>/dev/null || true)
+          if [ -n "$REPRO_FILE" ] && [ -f "$REPRO_FILE" ]; then
+            git add "$REPRO_FILE"
+          fi
           echo "repro_file=$REPRO_FILE" >> "$GITHUB_OUTPUT"
 
       # =====================================================================
@@ -267,7 +306,7 @@ jobs:
         run: |
           echo "=== 🛠️ Specialist 3: Coder Agent running ==="
           TARGETS=$(cat target_files.txt)
-          REPRO_TEST=$(cat repro_test.txt)
+          REPRO_TEST=$(cat repro_test.txt 2>/dev/null || true)
           ROOT_CAUSE=$(cat root_cause.txt)
           TITLE=$(jq -r .title issue.json)
 
@@ -304,15 +343,17 @@ jobs:
               f"{body}\n\n"
               f"## INVESTIGATOR DIAGNOSIS:\n"
               f"{root_cause}\n\n"
-              f"## TARGET FILES TO MODIFY:\n"
+              f"## TARGET FILES AVAILABLE IN SESSION:\n"
               f"{targets}\n\n"
               f"## REPRODUCTION TEST:\n"
               f"{repro if repro else 'None (verify with full monorepo test runner)'}\n\n"
               f"## CRITICAL INSTRUCTIONS:\n"
-              f"1. You MUST modify the actual source code in {targets} to implement the requested feature or fix all issues described.\n"
-              f"2. Do NOT just commit tests or .gitignore. You MUST make the functional code changes in {targets}.\n"
-              f"3. Run tests with `./run_tests.sh` and make sure all tests pass.\n"
-              f"4. Output concise search/replace diff blocks.\n"
+              f"1. All necessary source files and test files are ALREADY loaded into this chat session.\n"
+              f"2. DO NOT ask the user to add files and do not ask clarifying questions. Immediately propose the code changes.\n"
+              f"3. You MUST modify the actual source code in packages/ to implement the requested feature or fix all issues described.\n"
+              f"4. Do NOT just commit tests or .gitignore. You MUST make the functional code changes in {targets}.\n"
+              f"5. Run tests with `./run_tests.sh` and make sure all tests pass.\n"
+              f"6. Output concise search/replace diff blocks.\n"
           )
           with open("task.txt", "w") as f:
               f.write(task_content)
@@ -350,19 +391,28 @@ jobs:
               --yes-always \
               --message-file task.txt \
               --auto-test \
-              --map-tokens 512 \
+              --map-tokens 1024 \
               --no-analytics \
               --test-cmd "./run_tests.sh" \
-              $TARGETS $REPRO_TEST && break
+              $TARGETS $REPRO_TEST || true
 
+            # Verify that actual source code changes were made
+            TOUCHED_SRC=$(git diff --name-only origin/main..HEAD | grep -E '^packages/.+\.(py|ts)$' | grep -v 'tests/' || true)
+            if [ -n "$TOUCHED_SRC" ]; then
+              echo "Coder Agent successfully modified source files:"
+              echo "$TOUCHED_SRC"
+              break
+            fi
+
+            echo "Attempt $i did not modify any source code files."
             # If attempt 1 failed with Gemini and Groq is configured, switch to Groq on attempt 2!
             if [ "$i" -eq 1 ] && [ -n "$GROQ_API_KEY" ] && [[ "$CURRENT_MODEL" == gemini* ]]; then
-              echo "Gemini attempt failed or hit rate limits. Falling back to Groq ($CHOSEN_GROQ) for attempt 2..."
+              echo "Gemini attempt did not produce code changes. Falling back to Groq ($CHOSEN_GROQ) for attempt 2..."
               CURRENT_MODEL="groq/$CHOSEN_GROQ"
             fi
 
-            echo "Attempt $i failed, retrying in 15s..."
-            sleep 15
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
           done
 
       # =====================================================================
