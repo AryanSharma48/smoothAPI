@@ -135,7 +135,7 @@ jobs:
 
           if gemini_key:
               try:
-                  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+                  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"
                   data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode('utf-8')
                   req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
                   with urllib.request.urlopen(req, timeout=12) as resp:
@@ -226,7 +226,7 @@ jobs:
 
           if gemini_key:
               try:
-                  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+                  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"
                   data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode('utf-8')
                   req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
                   with urllib.request.urlopen(req, timeout=12) as resp:
@@ -286,32 +286,34 @@ jobs:
           3. Output search/replace diff blocks only.
           EOF
 
-          if [ -n "$GEMINI_API_KEY" ]; then
-            MODEL="gemini/gemini-2.5-flash"
-            echo "Selected Gemini model: $MODEL (1M context, 1M TPM free tier)"
-          elif [ -n "$GROQ_API_KEY" ]; then
-            echo "Querying available Groq models..."
+          # Determine primary and fallback models
+          CHOSEN_GROQ="llama-3.3-70b-versatile"
+          if [ -n "$GROQ_API_KEY" ]; then
             MODELS=$(curl -sS https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY" | jq -r '.data[].id' 2>/dev/null || echo "")
-            CHOSEN=""
-            for candidate in "qwen/qwen3.8-27b" "deepseek-r1-distill-llama-70b" "openai/gpt-oss-20b" "openai/gpt-oss-120b"; do
+            for candidate in "llama-3.3-70b-versatile" "qwen-2.5-32b" "deepseek-r1-distill-llama-70b" "llama-3.1-70b-versatile"; do
               if echo "$MODELS" | grep -qx "$candidate"; then
-                CHOSEN="$candidate"
+                CHOSEN_GROQ="$candidate"
                 break
               fi
             done
-            if [ -z "$CHOSEN" ]; then
-              CHOSEN=$(echo "$MODELS" | grep -vE 'whisper|vision|guard|120b' | head -n 1)
-            fi
-            MODEL="groq/${CHOSEN:-qwen/qwen3.8-27b}"
+          fi
+
+          if [ -n "$GEMINI_API_KEY" ]; then
+            MODEL="gemini/gemini-flash-latest"
+            echo "Selected primary model: $MODEL (1M context, 64k output, 1,500 RPD free tier)"
+          elif [ -n "$GROQ_API_KEY" ]; then
+            MODEL="groq/$CHOSEN_GROQ"
+            echo "Selected Groq model: $MODEL"
           else
             echo "Error: Neither GEMINI_API_KEY nor GROQ_API_KEY secret configured."
             exit 1
           fi
 
           echo "Coder Agent targeting: $TARGETS and $REPRO_TEST"
+          CURRENT_MODEL="$MODEL"
           for i in 1 2 3; do
-            echo "--- Coding agent attempt $i ---"
-            aider --model "$MODEL" \
+            echo "--- Coding agent attempt $i (Model: $CURRENT_MODEL) ---"
+            aider --model "$CURRENT_MODEL" \
               --yes-always \
               --message-file task.txt \
               --auto-test \
@@ -319,8 +321,15 @@ jobs:
               --no-analytics \
               --test-cmd "./run_tests.sh" \
               $TARGETS $REPRO_TEST && break
-            echo "Attempt $i failed, retrying in 20s..."
-            sleep 20
+
+            # If attempt 1 failed with Gemini and Groq is configured, switch to Groq on attempt 2!
+            if [ "$i" -eq 1 ] && [ -n "$GROQ_API_KEY" ] && [[ "$CURRENT_MODEL" == gemini* ]]; then
+              echo "Gemini attempt failed or hit rate limits. Falling back to Groq ($CHOSEN_GROQ) for attempt 2..."
+              CURRENT_MODEL="groq/$CHOSEN_GROQ"
+            fi
+
+            echo "Attempt $i failed, retrying in 15s..."
+            sleep 15
           done
 
       # =====================================================================
@@ -422,7 +431,7 @@ jobs:
           generated_body = ""
           if gemini_key:
               try:
-                  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
+                  url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={gemini_key}"
                   data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode('utf-8')
                   req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
                   with urllib.request.urlopen(req, timeout=10) as resp:
