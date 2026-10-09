@@ -17,7 +17,7 @@ pip install smoothapi-py
 - **Smart Retries:** Automatically detects HTTP status codes from `requests` and `httpx` exceptions. Retries on retryable codes (429, 500, 502, 503, 504) and re-raises client errors immediately.
 - **Graceful Fallbacks:** Optionally return cached or default data instantly when the circuit is `OPEN`, bypassing network IO entirely.
 - **Request Deduplication:** Automatically merges concurrent identical requests into a single network call (async only).
-- **Request Timeouts:** Configurable timeouts to automatically abort requests that hang indefinitely (async only).
+- **Request Timeouts:** Configurable timeouts to automatically abort requests that hang indefinitely. This feature is **async-only**. If `timeout_ms` is configured for a synchronous function, a `NotImplementedError` will be raised. For synchronous HTTP clients like `requests`, you should use their native `timeout` parameter directly.
 
 ## Usage
 
