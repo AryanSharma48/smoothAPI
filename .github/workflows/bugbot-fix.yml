@@ -1,0 +1,119 @@
+name: bugbot-fix
+run-name: Fix issue #${{ inputs.issue_number }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to autonomously fix'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: bugbot-fix-${{ inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ inputs.issue_number }}
+      N8N_URL: ${{ secrets.N8N_CALLBACK_URL }}
+      N8N_SECRET: ${{ secrets.N8N_SHARED_SECRET }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Read issue details
+        run: |
+          gh issue view "$ISSUE" --json title,body > issue.json
+          jq -r '"Fix this bug in smoothapi. Make the smallest change that makes the tests pass.\n\nTitle: \(.title)\n\n\(.body)"' issue.json > task.txt
+          echo "Task description prepared for coding agent."
+
+      - name: Create fix branch
+        run: |
+          git config user.name "bugbot[bot]"
+          git config user.email "bugbot@users.noreply.github.com"
+          git checkout -B "fix/issue-$ISSUE"
+
+      - name: Install dependencies & Aider
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install aider-chat
+          # If pnpm/npm workspace exists:
+          if [ -f "pnpm-lock.yaml" ]; then
+            npm install -g pnpm && pnpm install
+          elif [ -f "package.json" ]; then
+            npm install
+          fi
+
+      - name: Run coding agent (Aider + Gemini)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Pick target files to edit
+          TARGET_FILES=$(git ls-files 'packages/**/*' 'src/**/*' 'tests/**/*')
+          for i in 1 2 3; do
+            echo "--- Coding agent attempt $i ---"
+            aider --model gemini/gemini-2.5-flash \
+              --yes-always \
+              --message-file task.txt \
+              --auto-test \
+              --test-cmd "npm test" \
+              $TARGET_FILES && break
+            echo "Attempt $i failed, retrying in 20s..."
+            sleep 20
+          done
+
+      - name: Verify tests pass and commits exist
+        run: |
+          # Ensure new commits were made
+          test "$(git rev-list --count origin/main..HEAD)" -gt 0
+          echo "Agent commits verified."
+
+      - name: Push branch and open Pull Request
+        id: pr
+        run: |
+          git push --force origin "fix/issue-$ISSUE"
+          TITLE=$(jq -r .title issue.json)
+          URL=$(gh pr view "fix/issue-$ISSUE" --json url -q .url 2>/dev/null || \
+            gh pr create --base main --head "fix/issue-$ISSUE" \
+              --title "Fix #$ISSUE: $TITLE" \
+              --body "Closes #$ISSUE.\n\nOpened automatically by **VoiceBugBot**.\nTests passed in autonomous verification run.\n\n> A human maintainer must review before merging.")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "PR created: $URL"
+
+      - name: Callback to n8n webhook
+        if: always()
+        run: |
+          if [ -n "$N8N_URL" ]; then
+            jq -n --arg issue "$ISSUE" --arg status "${{ job.status }}" \
+              --arg pr "${{ steps.pr.outputs.url }}" \
+              --arg run "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{issue_number: ($issue|tonumber), status: $status, pr_url: $pr, run_url: $run}' \
+            | curl -sS -X POST "$N8N_URL" \
+              -H 'Content-Type: application/json' \
+              -H "x-bugbot-secret: $N8N_SECRET" \
+              -d @- || echo "Warning: Callback to n8n failed or was unreachable."
+          else
+            echo "N8N_CALLBACK_URL secret not configured, skipping callback."
+          fi
