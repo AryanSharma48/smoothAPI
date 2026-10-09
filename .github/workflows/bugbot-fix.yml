@@ -55,7 +55,7 @@ jobs:
           git config user.email "bugbot@users.noreply.github.com"
           git checkout -B "fix/issue-$ISSUE"
 
-      - name: Install dependencies & Aider
+      - name: Install dependencies, sandbox server & Aider
         run: |
           python -m pip install --upgrade pip
           python -m pip install aider-chat pytest pytest-asyncio requests httpx
@@ -64,6 +64,15 @@ jobs:
           fi
           if [ -f "packages/smooth-api-ts/package.json" ]; then
             npm install --prefix packages/smooth-api-ts
+          fi
+
+          # Start mock sandbox server on port 3001 required by both test suites
+          if [ -f "sandbox/package.json" ]; then
+            npm install --prefix sandbox
+            node sandbox/server.js &
+            for i in {1..10}; do
+              curl -s -f http://localhost:3001/health > /dev/null && echo "Mock sandbox server ready" && break || sleep 1
+            done
           fi
 
           # Create monorepo test runner for Aider
