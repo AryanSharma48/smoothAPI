@@ -439,11 +439,18 @@ jobs:
               f.write(final_pr)
           EOF
 
+          # 3. Create or View Pull Request
           URL=$(gh pr view "fix/issue-$ISSUE" --json url -q .url 2>/dev/null || \
             gh pr create --base main --head "fix/issue-$ISSUE" \
               --title "Fix #$ISSUE: $TITLE" \
-              --body-file pr_description.md \
-              --label "$PR_LABELS")
+              --body-file pr_description.md)
+
+          # 4. Attach Labels safely (auto-creating labels in repo if missing)
+          for lbl in $(echo "$PR_LABELS" | tr ',' ' '); do
+            gh label create "$lbl" 2>/dev/null || true
+            gh pr edit "fix/issue-$ISSUE" --add-label "$lbl" 2>/dev/null || true
+          done
+
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "PR created: $URL"
 
