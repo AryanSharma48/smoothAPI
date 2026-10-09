@@ -66,20 +66,27 @@ jobs:
             npm install
           fi
 
-      - name: Run coding agent (Aider + Gemini)
+      - name: Run coding agent (Aider)
         env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # Pick target files to edit
-          TARGET_FILES=$(git ls-files 'packages/**/*' 'src/**/*' 'tests/**/*')
+          if [ -n "$GROQ_API_KEY" ]; then
+            MODEL="groq/llama-3.3-70b-versatile"
+          elif [ -n "$GEMINI_API_KEY" ]; then
+            MODEL="gemini/gemini-2.5-flash"
+          else
+            echo "Error: Neither GROQ_API_KEY nor GEMINI_API_KEY secret is configured."
+            exit 1
+          fi
+          echo "Starting Aider with model: $MODEL"
           for i in 1 2 3; do
             echo "--- Coding agent attempt $i ---"
-            aider --model gemini/gemini-2.5-flash \
+            aider --model "$MODEL" \
               --yes-always \
               --message-file task.txt \
               --auto-test \
-              --test-cmd "npm test" \
-              $TARGET_FILES && break
+              --test-cmd "npm test" && break
             echo "Attempt $i failed, retrying in 20s..."
             sleep 20
           done
