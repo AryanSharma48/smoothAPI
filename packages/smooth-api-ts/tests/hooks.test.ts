@@ -1,9 +1,25 @@
-import { describe, it, mock } from 'node:test';
+import { describe, it, mock, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSmoothFetch } from '../src/index.js';
 import type { CircuitStateChangeEvent, RetryContext } from '../src/types.js';
 
 const BASE = 'http://localhost:3001';
+
+let originalFetch: typeof globalThis.fetch;
+
+before(() => {
+  originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    if (String(input) === `${BASE}/reset`) {
+      return new Response(null, { status: 200 });
+    }
+    return originalFetch(input, init);
+  };
+});
+
+after(() => {
+  globalThis.fetch = originalFetch;
+});
 
 async function reset() {
   await fetch(`${BASE}/reset`);

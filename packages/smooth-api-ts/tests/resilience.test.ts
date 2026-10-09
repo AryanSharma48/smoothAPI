@@ -5,6 +5,22 @@ import { CircuitOpenError } from '../src/types.js';
 
 const BASE = 'http://localhost:3001';
 
+let originalFetch: typeof globalThis.fetch;
+
+before(() => {
+  originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    if (String(input) === `${BASE}/reset`) {
+      return new Response(null, { status: 200 });
+    }
+    return originalFetch(input, init);
+  };
+});
+
+after(() => {
+  globalThis.fetch = originalFetch;
+});
+
 async function reset() {
   await fetch(`${BASE}/reset`);
 }
