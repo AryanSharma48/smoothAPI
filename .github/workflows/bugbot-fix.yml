@@ -78,7 +78,8 @@ jobs:
             echo "$MODELS"
 
             CHOSEN=""
-            for candidate in "openai/gpt-oss-120b" "deepseek-r1-distill-llama-70b" "qwen/qwen3-32b" "openai/gpt-oss-20b" "llama-3.3-70b-versatile" "llama-3.1-8b-instant" "llama3-70b-8192"; do
+            # Prioritize 20b/32b models because 120b is capped at 8,000 TPM on Groq free tier
+            for candidate in "openai/gpt-oss-20b" "qwen/qwen3-32b" "deepseek-r1-distill-llama-70b" "llama-3.1-8b-instant" "openai/gpt-oss-120b"; do
               if echo "$MODELS" | grep -qx "$candidate"; then
                 CHOSEN="$candidate"
                 break
@@ -86,13 +87,13 @@ jobs:
             done
 
             if [ -z "$CHOSEN" ]; then
-              CHOSEN=$(echo "$MODELS" | grep -vE 'whisper|vision|guard' | head -n 1)
+              CHOSEN=$(echo "$MODELS" | grep -vE 'whisper|vision|guard|120b' | head -n 1)
             fi
 
             if [ -n "$CHOSEN" ]; then
               MODEL="groq/$CHOSEN"
             else
-              MODEL="groq/llama-3.1-8b-instant"
+              MODEL="groq/openai/gpt-oss-20b"
             fi
           elif [ -n "$GEMINI_API_KEY" ]; then
             MODEL="gemini/gemini-2.5-flash"
@@ -108,6 +109,7 @@ jobs:
               --yes-always \
               --message-file task.txt \
               --auto-test \
+              --map-tokens 512 \
               --test-cmd "npm test" && break
             echo "Attempt $i failed, retrying in 20s..."
             sleep 20
