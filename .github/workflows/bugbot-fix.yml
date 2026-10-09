@@ -58,13 +58,26 @@ jobs:
       - name: Install dependencies & Aider
         run: |
           python -m pip install --upgrade pip
-          python -m pip install aider-chat
-          # If pnpm/npm workspace exists:
-          if [ -f "pnpm-lock.yaml" ]; then
-            npm install -g pnpm && pnpm install
-          elif [ -f "package.json" ]; then
-            npm install
+          python -m pip install aider-chat pytest pytest-asyncio requests httpx
+          if [ -f "packages/smooth-api-py/pyproject.toml" ]; then
+            python -m pip install -e "packages/smooth-api-py[dev]"
           fi
+          if [ -f "packages/smooth-api-ts/package.json" ]; then
+            npm install --prefix packages/smooth-api-ts
+          fi
+
+          # Create monorepo test runner for Aider
+          cat << 'EOF' > run_tests.sh
+          #!/bin/bash
+          set -e
+          if [ -f "packages/smooth-api-ts/package.json" ]; then
+            npm test --prefix packages/smooth-api-ts
+          fi
+          if [ -f "packages/smooth-api-py/pyproject.toml" ]; then
+            pytest packages/smooth-api-py/tests/ -v
+          fi
+          EOF
+          chmod +x run_tests.sh
 
       - name: Run coding agent (Aider)
         env:
@@ -112,7 +125,7 @@ jobs:
               --edit-format diff \
               --map-tokens 256 \
               --no-analytics \
-              --test-cmd "npm test" && break
+              --test-cmd "./run_tests.sh" && break
             echo "Attempt $i failed, retrying in 20s..."
             sleep 20
           done
