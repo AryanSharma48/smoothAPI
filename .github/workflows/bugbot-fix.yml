@@ -84,14 +84,16 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          if [ -n "$GROQ_API_KEY" ]; then
+          if [ -n "$GEMINI_API_KEY" ]; then
+            MODEL="gemini/gemini-2.5-flash"
+            echo "Selected Gemini model: $MODEL (1M context, 1M TPM free tier)"
+          elif [ -n "$GROQ_API_KEY" ]; then
             echo "Querying available Groq models..."
             MODELS=$(curl -sS https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY" | jq -r '.data[].id' 2>/dev/null || echo "")
             echo "Detected Groq models:"
             echo "$MODELS"
 
             CHOSEN=""
-            # Prioritize specialized coding model (qwen3.8-27b) detected on Groq
             for candidate in "qwen/qwen3.8-27b" "deepseek-r1-distill-llama-70b" "openai/gpt-oss-20b" "openai/gpt-oss-120b"; do
               if echo "$MODELS" | grep -qx "$candidate"; then
                 CHOSEN="$candidate"
@@ -108,10 +110,8 @@ jobs:
             else
               MODEL="groq/qwen/qwen3.8-27b"
             fi
-          elif [ -n "$GEMINI_API_KEY" ]; then
-            MODEL="gemini/gemini-2.5-flash"
           else
-            echo "Error: Neither GROQ_API_KEY nor GEMINI_API_KEY secret is configured."
+            echo "Error: Neither GEMINI_API_KEY nor GROQ_API_KEY secret is configured."
             exit 1
           fi
           echo "Starting Aider with model: $MODEL"
@@ -122,8 +122,7 @@ jobs:
               --yes-always \
               --message-file task.txt \
               --auto-test \
-              --edit-format diff \
-              --map-tokens 256 \
+              --map-tokens 512 \
               --no-analytics \
               --test-cmd "./run_tests.sh" && break
             echo "Attempt $i failed, retrying in 20s..."
