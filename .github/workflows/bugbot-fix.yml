@@ -360,24 +360,41 @@ jobs:
           print("Generated comprehensive task.txt for Coder Agent.")
           EOF
 
-          # Determine primary and fallback models
-          CHOSEN_GROQ="llama-3.3-70b-versatile"
+          # Determine primary and fallback models dynamically from Groq catalog
+          CHOSEN_GROQ="llama-3.1-8b-instant"
+          FALLBACK_GROQ="openai/gpt-oss-120b"
           if [ -n "$GROQ_API_KEY" ]; then
-            MODELS=$(curl -sS https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY" | jq -r '.data[].id' 2>/dev/null || echo "")
-            for candidate in "llama-3.3-70b-versatile" "qwen-2.5-32b" "deepseek-r1-distill-llama-70b" "llama-3.1-70b-versatile"; do
+            RAW_MODELS=$(curl -sS https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY" 2>/dev/null || echo "")
+            MODELS=$(echo "$RAW_MODELS" | jq -r '.data[].id' 2>/dev/null || echo "")
+            echo "Groq live available models:"
+            echo "$MODELS"
+
+            # Check preferred high-performance coding candidates in order
+            for candidate in "openai/gpt-oss-120b" "qwen/qwen3.8-27b" "llama-3.3-70b-versatile" "llama-3.1-70b-versatile" "llama-3.1-8b-instant"; do
               if echo "$MODELS" | grep -qx "$candidate"; then
                 CHOSEN_GROQ="$candidate"
                 break
               fi
             done
+
+            # If none of the specific candidates matched, select first non-guard/non-audio model
+            if [ -z "$CHOSEN_GROQ" ] || ! echo "$MODELS" | grep -qx "$CHOSEN_GROQ"; then
+              CHOSEN_GROQ=$(echo "$MODELS" | grep -v 'whisper' | grep -v 'guard' | head -n 1)
+            fi
+
+            # Select a distinct fallback model
+            FALLBACK_GROQ=$(echo "$MODELS" | grep -v 'whisper' | grep -v 'guard' | grep -vFx "$CHOSEN_GROQ" | head -n 1)
           fi
 
           export LITELLM_NUM_RETRIES=0
           export NUM_RETRIES=0
 
-          if [ -n "$GROQ_API_KEY" ]; then
+          if [ -n "$GROQ_API_KEY" ] && [ -n "$CHOSEN_GROQ" ]; then
             MODEL="groq/$CHOSEN_GROQ"
-            echo "Selected primary model: $MODEL (Ultra-Fast Groq LPUs, high-rate limits)"
+            echo "Selected primary model: $MODEL (Ultra-Fast Groq LPUs)"
+            if [ -n "$FALLBACK_GROQ" ]; then
+              echo "Configured fallback model: groq/$FALLBACK_GROQ"
+            fi
           elif [ -n "$GEMINI_API_KEY" ]; then
             MODEL="gemini/gemini-flash-latest"
             echo "Selected primary model: $MODEL"
@@ -419,9 +436,9 @@ jobs:
             fi
 
             echo "Attempt $i did not produce passing source code changes."
-            if [ "$i" -eq 1 ] && [ -n "$GROQ_API_KEY" ]; then
-              echo "Switching to alternative Groq model for attempt 2..."
-              CURRENT_MODEL="groq/qwen-2.5-32b"
+            if [ "$i" -eq 1 ] && [ -n "$FALLBACK_GROQ" ]; then
+              echo "Switching to verified fallback Groq model ($FALLBACK_GROQ) for attempt 2..."
+              CURRENT_MODEL="groq/$FALLBACK_GROQ"
             fi
 
             echo "Retrying in 5s..."
