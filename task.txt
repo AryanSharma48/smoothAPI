@@ -1,0 +1,26 @@
+Fix issue #65: Typo in Smooth API TypeScript README
+
+Requirements:
+## Description
+
+The word 'exhausting' doesn't have an H in the README right now. The component that is affected is the packages/smoother TypeScript docs.
+
+## Steps to reproduce
+
+_not provided_
+
+## Environment
+
+_not provided_
+
+## 🔍 Recent Changes & Suspect Commits
+- [`a6bab76`](https://github.com/AryanSharma48/smoothAPI/commit/a6bab76b71ab767bd3b2c8d1c917fc42844b676d) - **feat(ci): add docs target selection heuristic** (by @Aryan Sharma)
+- [`fd7cede`](https://github.com/AryanSharma48/smoothAPI/commit/fd7cede8cb68cf52ac456e7759c8a5888a57ed26) - **fix(yaml): resolve indentation and heredoc syntax errors in workflow** (by @Aryan Sharma)
+- [`93476aa`](https://github.com/AryanSharma48/smoothAPI/commit/93476aa0aff4e20f1deb831877faa7c1ce361370) - **refactor(ci): simplify to single Aider + Gemini agent with minimal token footprint** (by @Aryan Sharma)
+
+---
+_Filed automatically by VoiceBugBot_
+
+Instructions:
+1. Make minimal surgical code changes to pass tests.
+2. Edit only target files. Output search/replace diff blocks.
