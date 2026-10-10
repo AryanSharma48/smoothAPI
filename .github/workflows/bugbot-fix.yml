@@ -389,17 +389,20 @@ jobs:
           export LITELLM_NUM_RETRIES=0
           export NUM_RETRIES=0
 
-          if [ -n "$GROQ_API_KEY" ] && [ -n "$CHOSEN_GROQ" ]; then
+          if [ -n "$GEMINI_API_KEY" ]; then
+            MODEL="gemini/gemini-2.0-flash"
+            echo "Selected primary model: $MODEL (Google Gemini - 1M+ TPM capacity)"
+            if [ -n "$GROQ_API_KEY" ] && [ -n "$CHOSEN_GROQ" ]; then
+              echo "Configured fallback model: groq/$CHOSEN_GROQ"
+            fi
+          elif [ -n "$GROQ_API_KEY" ] && [ -n "$CHOSEN_GROQ" ]; then
             MODEL="groq/$CHOSEN_GROQ"
-            echo "Selected primary model: $MODEL (Ultra-Fast Groq LPUs)"
+            echo "Selected primary model: $MODEL (Groq LPUs)"
             if [ -n "$FALLBACK_GROQ" ]; then
               echo "Configured fallback model: groq/$FALLBACK_GROQ"
             fi
-          elif [ -n "$GEMINI_API_KEY" ]; then
-            MODEL="gemini/gemini-flash-latest"
-            echo "Selected primary model: $MODEL"
           else
-            echo "Error: Neither GROQ_API_KEY nor GEMINI_API_KEY secret configured."
+            echo "Error: Neither GEMINI_API_KEY nor GROQ_API_KEY secret configured."
             exit 1
           fi
 
