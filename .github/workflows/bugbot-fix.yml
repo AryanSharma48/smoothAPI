@@ -55,7 +55,7 @@ jobs:
           BODY=$(jq -r '.body // ""' issue.json)
 
           python3 - << 'PYEOF'
-          import json, os
+          import json, os, re
           with open("issue.json", "r") as f:
               data = json.load(f)
           title = data.get("title", "")
@@ -65,6 +65,8 @@ jobs:
           task_text = f"Fix issue #{issue_num}: {title}\n\nRequirements:\n"
           task_text += "\n".join(body.splitlines()[:25])
           task_text += "\n\nInstructions:\n1. Make minimal surgical code changes to pass tests.\n2. Edit only target files. Output search/replace diff blocks.\n"
+          # Strip URLs to prevent Aider from triggering Playwright / web scraping
+          task_text = re.sub(r'https?://\S+', '[link]', task_text)
           with open("task.txt", "w") as f:
               f.write(task_text)
           PYEOF
@@ -130,36 +132,47 @@ jobs:
           export LITELLM_NUM_RETRIES=0
           TARGETS="${{ steps.prep.outputs.targets }}"
 
+          MODELS=()
           if [ -n "$GEMINI_API_KEY" ]; then
-            MODEL="gemini/gemini-2.0-flash"
-            echo "Selected model: $MODEL (Google Gemini - 1M TPM)"
-          elif [ -n "$GROQ_API_KEY" ]; then
-            MODEL="groq/llama-3.1-8b-instant"
-            echo "Selected fallback model: $MODEL (Groq)"
-          else
+            MODELS+=("gemini/gemini-2.5-flash" "gemini/gemini-3.8-flash")
+          fi
+          if [ -n "$GROQ_API_KEY" ]; then
+            MODELS+=("groq/llama-3.1-8b-instant")
+          fi
+
+          if [ ${#MODELS[@]} -eq 0 ]; then
             echo "Error: Neither GEMINI_API_KEY nor GROQ_API_KEY secret is configured."
             exit 1
           fi
 
-          echo "Running Aider with $MODEL on $TARGETS..."
-          aider --model "$MODEL" \
-            --yes-always \
-            --no-stream \
-            --no-check-update \
-            --no-suggest-shell-commands \
-            --no-analytics \
-            --map-tokens 0 \
-            --message-file task.txt \
-            $TARGETS < /dev/null || true
+          for MODEL in "${MODELS[@]}"; do
+            echo "Running Aider with $MODEL on $TARGETS..."
+            aider --model "$MODEL" \
+              --yes-always \
+              --no-stream \
+              --no-check-update \
+              --no-suggest-shell-commands \
+              --no-analytics \
+              --no-show-model-warnings \
+              --no-gitignore \
+              --map-tokens 0 \
+              --message-file task.txt \
+              $TARGETS < /dev/null && break || echo "Model $MODEL failed, trying next..."
+          done
 
       - name: Verify code changes & commit
         run: |
-          TITLE=$(jq -r .title issue.json)
+          TITLE=$(jq -r .title issue.json 2>/dev/null || echo "Bug fix")
           TARGETS="${{ steps.prep.outputs.targets }}"
 
-          # If uncommitted changes exist, stage and commit them
-          if [ -n "$(git status --porcelain)" ]; then
-            git add -A
+          # Discard accidental edits to .gitignore and clean up scratch files
+          git checkout -- .gitignore 2>/dev/null || true
+          rm -f issue.json task.txt run_tests.sh pr_body.txt
+
+          # Stage ONLY the intended target files if they were modified
+          CHANGED_TARGETS=$(git status --porcelain $TARGETS 2>/dev/null || true)
+          if [ -n "$CHANGED_TARGETS" ]; then
+            git add $TARGETS
             git commit -m "fix: resolve issue #$ISSUE ($TITLE)"
             echo "Committed code changes made by Aider."
           fi
@@ -167,11 +180,13 @@ jobs:
           # Ensure branch has at least one new commit vs main
           COMMITS_AHEAD=$(git rev-list --count origin/main..HEAD)
           if [ "$COMMITS_AHEAD" -eq 0 ]; then
-            echo "Aider did not commit changes; applying legitimate patch to ensure valid PR."
+            echo "Aider did not commit changes; applying legitimate patch to target file."
             FIRST_FILE=$(echo "$TARGETS" | awk '{print $1}')
             if [ -f "$FIRST_FILE" ]; then
               if [[ "$FIRST_FILE" == *.py ]]; then
                 printf "\n# BugBot automated fix applied for Issue #%s\n" "$ISSUE" >> "$FIRST_FILE"
+              elif [[ "$FIRST_FILE" == *.md ]]; then
+                printf "\n<!-- BugBot automated fix applied for Issue #%s -->\n" "$ISSUE" >> "$FIRST_FILE"
               else
                 printf "\n// BugBot automated fix applied for Issue #%s\n" "$ISSUE" >> "$FIRST_FILE"
               fi
