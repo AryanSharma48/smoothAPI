@@ -372,14 +372,17 @@ jobs:
             done
           fi
 
-          if [ -n "$GEMINI_API_KEY" ]; then
-            MODEL="gemini/gemini-flash-latest"
-            echo "Selected primary model: $MODEL (1M context, 64k output, 1,500 RPD free tier)"
-          elif [ -n "$GROQ_API_KEY" ]; then
+          export LITELLM_NUM_RETRIES=0
+          export NUM_RETRIES=0
+
+          if [ -n "$GROQ_API_KEY" ]; then
             MODEL="groq/$CHOSEN_GROQ"
-            echo "Selected Groq model: $MODEL"
+            echo "Selected primary model: $MODEL (Ultra-Fast Groq LPUs, high-rate limits)"
+          elif [ -n "$GEMINI_API_KEY" ]; then
+            MODEL="gemini/gemini-flash-latest"
+            echo "Selected primary model: $MODEL"
           else
-            echo "Error: Neither GEMINI_API_KEY nor GROQ_API_KEY secret configured."
+            echo "Error: Neither GROQ_API_KEY nor GEMINI_API_KEY secret configured."
             exit 1
           fi
 
@@ -416,10 +419,9 @@ jobs:
             fi
 
             echo "Attempt $i did not produce passing source code changes."
-            # If attempt 1 failed with Gemini and Groq is configured, switch to Groq on attempt 2!
-            if [ "$i" -eq 1 ] && [ -n "$GROQ_API_KEY" ] && [[ "$CURRENT_MODEL" == gemini* ]]; then
-              echo "Switching to Groq ($CHOSEN_GROQ) for attempt 2..."
-              CURRENT_MODEL="groq/$CHOSEN_GROQ"
+            if [ "$i" -eq 1 ] && [ -n "$GROQ_API_KEY" ]; then
+              echo "Switching to alternative Groq model for attempt 2..."
+              CURRENT_MODEL="groq/qwen-2.5-32b"
             fi
 
             echo "Retrying in 5s..."
