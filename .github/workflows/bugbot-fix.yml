@@ -73,12 +73,33 @@ jobs:
 
           echo "Task description prepared."
 
-          # Select only 1-2 relevant files based on issue keywords
-          COMBINED=$(echo "$TITLE $BODY" | tr '[:upper:]' '[:lower:]')
-          if echo "$COMBINED" | grep -qE "backoff|retry-after|ratelimit|rate-limit|jitter|429"; then
+          # Exclude runner temporary files locally so git never tracks them
+          mkdir -p .git/info
+          printf "issue.json\ntask.txt\nrun_tests.sh\npr_body.txt\n.aider*\n" >> .git/info/exclude
+
+          # Select target files accurately (checking Title first)
+          TITLE_LOWER=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]')
+          BODY_LOWER=$(echo "$BODY" | tr '[:upper:]' '[:lower:]')
+          COMBINED="$TITLE_LOWER $BODY_LOWER"
+
+          if echo "$TITLE_LOWER" | grep -qE "readme|doc|docs|markdown|\.md"; then
+            if echo "$COMBINED" | grep -qE "typescript|ts|smooth-api-ts"; then
+              TARGETS="packages/smooth-api-ts/README.md"
+            elif echo "$COMBINED" | grep -qE "python|py|smooth-api-py"; then
+              TARGETS="packages/smooth-api-py/README.md"
+            else
+              TARGETS="packages/smooth-api-ts/README.md README.md packages/smooth-api-py/README.md"
+            fi
+          elif echo "$TITLE_LOWER" | grep -qE "backoff|retry-after|ratelimit|rate-limit|jitter|429"; then
+            TARGETS="packages/smooth-api-ts/src/utils/backoff.ts packages/smooth-api-py/smooth_api/utils.py"
+          elif echo "$TITLE_LOWER" | grep -qE "dedup|deduplication|cache"; then
+            TARGETS="packages/smooth-api-ts/src/dedup.ts packages/smooth-api-py/smooth_api/dedup.py"
+          elif echo "$TITLE_LOWER" | grep -qE "state|circuit|fallback"; then
+            TARGETS="packages/smooth-api-ts/src/state.ts packages/smooth-api-py/smooth_api/state.py"
+          elif echo "$COMBINED" | grep -qE "backoff|retry-after|ratelimit|rate-limit|jitter|429"; then
             TARGETS="packages/smooth-api-ts/src/utils/backoff.ts packages/smooth-api-py/smooth_api/utils.py"
           elif echo "$COMBINED" | grep -qE "docs|doc|readme|guide|markdown|\.md"; then
-            TARGETS="README.md packages/smooth-api-ts/README.md packages/smooth-api-py/README.md"
+            TARGETS="packages/smooth-api-ts/README.md README.md"
           elif echo "$COMBINED" | grep -qE "dedup|deduplication|cache"; then
             TARGETS="packages/smooth-api-ts/src/dedup.ts packages/smooth-api-py/smooth_api/dedup.py"
           elif echo "$COMBINED" | grep -qE "state|circuit|fallback"; then
@@ -161,9 +182,8 @@ jobs:
           TITLE=$(jq -r .title issue.json 2>/dev/null || echo "Bug fix")
           TARGETS="${{ steps.prep.outputs.targets }}"
 
-          # Discard accidental edits to .gitignore and clean up scratch files
+          # Discard accidental edits to .gitignore
           git checkout -- .gitignore 2>/dev/null || true
-          rm -f issue.json task.txt run_tests.sh pr_body.txt
 
           # Stage ONLY the intended target files if they were modified
           CHANGED_TARGETS=$(git status --porcelain $TARGETS 2>/dev/null || true)
@@ -199,7 +219,7 @@ jobs:
         id: pr
         run: |
           git push --force origin "fix/issue-$ISSUE"
-          TITLE=$(jq -r .title issue.json)
+          TITLE=$(jq -r .title issue.json 2>/dev/null || echo "Bug fix")
 
           printf "Closes #%s.\n\nOpened automatically by **BugBot**.\nTarget files modified: \`%s\`\n\n> A maintainer should review and verify before merging.\n" "$ISSUE" "${{ steps.prep.outputs.targets }}" > pr_body.txt
 
