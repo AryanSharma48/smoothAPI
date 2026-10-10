@@ -57,9 +57,17 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
   const retryOn = globalConfig.retryOn ?? DEFAULT_RETRY_ON;
   const breaker = new CircuitBreakerState(
     globalConfig.circuitBreaker,
-    globalConfig.onCircuitStateChange 
-      ? (event) => safeInvoke(globalConfig.onCircuitStateChange, event)
-      : undefined
+    (event) => {
+      if (globalConfig.onCircuitStateChange) {
+        safeInvoke(globalConfig.onCircuitStateChange, event);
+      }
+      if (event.to === 'OPEN' && globalConfig.onCircuitOpen) {
+        safeInvoke(globalConfig.onCircuitOpen, {
+          domain: event.domain,
+          failureCount: event.failureCount,
+        });
+      }
+    }
   );
   const deduplicator = globalConfig.deduplication
     ? new RequestDeduplicator(globalConfig.deduplication.keyFn)

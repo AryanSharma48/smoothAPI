@@ -55,6 +55,11 @@ export interface CircuitStateChangeEvent {
   failureCount: number;
 }
 
+export interface CircuitOpenEvent {
+  domain: string;
+  failureCount: number;
+}
+
 /**
  * Custom predicate function to determine if an attempt should be retried.
  * Receives either (response, undefined) on HTTP completion or (undefined, error) on network/catch errors.
@@ -88,8 +93,16 @@ export interface FailureContext {
 export type RequestSuccessContext = SuccessContext;
 export type RequestFailureContext = FailureContext;
 
+export interface MetricsHooks {
+  onRetry?: (context: RetryContext) => void | Promise<void>;
+  onFailure?: (context: FailureContext) => void | Promise<void>;
+  onSuccess?: (context: SuccessContext) => void | Promise<void>;
+  onCircuitOpen?: (event: CircuitOpenEvent) => void | Promise<void>;
+  onCircuitStateChange?: (event: CircuitStateChangeEvent) => void | Promise<void>;
+}
+
 // T types the fallback payload so callers get inference at the use site.
-export interface SmoothFetchConfig<T = unknown> {
+export interface SmoothFetchConfig<T = unknown> extends MetricsHooks {
   backoff?: Partial<BackoffConfig>;
   circuitBreaker?: Partial<CircuitBreakerConfig>;
   fallback?: T;    // returned immediately on an OPEN circuit, no network IO
@@ -113,10 +126,6 @@ export interface SmoothFetchConfig<T = unknown> {
    * Must be a positive finite number.
    */
   timeoutMs?: number;
-  onRetry?: (context: RetryContext) => void | Promise<void>;
-  onCircuitStateChange?: (event: CircuitStateChangeEvent) => void | Promise<void>;
-  onSuccess?: (context: SuccessContext) => void | Promise<void>;
-  onFailure?: (context: FailureContext) => void | Promise<void>;
 }
 
 /** @deprecated use SmoothFetchConfig instead */
