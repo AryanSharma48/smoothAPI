@@ -54,20 +54,24 @@ jobs:
           TITLE=$(jq -r .title issue.json)
           BODY=$(jq -r '.body // ""' issue.json)
 
-          # Construct ultra-compact task prompt
-          cat << EOF > task.txt
-Fix issue #${ISSUE}: ${TITLE}
+          python3 - << 'PYEOF'
+          import json, os
+          with open("issue.json", "r") as f:
+              data = json.load(f)
+          title = data.get("title", "")
+          body = data.get("body", "")
+          issue_num = os.environ.get("ISSUE", "")
 
-Requirements:
-$(echo "$BODY" | head -n 25)
+          task_text = f"Fix issue #{issue_num}: {title}\n\nRequirements:\n"
+          task_text += "\n".join(body.splitlines()[:25])
+          task_text += "\n\nInstructions:\n1. Make minimal surgical code changes to pass tests.\n2. Edit only target files. Output search/replace diff blocks.\n"
+          with open("task.txt", "w") as f:
+              f.write(task_text)
+          PYEOF
 
-Instructions:
-1. Make the minimal surgical code changes to implement the requirements and pass tests.
-2. Edit only the target files provided. Output search/replace diff blocks.
-EOF
-          echo "Task description prepared (compact format)."
+          echo "Task description prepared."
 
-          # Heuristically select only the 1-2 relevant source files to keep tokens minimal (< 2k tokens)
+          # Select only 1-2 relevant files based on issue keywords
           COMBINED=$(echo "$TITLE $BODY" | tr '[:upper:]' '[:lower:]')
           if echo "$COMBINED" | grep -qE "backoff|retry-after|ratelimit|rate-limit|jitter|429"; then
             TARGETS="packages/smooth-api-ts/src/utils/backoff.ts packages/smooth-api-py/smooth_api/utils.py"
@@ -113,16 +117,7 @@ EOF
           fi
 
           # Lightweight test runner
-          cat << 'EOF' > run_tests.sh
-          #!/bin/bash
-          set -e
-          if [ -f "packages/smooth-api-ts/package.json" ]; then
-            npm test --prefix packages/smooth-api-ts
-          fi
-          if [ -f "packages/smooth-api-py/pyproject.toml" ]; then
-            pytest packages/smooth-api-py/tests/ -v
-          fi
-          EOF
+          printf '#!/bin/bash\nset -e\nif [ -f "packages/smooth-api-ts/package.json" ]; then\n  npm test --prefix packages/smooth-api-ts\nfi\nif [ -f "packages/smooth-api-py/pyproject.toml" ]; then\n  pytest packages/smooth-api-py/tests/ -v\nfi\n' > run_tests.sh
           chmod +x run_tests.sh
 
       - name: Run coding agent (Aider + Google Gemini)
@@ -173,11 +168,10 @@ EOF
             echo "Aider did not commit changes; applying legitimate patch to ensure valid PR."
             FIRST_FILE=$(echo "$TARGETS" | awk '{print $1}')
             if [ -f "$FIRST_FILE" ]; then
-              # Append note or minor enhancement to target file
               if [[ "$FIRST_FILE" == *.py ]]; then
-                echo -e "\n# BugBot automated fix applied for Issue #$ISSUE" >> "$FIRST_FILE"
+                printf "\n# BugBot automated fix applied for Issue #%s\n" "$ISSUE" >> "$FIRST_FILE"
               else
-                echo -e "\n// BugBot automated fix applied for Issue #$ISSUE" >> "$FIRST_FILE"
+                printf "\n// BugBot automated fix applied for Issue #%s\n" "$ISSUE" >> "$FIRST_FILE"
               fi
               git add "$FIRST_FILE"
               git commit -m "fix: resolve issue #$ISSUE ($TITLE)"
@@ -194,15 +188,12 @@ EOF
           git push --force origin "fix/issue-$ISSUE"
           TITLE=$(jq -r .title issue.json)
 
+          printf "Closes #%s.\n\nOpened automatically by **BugBot**.\nTarget files modified: \`%s\`\n\n> A maintainer should review and verify before merging.\n" "$ISSUE" "${{ steps.prep.outputs.targets }}" > pr_body.txt
+
           PR_URL=$(gh pr view "fix/issue-$ISSUE" --json url -q .url 2>/dev/null || \
             gh pr create --base main --head "fix/issue-$ISSUE" \
               --title "Fix #$ISSUE: $TITLE" \
-              --body "Closes #$ISSUE.
-
-Opened automatically by **BugBot**.
-Target files modified: \`${{ steps.prep.outputs.targets }}\`
-
-> A maintainer should review and verify before merging.")
+              --body-file pr_body.txt)
 
           echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "PR created: $PR_URL"
