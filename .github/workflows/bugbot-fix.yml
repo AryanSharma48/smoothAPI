@@ -300,6 +300,7 @@ jobs:
       # =====================================================================
       - name: "Agent 3: Coder (Surgical TDD Fix)"
         id: coder
+        timeout-minutes: 8
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -352,8 +353,7 @@ jobs:
               f"2. DO NOT ask the user to add files and do not ask clarifying questions. Immediately propose the code changes.\n"
               f"3. You MUST modify the actual source code in packages/ to implement the requested feature or fix all issues described.\n"
               f"4. Do NOT just commit tests or .gitignore. You MUST make the functional code changes in {targets}.\n"
-              f"5. Run tests with `./run_tests.sh` and make sure all tests pass.\n"
-              f"6. Output concise search/replace diff blocks.\n"
+              f"5. Output concise search/replace diff blocks.\n"
           )
           with open("task.txt", "w") as f:
               f.write(task_content)
@@ -389,30 +389,41 @@ jobs:
             echo "--- Coding agent attempt $i (Model: $CURRENT_MODEL) ---"
             aider --model "$CURRENT_MODEL" \
               --yes-always \
-              --message-file task.txt \
-              --auto-test \
-              --map-tokens 1024 \
+              --no-stream \
+              --no-check-update \
+              --no-suggest-shell-commands \
               --no-analytics \
-              --test-cmd "./run_tests.sh" \
-              $TARGETS $REPRO_TEST || true
+              --message-file task.txt \
+              --map-tokens 1024 \
+              $TARGETS $REPRO_TEST < /dev/null || true
 
             # Verify that actual source code changes were made
             TOUCHED_SRC=$(git diff --name-only origin/main..HEAD | grep -E '^packages/.+\.(py|ts)$' | grep -v 'tests/' || true)
-            if [ -n "$TOUCHED_SRC" ]; then
-              echo "Coder Agent successfully modified source files:"
+            
+            # Run test suite to verify the changes
+            TEST_PASSED=false
+            if ./run_tests.sh; then
+              TEST_PASSED=true
+              echo "Monorepo test suite passed on attempt $i!"
+            else
+              echo "Monorepo tests failed on attempt $i."
+            fi
+
+            if [ "$TEST_PASSED" = true ] && [ -n "$TOUCHED_SRC" ]; then
+              echo "Coder Agent successfully modified source files and all tests pass:"
               echo "$TOUCHED_SRC"
               break
             fi
 
-            echo "Attempt $i did not modify any source code files."
+            echo "Attempt $i did not produce passing source code changes."
             # If attempt 1 failed with Gemini and Groq is configured, switch to Groq on attempt 2!
             if [ "$i" -eq 1 ] && [ -n "$GROQ_API_KEY" ] && [[ "$CURRENT_MODEL" == gemini* ]]; then
-              echo "Gemini attempt did not produce code changes. Falling back to Groq ($CHOSEN_GROQ) for attempt 2..."
+              echo "Switching to Groq ($CHOSEN_GROQ) for attempt 2..."
               CURRENT_MODEL="groq/$CHOSEN_GROQ"
             fi
 
-            echo "Attempt $i failed, retrying in 10s..."
-            sleep 10
+            echo "Retrying in 5s..."
+            sleep 5
           done
 
       # =====================================================================
