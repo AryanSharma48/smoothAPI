@@ -132,33 +132,29 @@ jobs:
           export LITELLM_NUM_RETRIES=0
           TARGETS="${{ steps.prep.outputs.targets }}"
 
-          MODELS=()
           if [ -n "$GEMINI_API_KEY" ]; then
-            MODELS+=("gemini/gemini-2.5-flash" "gemini/gemini-3.8-flash")
-          fi
-          if [ -n "$GROQ_API_KEY" ]; then
-            MODELS+=("groq/llama-3.1-8b-instant")
-          fi
-
-          if [ ${#MODELS[@]} -eq 0 ]; then
+            MODEL="gemini/gemini-3.8-flash"
+            echo "Selected model: $MODEL (Google Gemini)"
+          elif [ -n "$GROQ_API_KEY" ]; then
+            MODEL="groq/llama-3.1-8b-instant"
+            echo "Selected model: $MODEL (Groq)"
+          else
             echo "Error: Neither GEMINI_API_KEY nor GROQ_API_KEY secret is configured."
             exit 1
           fi
 
-          for MODEL in "${MODELS[@]}"; do
-            echo "Running Aider with $MODEL on $TARGETS..."
-            aider --model "$MODEL" \
-              --yes-always \
-              --no-stream \
-              --no-check-update \
-              --no-suggest-shell-commands \
-              --no-analytics \
-              --no-show-model-warnings \
-              --no-gitignore \
-              --map-tokens 0 \
-              --message-file task.txt \
-              $TARGETS < /dev/null && break || echo "Model $MODEL failed, trying next..."
-          done
+          echo "Running Aider with $MODEL on $TARGETS..."
+          aider --model "$MODEL" \
+            --yes-always \
+            --no-stream \
+            --no-check-update \
+            --no-suggest-shell-commands \
+            --no-analytics \
+            --no-show-model-warnings \
+            --no-gitignore \
+            --map-tokens 0 \
+            --message-file task.txt \
+            $TARGETS < /dev/null || true
 
       - name: Verify code changes & commit
         run: |
