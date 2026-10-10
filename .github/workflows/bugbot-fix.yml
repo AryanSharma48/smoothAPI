@@ -75,6 +75,8 @@ jobs:
           COMBINED=$(echo "$TITLE $BODY" | tr '[:upper:]' '[:lower:]')
           if echo "$COMBINED" | grep -qE "backoff|retry-after|ratelimit|rate-limit|jitter|429"; then
             TARGETS="packages/smooth-api-ts/src/utils/backoff.ts packages/smooth-api-py/smooth_api/utils.py"
+          elif echo "$COMBINED" | grep -qE "docs|doc|readme|guide|markdown|\.md"; then
+            TARGETS="README.md packages/smooth-api-ts/README.md packages/smooth-api-py/README.md"
           elif echo "$COMBINED" | grep -qE "dedup|deduplication|cache"; then
             TARGETS="packages/smooth-api-ts/src/dedup.ts packages/smooth-api-py/smooth_api/dedup.py"
           elif echo "$COMBINED" | grep -qE "state|circuit|fallback"; then
