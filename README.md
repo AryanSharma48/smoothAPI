@@ -118,6 +118,40 @@ Explore production-grade examples in the [`/examples`](./examples) directory:
 - **Request Deduplication:** Merging concurrent API calls.
 - **Chaos Testing:** Testing fault tolerance against the built-in [Express Chaos Server](./sandbox).
 
+### Request Deduplication
+
+When multiple identical requests are made concurrently, SmoothAPI can execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services and prevents redundant work during bursts of traffic.
+
+This feature is covered in the TypeScript package documentation at [packages/smooth-api-ts/README.md](./packages/smooth-api-ts/README.md).
+
+```ts
+import { createSmoothFetch } from '@codingaryan/smoothapi';
+
+const fetchWithRetry = createSmoothFetch({
+  deduplication: {} // Empty object activates deduplication
+});
+
+// All three calls share a single network request
+const [a, b, c] = await Promise.all([
+  fetchWithRetry('https://api.example.com/users/1'),
+  fetchWithRetry('https://api.example.com/users/1'),
+  fetchWithRetry('https://api.example.com/users/1'),
+]);
+```
+
+```ts
+const fetchWithRetry = createSmoothFetch({
+  deduplication: {
+    // Deduplicate by method + URL (ignores headers/body)
+    keyFn: (url, options) => `${options?.method ?? 'GET'}:${url.toString()}`
+  }
+});
+```
+
+- **Default behavior:** Deduplicates by URL only (method-agnostic). Concurrent GETs to the same URL are merged.
+- **Error propagation:** If the network call fails, all waiting callers receive the same error.
+- **Settlement:** Once a request completes, the next call to the same URL triggers a fresh network request.
+
 ---
 
 ## Design Philosophy
