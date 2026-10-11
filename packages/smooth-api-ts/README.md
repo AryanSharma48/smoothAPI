@@ -170,7 +170,7 @@ const fetchWithRetry = createSmoothFetch({
 
 ### Request Deduplication
 
-When multiple identical requests are made concurrently, SmoothAPI will execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services and prevents exausting computing resources.
+When multiple identical requests are made concurrently, SmoothAPI will execute only one network call and share the result with all callers. This reduces unnecessary load on downstream services and prevents exhausting computing resources.
 
 **Enable with default key function** (deduplicates by URL):
 
