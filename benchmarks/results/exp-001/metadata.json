@@ -1,0 +1,25 @@
+{
+  "experiment_id": "exp-001",
+  "timestamp": "2026-10-19T20:22:02.718116+00:00",
+  "git_commit": "efcc871a3a93f9758da3c69a6c22188e599a5977",
+  "mode": "full",
+  "system": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+    "machine": "AMD64"
+  },
+  "toolchains": {
+    "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+    "node": "v22.20.0",
+    "python": "3.14.0"
+  },
+  "parameters": {
+    "iterations": 1000000,
+    "rounds": 5,
+    "warmup_iterations": 50000,
+    "workloads": [
+      "backoff_deterministic",
+      "retry_policy_evaluation"
+    ]
+  }
+}
