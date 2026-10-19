@@ -183,8 +183,14 @@ To evaluate the benefits and trade-offs of a shared Rust core, SmoothAPI follows
 1. **Milestone 1 — Backoff:** Exponential backoff calculations, delay limits, and overflow safety. *(Completed)*
 2. **Milestone 2 — Jitter:** Deterministic and randomized jitter strategy evaluation. *(Completed)*
 3. **Milestone 3 — Retry Policy:** Attempt limits, status-code filtering, and `Retry-After` parsing. *(Completed)*
-4. **Milestone 4 — Native Baselines:** Ensure equivalent TypeScript and Python implementations pass identical correctness tests. *(In Progress)*
-5. **Milestone 5 — Microbenchmarks:** Measure computation cost, throughput (ops/sec), and native binding FFI overhead under equivalent workloads.
+4. **Milestone 4 — Native Baselines:** Ensure equivalent TypeScript and Python implementations pass identical correctness tests. *(Completed)*
+5. **Milestone 5 — Microbenchmarks:** Measure computation cost, throughput (ops/sec), and native binding FFI overhead under equivalent workloads. *(Baseline Completed)*
+
+### Baseline Findings (`exp-001`)
+
+![Experiment exp-001 Benchmark Results](../research/figures/exp-001-summary.png)
+
+Full statistical logs, raw CSVs, and measurement controls are available in the [research/](../research) directory and [benchmarks/](../benchmarks).
 
 > **Research Note:** Comparing raw Rust computation against interpreted or JIT-compiled runtimes measures execution cost alone. Production viability requires accounting for language binding overhead (Node-API / PyO3) and realistic network latency.
 
