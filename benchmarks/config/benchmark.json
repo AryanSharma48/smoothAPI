@@ -1,0 +1,37 @@
+{
+  "experiment_id": "exp-001",
+  "parameters": {
+    "base_delay_ms": 100,
+    "max_delay_ms": 30000,
+    "max_retries": 3,
+    "pilot": {
+      "iterations": 20000,
+      "rounds": 3,
+      "warmup_iterations": 5000
+    },
+    "full": {
+      "iterations": 1000000,
+      "rounds": 5,
+      "warmup_iterations": 50000
+    }
+  },
+  "workloads": [
+    {
+      "name": "backoff_deterministic",
+      "description": "Deterministic exponential backoff calculation across representative attempts (0, 1, 2, 3, 10)",
+      "attempts": [0, 1, 2, 3, 10],
+      "expected_ms": [100, 200, 400, 800, 30000]
+    },
+    {
+      "name": "retry_policy_evaluation",
+      "description": "Response evaluation across status codes and attempt boundaries",
+      "cases": [
+        { "status": 200, "attempt": 0, "retry_after": null, "expected": "Success" },
+        { "status": 404, "attempt": 0, "retry_after": null, "expected": "Terminal" },
+        { "status": 503, "attempt": 0, "retry_after": null, "expected": "Retry", "delay_ms": 100 },
+        { "status": 429, "attempt": 0, "retry_after": "5", "expected": "Retry", "delay_ms": 5000 },
+        { "status": 500, "attempt": 3, "retry_after": null, "expected": "Exhausted" }
+      ]
+    }
+  ]
+}
