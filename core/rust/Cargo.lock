@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "core-rust"
+name = "smooth-api-core"
 version = "0.1.0"
