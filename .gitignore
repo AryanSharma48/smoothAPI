@@ -40,3 +40,8 @@ Thumbs.db
 *.swp
 *.swo
 .agent
+
+# ─── Rust ──────────────────────────────────────────────────
+**/target/
+**/*.rs.bk
+Cargo.lock.back
