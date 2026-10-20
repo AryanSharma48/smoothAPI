@@ -1,7 +1,7 @@
 {
   "experiment_id": "exp-001-pilot",
-  "timestamp": "2026-10-19T20:21:37.185118+00:00",
-  "git_commit": "efcc871a3a93f9758da3c69a6c22188e599a5977",
+  "timestamp": "2026-10-20T12:01:07.016033+00:00",
+  "git_commit": "ac31b18d5b83e4820ac14f44cb49ae2cfb0dafad",
   "mode": "pilot",
   "system": {
     "os": "Windows-11-10.0.26300-SP0",
@@ -14,12 +14,30 @@
     "python": "3.14.0"
   },
   "parameters": {
-    "iterations": 20000,
     "rounds": 3,
-    "warmup_iterations": 5000,
+    "warmup_iterations": 10000,
     "workloads": [
       "backoff_deterministic",
       "retry_policy_evaluation"
-    ]
-  }
+    ],
+    "calibrated_iterations": {
+      "backoff_deterministic": {
+        "rust": 15000000,
+        "typescript": 2000000,
+        "python": 500000
+      },
+      "retry_policy_evaluation": {
+        "rust": 8000000,
+        "typescript": 3000000,
+        "python": 300000
+      }
+    }
+  },
+  "methodology_notes": [
+    "Calibrated iterations target 0.5-1.0 second duration per measured sample across all runtimes.",
+    "Correctness checks run strictly outside timed loops.",
+    "Test vectors are pre-allocated outside timed loop; loop executes in 5-iteration batches without modulo math.",
+    "DCE prevention via black_box in Rust and sink accumulation across all languages.",
+    "Language execution order is counterbalanced across rounds."
+  ]
 }
