@@ -47,31 +47,41 @@ fn verify_correctness(config: &BackoffConfig) {
 }
 
 fn bench_backoff(iterations: u64, warmup: u64, round: u32, config: &BackoffConfig) -> BenchmarkResult {
-    let attempts = [0, 1, 2, 3, 10];
-    let num_attempts = attempts.len();
+    let attempts = [0u32, 1, 2, 3, 10];
+    let mut sink: u64 = 0;
 
-    // Warm-up
-    for i in 0..warmup {
-        let att = attempts[(i as usize) % num_attempts];
-        black_box(calculate_backoff(black_box(att), config, None, 0.0));
+    // Warm-up outside timed region
+    let warmup_batches = (warmup / 5).max(1);
+    for _ in 0..warmup_batches {
+        for &att in &attempts {
+            sink = sink.wrapping_add(calculate_backoff(black_box(att), black_box(config), None, 0.0));
+        }
     }
+    black_box(sink);
+    sink = 0;
 
-    // Timed execution
+    let batches = (iterations / 5).max(1);
+    let actual_iterations = batches * 5;
+
+    // Timed execution - batch iteration eliminates modulo arithmetic from timed loop
     let start = Instant::now();
-    for i in 0..iterations {
-        let att = attempts[(i as usize) % num_attempts];
-        black_box(calculate_backoff(black_box(att), config, None, 0.0));
+    for _ in 0..batches {
+        for &att in &attempts {
+            sink = sink.wrapping_add(calculate_backoff(black_box(att), black_box(config), None, 0.0));
+        }
     }
     let elapsed = start.elapsed();
+    black_box(sink);
+
     let elapsed_ms = elapsed.as_secs_f64() * 1000.0;
-    let ops_per_sec = (iterations as f64) / elapsed.as_secs_f64();
-    let ns_per_op = (elapsed.as_nanos() as f64) / (iterations as f64);
+    let ops_per_sec = (actual_iterations as f64) / elapsed.as_secs_f64();
+    let ns_per_op = (elapsed.as_nanos() as f64) / (actual_iterations as f64);
 
     BenchmarkResult {
         workload: "backoff_deterministic".to_string(),
         language: "rust".to_string(),
         round,
-        iterations,
+        iterations: actual_iterations,
         elapsed_ms,
         ops_per_sec,
         ns_per_op,
@@ -79,51 +89,73 @@ fn bench_backoff(iterations: u64, warmup: u64, round: u32, config: &BackoffConfi
 }
 
 fn bench_policy(iterations: u64, warmup: u64, round: u32, config: &BackoffConfig) -> BenchmarkResult {
-    let test_cases = [
-        (200u16, 0u32, None),
+    let test_cases: [(u16, u32, Option<&'static str>); 5] = [
+        (200, 0, None),
         (404, 0, None),
         (503, 0, None),
         (429, 0, Some("5")),
         (500, 3, None),
     ];
-    let num_cases = test_cases.len();
+    let mut sink: u64 = 0;
 
-    // Warm-up
-    for i in 0..warmup {
-        let (status, attempt, header) = test_cases[(i as usize) % num_cases];
-        black_box(evaluate_response(
-            black_box(status),
-            black_box(attempt),
-            config,
-            header,
-            None,
-            0.0,
-        ));
+    // Warm-up outside timed region
+    let warmup_batches = (warmup / 5).max(1);
+    for _ in 0..warmup_batches {
+        for &(status, attempt, header) in &test_cases {
+            let decision = evaluate_response(
+                black_box(status),
+                black_box(attempt),
+                black_box(config),
+                header,
+                None,
+                0.0,
+            );
+            sink = sink.wrapping_add(match decision {
+                RetryDecision::Success => 1,
+                RetryDecision::Terminal => 2,
+                RetryDecision::Exhausted => 3,
+                RetryDecision::Retry { delay_ms } => delay_ms,
+            });
+        }
     }
+    black_box(sink);
+    sink = 0;
+
+    let batches = (iterations / 5).max(1);
+    let actual_iterations = batches * 5;
 
     // Timed execution
     let start = Instant::now();
-    for i in 0..iterations {
-        let (status, attempt, header) = test_cases[(i as usize) % num_cases];
-        black_box(evaluate_response(
-            black_box(status),
-            black_box(attempt),
-            config,
-            header,
-            None,
-            0.0,
-        ));
+    for _ in 0..batches {
+        for &(status, attempt, header) in &test_cases {
+            let decision = evaluate_response(
+                black_box(status),
+                black_box(attempt),
+                black_box(config),
+                header,
+                None,
+                0.0,
+            );
+            sink = sink.wrapping_add(match decision {
+                RetryDecision::Success => 1,
+                RetryDecision::Terminal => 2,
+                RetryDecision::Exhausted => 3,
+                RetryDecision::Retry { delay_ms } => delay_ms,
+            });
+        }
     }
     let elapsed = start.elapsed();
+    black_box(sink);
+
     let elapsed_ms = elapsed.as_secs_f64() * 1000.0;
-    let ops_per_sec = (iterations as f64) / elapsed.as_secs_f64();
-    let ns_per_op = (elapsed.as_nanos() as f64) / (iterations as f64);
+    let ops_per_sec = (actual_iterations as f64) / elapsed.as_secs_f64();
+    let ns_per_op = (elapsed.as_nanos() as f64) / (actual_iterations as f64);
 
     BenchmarkResult {
         workload: "retry_policy_evaluation".to_string(),
         language: "rust".to_string(),
         round,
-        iterations,
+        iterations: actual_iterations,
         elapsed_ms,
         ops_per_sec,
         ns_per_op,

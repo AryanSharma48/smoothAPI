@@ -5,14 +5,36 @@
     "max_delay_ms": 30000,
     "max_retries": 3,
     "pilot": {
-      "iterations": 20000,
       "rounds": 3,
-      "warmup_iterations": 5000
+      "warmup_iterations": 10000,
+      "calibrated": {
+        "backoff_deterministic": {
+          "rust": 15000000,
+          "typescript": 2000000,
+          "python": 500000
+        },
+        "retry_policy_evaluation": {
+          "rust": 8000000,
+          "typescript": 3000000,
+          "python": 300000
+        }
+      }
     },
     "full": {
-      "iterations": 1000000,
       "rounds": 5,
-      "warmup_iterations": 50000
+      "warmup_iterations": 50000,
+      "calibrated": {
+        "backoff_deterministic": {
+          "rust": 200000000,
+          "typescript": 20000000,
+          "python": 6000000
+        },
+        "retry_policy_evaluation": {
+          "rust": 100000000,
+          "typescript": 40000000,
+          "python": 3000000
+        }
+      }
     }
   },
   "workloads": [

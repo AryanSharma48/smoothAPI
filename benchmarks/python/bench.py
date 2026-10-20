@@ -64,25 +64,30 @@ def verify_correctness(config: BackoffConfig):
     assert d5["type"] == "Exhausted", "Python correctness failed on 500 exhausted"
 
 def bench_backoff(iterations: int, warmup: int, round_num: int, config: BackoffConfig):
-    attempts = [0, 1, 2, 3, 10]
-    num_attempts = len(attempts)
+    attempts = (0, 1, 2, 3, 10)
     sink = 0.0
 
-    # Warm-up (measurement control)
-    for i in range(warmup):
-        sink += calculate_backoff_deterministic(attempts[i % num_attempts], config)
+    # Warm-up outside timed region
+    warmup_batches = max(1, warmup // 5)
+    for _ in range(warmup_batches):
+        for att in attempts:
+            sink += calculate_backoff_deterministic(att, config)
 
-    # Timed execution
+    batches = max(1, iterations // 5)
+    actual_iterations = batches * 5
+
+    # Timed execution - batch iteration eliminates modulo arithmetic from timed loop
     start = time.perf_counter_ns()
-    for i in range(iterations):
-        sink += calculate_backoff_deterministic(attempts[i % num_attempts], config)
+    for _ in range(batches):
+        for att in attempts:
+            sink += calculate_backoff_deterministic(att, config)
     end = time.perf_counter_ns()
 
     elapsed_ns = end - start
     elapsed_ms = elapsed_ns / 1_000_000.0
     elapsed_sec = elapsed_ns / 1_000_000_000.0
-    ops_per_sec = iterations / elapsed_sec if elapsed_sec > 0 else 0.0
-    ns_per_op = elapsed_ns / iterations if iterations > 0 else 0.0
+    ops_per_sec = actual_iterations / elapsed_sec if elapsed_sec > 0 else 0.0
+    ns_per_op = elapsed_ns / actual_iterations if actual_iterations > 0 else 0.0
 
     if sink == 0.0:
         print("Prevent DCE", file=sys.stderr)
@@ -91,42 +96,45 @@ def bench_backoff(iterations: int, warmup: int, round_num: int, config: BackoffC
         "workload": "backoff_deterministic",
         "language": "python",
         "round": round_num,
-        "iterations": iterations,
+        "iterations": actual_iterations,
         "elapsed_ms": elapsed_ms,
         "ops_per_sec": ops_per_sec,
         "ns_per_op": ns_per_op,
     }
 
 def bench_policy(iterations: int, warmup: int, round_num: int, config: BackoffConfig):
-    test_cases = [
+    test_cases = (
         (200, 0, None),
         (404, 0, None),
         (503, 0, None),
         (429, 0, "5"),
         (500, 3, None),
-    ]
-    num_cases = len(test_cases)
+    )
     sink = 0.0
 
-    # Warm-up
-    for i in range(warmup):
-        c = test_cases[i % num_cases]
-        res = evaluate_response(c[0], c[1], config, c[2])
-        sink += res.get("delay_ms", 1.0)
+    # Warm-up outside timed region
+    warmup_batches = max(1, warmup // 5)
+    for _ in range(warmup_batches):
+        for status, attempt, retry_after in test_cases:
+            res = evaluate_response(status, attempt, config, retry_after)
+            sink += res.get("delay_ms", 1.0)
 
-    # Timed execution
+    batches = max(1, iterations // 5)
+    actual_iterations = batches * 5
+
+    # Timed execution - batch iteration eliminates modulo arithmetic from timed loop
     start = time.perf_counter_ns()
-    for i in range(iterations):
-        c = test_cases[i % num_cases]
-        res = evaluate_response(c[0], c[1], config, c[2])
-        sink += res.get("delay_ms", 1.0)
+    for _ in range(batches):
+        for status, attempt, retry_after in test_cases:
+            res = evaluate_response(status, attempt, config, retry_after)
+            sink += res.get("delay_ms", 1.0)
     end = time.perf_counter_ns()
 
     elapsed_ns = end - start
     elapsed_ms = elapsed_ns / 1_000_000.0
     elapsed_sec = elapsed_ns / 1_000_000_000.0
-    ops_per_sec = iterations / elapsed_sec if elapsed_sec > 0 else 0.0
-    ns_per_op = elapsed_ns / iterations if iterations > 0 else 0.0
+    ops_per_sec = actual_iterations / elapsed_sec if elapsed_sec > 0 else 0.0
+    ns_per_op = elapsed_ns / actual_iterations if actual_iterations > 0 else 0.0
 
     if sink == 0.0:
         print("Prevent DCE", file=sys.stderr)
@@ -135,34 +143,38 @@ def bench_policy(iterations: int, warmup: int, round_num: int, config: BackoffCo
         "workload": "retry_policy_evaluation",
         "language": "python",
         "round": round_num,
-        "iterations": iterations,
+        "iterations": actual_iterations,
         "elapsed_ms": elapsed_ms,
         "ops_per_sec": ops_per_sec,
         "ns_per_op": ns_per_op,
     }
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="SmoothAPI Python Benchmark Runner")
     parser.add_argument("--workload", default="backoff_deterministic")
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup", type=int, default=10000)
     parser.add_argument("--round", type=int, default=1)
     args = parser.parse_args()
 
-    # Python base config in seconds (0.1s = 100ms, 30.0s = 30000ms)
-    config = BackoffConfig(base_delay=0.1, max_delay=30.0, max_retries=3)
+    config = BackoffConfig(
+        base_delay=0.1,    # 100ms
+        max_delay=30.0,    # 30,000ms
+        max_retries=3
+    )
 
+    # Pre-flight correctness verification
     verify_correctness(config)
 
     if args.workload == "backoff_deterministic":
-        res = bench_backoff(args.iterations, args.warmup, args.round, config)
+        result = bench_backoff(args.iterations, args.warmup, args.round, config)
     elif args.workload == "retry_policy_evaluation":
-        res = bench_policy(args.iterations, args.warmup, args.round, config)
+        result = bench_policy(args.iterations, args.warmup, args.round, config)
     else:
         print(f"Unknown workload: {args.workload}", file=sys.stderr)
         sys.exit(1)
 
-    print(json.dumps(res))
+    print(json.dumps(result))
 
 if __name__ == "__main__":
     main()

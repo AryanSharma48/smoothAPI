@@ -51,12 +51,16 @@ def calculate_stats(numbers):
     median = s[n // 2] if n % 2 != 0 else (s[n // 2 - 1] + s[n // 2]) / 2.0
     variance = sum((x - mean) ** 2 for x in s) / n
     stdev = math.sqrt(variance)
+    spread = s[-1] - s[0]
+    spread_pct = (spread / median * 100.0) if median > 0 else 0.0
     return {
         "min": s[0],
         "max": s[-1],
         "median": median,
         "mean": mean,
         "stdev": stdev,
+        "spread": spread,
+        "spread_pct": round(spread_pct, 2),
     }
 
 def run_rust(workload, iterations, warmup, round_num):
@@ -77,7 +81,6 @@ def run_rust(workload, iterations, warmup, round_num):
         str(round_num),
     ]
     res = subprocess.run(cmd, cwd=ROOT_DIR, capture_output=True, text=True, check=True)
-    # Extract json from stdout
     for line in reversed(res.stdout.strip().splitlines()):
         if line.startswith("{") and line.endswith("}"):
             return json.loads(line)
@@ -145,33 +148,39 @@ def main():
         sys.exit(1)
 
     params = config["parameters"]["pilot"] if args.pilot else config["parameters"]["full"]
-    iterations = params["iterations"]
     rounds = params["rounds"]
     warmup = params["warmup_iterations"]
+    calibrated_map = params.get("calibrated", {})
 
     workloads = ["backoff_deterministic", "retry_policy_evaluation"]
     languages = ["rust", "typescript", "python"]
 
     raw_records = []
 
-    print("=" * 70)
+    print("=" * 75)
     print(f" SmoothAPI Microbenchmark Orchestrator - Experiment: {exp_id}")
-    print(f" Mode: {'PILOT' if args.pilot else 'FULL'} | Iterations: {iterations:,} | Rounds: {rounds} | Warm-up: {warmup:,}")
-    print("=" * 70)
+    print(f" Mode: {'PILOT' if args.pilot else 'FULL'} | Rounds: {rounds} | Warm-up: {warmup:,}")
+    print("=" * 75)
 
     for workload in workloads:
         print(f"\n>> Workload: {workload}")
         for r in range(1, rounds + 1):
-            # Counterbalance language execution order per round to mitigate bias
+            # Counterbalance language execution order per round to mitigate systematic bias
             order = languages[(r - 1) % len(languages):] + languages[:(r - 1) % len(languages)]
             print(f"  Round {r}/{rounds} (Execution Order: {' -> '.join(order)})")
 
             for lang in order:
                 runner = RUNNERS[lang]
+                # Determine calibrated iterations if available
+                if calibrated_map and workload in calibrated_map and lang in calibrated_map[workload]:
+                    iters = calibrated_map[workload][lang]
+                else:
+                    iters = params.get("iterations", 1_000_000)
+
                 try:
-                    result = runner(workload, iterations, warmup, r)
+                    result = runner(workload, iters, warmup, r)
                     raw_records.append(result)
-                    print(f"    [{lang:<10}] {result['ns_per_op']:>8.2f} ns/op | {result['ops_per_sec']:>12,.0f} ops/sec ({result['elapsed_ms']:>6.2f} ms)")
+                    print(f"    [{lang:<10}] {result['ns_per_op']:>8.2f} ns/op | {result['ops_per_sec']:>14,.0f} ops/sec ({result['elapsed_ms']:>7.2f} ms | {result['iterations']:>11,} iters)")
                 except Exception as err:
                     print(f"    [{lang:<10}] FAILED: {err}", file=sys.stderr)
                     sys.exit(1)
@@ -186,21 +195,22 @@ def main():
             ns_ops = [rec["ns_per_op"] for rec in records]
             ops_secs = [rec["ops_per_sec"] for rec in records]
             elapsed_mss = [rec["elapsed_ms"] for rec in records]
+            iter_counts = [rec["iterations"] for rec in records]
 
             summary["workloads"][workload][lang] = {
+                "sample_iterations": iter_counts[0] if iter_counts else 0,
                 "ns_per_op": calculate_stats(ns_ops),
                 "ops_per_sec": calculate_stats(ops_secs),
                 "elapsed_ms": calculate_stats(elapsed_mss),
             }
 
-        # Calculate speedup ratios based on median ns_per_op
         rust_median = summary["workloads"][workload]["rust"]["ns_per_op"]["median"]
         ts_median = summary["workloads"][workload]["typescript"]["ns_per_op"]["median"]
         py_median = summary["workloads"][workload]["python"]["ns_per_op"]["median"]
 
-        summary["workloads"][workload]["speedup_vs_rust"] = {
-            "typescript_overhead_ratio": round(ts_median / rust_median, 2) if rust_median > 0 else 0,
-            "python_overhead_ratio": round(py_median / rust_median, 2) if rust_median > 0 else 0,
+        summary["workloads"][workload]["relative_overhead_vs_rust"] = {
+            "typescript_ratio": round(ts_median / rust_median, 2) if rust_median > 0 else 0,
+            "python_ratio": round(py_median / rust_median, 2) if rust_median > 0 else 0,
         }
 
     metadata = {
@@ -215,11 +225,18 @@ def main():
         },
         "toolchains": get_toolchain_versions(),
         "parameters": {
-            "iterations": iterations,
             "rounds": rounds,
             "warmup_iterations": warmup,
             "workloads": workloads,
+            "calibrated_iterations": calibrated_map,
         },
+        "methodology_notes": [
+            "Calibrated iterations target 0.5-1.0 second duration per measured sample across all runtimes.",
+            "Correctness checks run strictly outside timed loops.",
+            "Test vectors are pre-allocated outside timed loop; loop executes in 5-iteration batches without modulo math.",
+            "DCE prevention via black_box in Rust and sink accumulation across all languages.",
+            "Language execution order is counterbalanced across rounds."
+        ]
     }
 
     # Save to disk
@@ -239,21 +256,23 @@ def main():
         writer.writeheader()
         writer.writerows(raw_records)
 
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 75)
     print(f" Experiment completed successfully! Results written to: {exp_dir}")
-    print("=" * 70)
+    print("=" * 75)
 
     # Print summary table
     for workload in workloads:
-        print(f"\n--- Summary: {workload} (Median latency & throughput) ---")
+        print(f"\n--- Summary: {workload} ---")
         w_data = summary["workloads"][workload]
         for lang in languages:
             med_ns = w_data[lang]["ns_per_op"]["median"]
             med_ops = w_data[lang]["ops_per_sec"]["median"]
             stdev_ns = w_data[lang]["ns_per_op"]["stdev"]
-            print(f"  {lang:<10}: {med_ns:>8.2f} ns/op (+/-{stdev_ns:.2f}) | {med_ops:>12,.0f} ops/sec")
-        ratios = w_data["speedup_vs_rust"]
-        print(f"  Relative cost vs Rust: TS is {ratios['typescript_overhead_ratio']}x | Python is {ratios['python_overhead_ratio']}x")
+            spread_pct = w_data[lang]["ns_per_op"]["spread_pct"]
+            med_ms = w_data[lang]["elapsed_ms"]["median"]
+            print(f"  {lang:<10}: {med_ns:>7.2f} ns/op (+/-{stdev_ns:.2f}, {spread_pct}% spread) | {med_ops:>13,.0f} ops/sec (Sample: {med_ms:>6.1f} ms)")
+        ratios = w_data["relative_overhead_vs_rust"]
+        print(f"  Relative execution cost vs Rust: TS is {ratios['typescript_ratio']}x | Python is {ratios['python_ratio']}x")
 
 if __name__ == "__main__":
     main()
