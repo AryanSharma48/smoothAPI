@@ -1,4 +1,4 @@
-use crate::backoff::{calculate_backoff, BackoffConfig};
+use crate::backoff::{BackoffConfig, calculate_backoff};
 
 // Default HTTP status codes eligible for retry
 pub const DEFAULT_RETRY_ON: [u16; 5] = [429, 500, 502, 503, 504];
@@ -101,18 +101,39 @@ mod tests {
     #[test]
     fn success_on_2xx_responses() {
         let config = test_config();
-        assert_eq!(evaluate_response(200, 0, &config, None, None, 0.0), RetryDecision::Success);
-        assert_eq!(evaluate_response(201, 0, &config, None, None, 0.0), RetryDecision::Success);
-        assert_eq!(evaluate_response(204, 0, &config, None, None, 0.0), RetryDecision::Success);
+        assert_eq!(
+            evaluate_response(200, 0, &config, None, None, 0.0),
+            RetryDecision::Success
+        );
+        assert_eq!(
+            evaluate_response(201, 0, &config, None, None, 0.0),
+            RetryDecision::Success
+        );
+        assert_eq!(
+            evaluate_response(204, 0, &config, None, None, 0.0),
+            RetryDecision::Success
+        );
     }
 
     #[test]
     fn terminal_on_client_errors() {
         let config = test_config();
-        assert_eq!(evaluate_response(400, 0, &config, None, None, 0.0), RetryDecision::Terminal);
-        assert_eq!(evaluate_response(401, 0, &config, None, None, 0.0), RetryDecision::Terminal);
-        assert_eq!(evaluate_response(403, 0, &config, None, None, 0.0), RetryDecision::Terminal);
-        assert_eq!(evaluate_response(404, 0, &config, None, None, 0.0), RetryDecision::Terminal);
+        assert_eq!(
+            evaluate_response(400, 0, &config, None, None, 0.0),
+            RetryDecision::Terminal
+        );
+        assert_eq!(
+            evaluate_response(401, 0, &config, None, None, 0.0),
+            RetryDecision::Terminal
+        );
+        assert_eq!(
+            evaluate_response(403, 0, &config, None, None, 0.0),
+            RetryDecision::Terminal
+        );
+        assert_eq!(
+            evaluate_response(404, 0, &config, None, None, 0.0),
+            RetryDecision::Terminal
+        );
     }
 
     #[test]

@@ -43,7 +43,9 @@ pub fn calculate_backoff(
     random_factor: f64,
 ) -> u64 {
     // Compute exponential delay with safe overflow saturation
-    let exponential = config.base_delay_ms.saturating_mul(2u64.saturating_pow(attempt));
+    let exponential = config
+        .base_delay_ms
+        .saturating_mul(2u64.saturating_pow(attempt));
     let capped = exponential.min(config.max_delay_ms);
     let factor = random_factor.clamp(0.0, 1.0);
 

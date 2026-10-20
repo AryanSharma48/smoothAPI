@@ -1,7 +1,7 @@
 use napi_derive::napi;
 use smooth_api_core::{
-    calculate_backoff, evaluate_response, BackoffConfig, CircuitBreaker, CircuitState,
-    JitterStrategy, RetryDecision,
+    BackoffConfig, CircuitBreaker, CircuitState, JitterStrategy, RetryDecision, calculate_backoff,
+    evaluate_response,
 };
 
 #[napi]
