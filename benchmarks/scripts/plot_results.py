@@ -51,8 +51,7 @@ ax = sns.barplot(
     y="ns_per_op",
     hue="Language",
     palette=colors,
-    capsize=0.08,
-    err_kws={"linewidth": 1.5},
+    errorbar=None,
 )
 
 plt.title("Execution Latency per Operation (Lower is Better)", fontsize=14, fontweight="bold", pad=15)
@@ -93,8 +92,7 @@ ax = sns.barplot(
     y="m_ops_sec",
     hue="Language",
     palette=colors,
-    capsize=0.08,
-    err_kws={"linewidth": 1.5},
+    errorbar=None,
 )
 
 plt.title("Execution Throughput (Higher is Better)", fontsize=14, fontweight="bold", pad=15)
@@ -135,8 +133,7 @@ sns.barplot(
     y="ns_per_op",
     hue="Language",
     palette=colors,
-    capsize=0.08,
-    err_kws={"linewidth": 1.5},
+    errorbar=None,
     ax=ax1,
 )
 ax1.set_title("A. Latency per Operation (Log Scale, Lower is Better)", fontsize=12, fontweight="bold")
@@ -166,8 +163,7 @@ sns.barplot(
     y="m_ops_sec",
     hue="Language",
     palette=colors,
-    capsize=0.08,
-    err_kws={"linewidth": 1.5},
+    errorbar=None,
     ax=ax2,
 )
 ax2.set_title("B. Throughput (Linear Scale, Higher is Better)", fontsize=12, fontweight="bold")
