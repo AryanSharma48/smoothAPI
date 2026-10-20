@@ -35,6 +35,22 @@ packages:
       - 'packages/**/*'
       - '!packages/**/*.md'
 
+Rust:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'core/rust/**/*'
+      - 'bindings/**/*'
+      - 'benchmarks/rust/**/*'
+      - '!core/rust/**/*.md'
+      - '!bindings/**/*.md'
+
+addon:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'bindings/**/*'
+      - '!bindings/**/*.md'
+
+
 ci:
   - changed-files:
     - any-glob-to-any-file: '.github/**/*'

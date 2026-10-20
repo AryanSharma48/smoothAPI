@@ -13,6 +13,7 @@ jobs:
     outputs:
       typescript: ${{ steps.filter.outputs.typescript }}
       python: ${{ steps.filter.outputs.python }}
+      rust: ${{ steps.filter.outputs.rust }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -28,6 +29,13 @@ jobs:
               - 'packages/smooth-api-py/**'
               - '!packages/smooth-api-py/**/*.md'
               - 'sandbox/**'
+              - '.github/workflows/ci.yml'
+            rust:
+              - 'core/rust/**'
+              - '!core/rust/**/*.md'
+              - 'bindings/**'
+              - '!bindings/**/*.md'
+              - 'benchmarks/rust/**'
               - '.github/workflows/ci.yml'
 
   typescript-checks:
@@ -174,4 +182,70 @@ jobs:
       - name: Run Python tests
         working-directory: ./packages/smooth-api-py
         run: pytest tests/ -v
+
+  rust-checks:
+    name: Rust Checks (Format & Clippy)
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Format Check
+        run: |
+          cargo fmt --manifest-path core/rust/Cargo.toml -- --check
+          cargo fmt --manifest-path bindings/node/Cargo.toml -- --check
+
+      - name: Rust Clippy
+        run: |
+          cargo clippy --manifest-path core/rust/Cargo.toml -- -D warnings
+          cargo clippy --manifest-path bindings/node/Cargo.toml -- -D warnings
+
+  rust-tests:
+    name: Rust Core Unit Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Core Rust tests
+        run: cargo test --manifest-path core/rust/Cargo.toml --verbose
+
+  node-native-tests:
+    name: Node-API Native Addon Build & Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' || needs.changes.outputs.typescript == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'bindings/node/package.json'
+
+      - name: Install dependencies
+        working-directory: ./bindings/node
+        run: npm install
+
+      - name: Build Native Addon
+        working-directory: ./bindings/node
+        run: npm run build
+
+      - name: Test Native Addon Binding
+        working-directory: ./bindings/node
+        run: |
+          node -e "const { calculateBackoffNative, evaluateResponseNative, NativeCircuitBreaker } = require('./index.js'); if (calculateBackoffNative(2, 100, 30000) !== 400) throw new Error('Native backoff calculation failed'); const decision = evaluateResponseNative(429, 0, 100, 30000, 3, null); if (decision.type !== 'Retry') throw new Error('Native evaluateResponse failed'); const cb = new NativeCircuitBreaker(3, 5000); if (cb.state !== 'CLOSED') throw new Error('Native CB failed'); console.log('All Native Addon checks passed successfully.');"
+
 
