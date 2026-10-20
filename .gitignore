@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-test/
 *.js.map
+*.node
 .env
 .env.local
 npm-debug.log*

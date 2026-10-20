@@ -1,0 +1,15 @@
+[package]
+name = "smooth-api-node"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", default-features = false, features = ["napi4"] }
+napi-derive = "2"
+smooth-api-core = { path = "../../core/rust" }
+
+[build-dependencies]
+napi-build = "2"
