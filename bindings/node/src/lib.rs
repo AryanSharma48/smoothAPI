@@ -5,14 +5,38 @@ use smooth_api_core::{
 };
 
 #[napi]
-pub fn calculate_backoff_native(attempt: u32, base_delay_ms: i64, max_delay_ms: i64) -> i64 {
+pub fn noop_native(x: i64) -> i64 {
+    std::hint::black_box(x)
+}
+
+fn parse_jitter_strategy(jitter: Option<&str>) -> JitterStrategy {
+    match jitter {
+        Some("full") => JitterStrategy::Full,
+        Some("equal") => JitterStrategy::Equal,
+        Some("decorrelated") => JitterStrategy::Decorrelated,
+        Some("default") => BackoffConfig::default().jitter,
+        _ => JitterStrategy::None,
+    }
+}
+
+#[napi]
+pub fn calculate_backoff_native(
+    attempt: u32,
+    base_delay_ms: i64,
+    max_delay_ms: i64,
+    jitter: Option<String>,
+    prev_delay_ms: Option<i64>,
+    random_factor: Option<f64>,
+) -> i64 {
     let config = BackoffConfig {
         base_delay_ms: base_delay_ms.max(0) as u64,
         max_delay_ms: max_delay_ms.max(0) as u64,
         max_retries: 3,
-        jitter: JitterStrategy::None,
+        jitter: parse_jitter_strategy(jitter.as_deref()),
     };
-    calculate_backoff(attempt, &config, None, 0.0) as i64
+    let prev = prev_delay_ms.map(|d| d.max(0) as u64);
+    let factor = random_factor.unwrap_or(0.0);
+    calculate_backoff(attempt, &config, prev, factor) as i64
 }
 
 #[napi(object)]
@@ -97,9 +121,23 @@ impl NativeCircuitBreaker {
         self.inner.record_failure(now_ms.max(0) as u64);
     }
 
+    #[napi]
+    pub fn release_probe(&mut self) {
+        self.inner.release_probe();
+    }
+
     #[napi(getter)]
     pub fn state(&self) -> String {
         match self.inner.state {
+            CircuitState::Closed => "CLOSED".to_string(),
+            CircuitState::Open => "OPEN".to_string(),
+            CircuitState::HalfOpen => "HALF_OPEN".to_string(),
+        }
+    }
+
+    #[napi]
+    pub fn state_at(&self, now_ms: i64) -> String {
+        match self.inner.state_at(now_ms.max(0) as u64) {
             CircuitState::Closed => "CLOSED".to_string(),
             CircuitState::Open => "OPEN".to_string(),
             CircuitState::HalfOpen => "HALF_OPEN".to_string(),

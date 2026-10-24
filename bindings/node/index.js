@@ -310,8 +310,9 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { calculateBackoffNative, evaluateResponseNative, NativeCircuitBreaker } = nativeBinding
+const { noopNative, calculateBackoffNative, evaluateResponseNative, NativeCircuitBreaker } = nativeBinding
 
+module.exports.noopNative = noopNative
 module.exports.calculateBackoffNative = calculateBackoffNative
 module.exports.evaluateResponseNative = evaluateResponseNative
 module.exports.NativeCircuitBreaker = NativeCircuitBreaker
