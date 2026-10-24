@@ -1,0 +1,2582 @@
+{
+  "reports": {
+    "rust_direct": {
+      "impl": "rust_direct",
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100"
+          },
+          "B02": {
+            "value": "200"
+          },
+          "B03": {
+            "value": "400"
+          },
+          "B04": {
+            "value": "800"
+          },
+          "B05": {
+            "value": "25600"
+          },
+          "B06": {
+            "value": "30000"
+          },
+          "B07": {
+            "value": "30000"
+          },
+          "B08": {
+            "value": "30000"
+          },
+          "B09": {
+            "value": "30000"
+          },
+          "B10": {
+            "value": "30000"
+          },
+          "B11": {
+            "value": "0"
+          },
+          "B12": {
+            "value": "0"
+          },
+          "B13": {
+            "value": "100"
+          },
+          "B14": {
+            "value": "0"
+          },
+          "B15": {
+            "value": "4503599627370496"
+          },
+          "B16": {
+            "value": "9007199254740991"
+          },
+          "B17": {
+            "value": "9007199254740993"
+          },
+          "B18": {
+            "value": "9223372036854775807"
+          },
+          "B19": {
+            "value": "6917529027641081856"
+          },
+          "B20": {
+            "value": "18446744073709551615"
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 3,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": true,
+              "state": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED"
+            }
+          ],
+          "CB02": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 1,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "ret": true,
+              "state": "CLOSED"
+            }
+          ],
+          "CB03": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 2,
+              "ret": true,
+              "state": "HALF_OPEN"
+            },
+            {
+              "failure_count": 3,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": true,
+              "state": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED"
+            }
+          ],
+          "CB04": [
+            {
+              "failure_count": 1,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED"
+            }
+          ],
+          "CB05": [
+            {
+              "failure_count": 1,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN"
+            }
+          ],
+          "CB06": [
+            {
+              "failure_count": 1,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN"
+            }
+          ],
+          "CB07": [
+            {
+              "failure_count": 1,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN"
+            }
+          ],
+          "CB08": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": true,
+              "state": "HALF_OPEN"
+            }
+          ],
+          "CB09": [
+            {
+              "failure_count": 1,
+              "state": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "state": "OPEN"
+            }
+          ]
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success"
+          },
+          "R02": {
+            "decision": "Success"
+          },
+          "R03": {
+            "decision": "Success"
+          },
+          "R04": {
+            "decision": "Terminal"
+          },
+          "R05": {
+            "decision": "Terminal"
+          },
+          "R06": {
+            "decision": "Terminal"
+          },
+          "R07": {
+            "decision": "Terminal"
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200"
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400"
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R12": {
+            "decision": "Exhausted"
+          },
+          "R13": {
+            "decision": "Exhausted"
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000"
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R24": {
+            "decision": "Exhausted"
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600"
+          }
+        }
+      }
+    },
+    "ts_native": {
+      "impl": "ts_native",
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B02": {
+            "value": "200",
+            "input_lossy": false
+          },
+          "B03": {
+            "value": "400",
+            "input_lossy": false
+          },
+          "B04": {
+            "value": "800",
+            "input_lossy": false
+          },
+          "B05": {
+            "value": "25600",
+            "input_lossy": false
+          },
+          "B06": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B07": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B08": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B09": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B10": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B11": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B12": {
+            "value": "NaN",
+            "input_lossy": false
+          },
+          "B13": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B14": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B15": {
+            "value": "4503599627370496",
+            "input_lossy": false
+          },
+          "B16": {
+            "value": "9007199254740991",
+            "input_lossy": false
+          },
+          "B17": {
+            "value": "9007199254740992",
+            "input_lossy": true
+          },
+          "B18": {
+            "value": "9223372036854775808",
+            "input_lossy": true
+          },
+          "B19": {
+            "value": "6917529027641081856",
+            "input_lossy": true
+          },
+          "B20": {
+            "value": "18446744073709551616",
+            "input_lossy": true
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R02": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R03": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 3,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R04": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R05": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 400"
+            }
+          },
+          "R06": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 404"
+            }
+          },
+          "R07": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 501"
+            }
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 500: Retries exhausted"
+            }
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 502: Retries exhausted"
+            }
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 503: Retries exhausted"
+            }
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 504: Retries exhausted"
+            }
+          },
+          "R12": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 500: Retries exhausted"
+            }
+          },
+          "R13": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "1000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 503: Retries exhausted"
+            }
+          },
+          "R24": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 500: Retries exhausted"
+            }
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600",
+            "raw": {
+              "fetch_calls": 6,
+              "on_success": false,
+              "on_failure_message": "HTTP 503: Retries exhausted"
+            }
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "HALF_OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            }
+          ]
+        }
+      }
+    },
+    "ts_napi": {
+      "impl": "ts_napi",
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B02": {
+            "value": "200",
+            "input_lossy": false
+          },
+          "B03": {
+            "value": "400",
+            "input_lossy": false
+          },
+          "B04": {
+            "value": "800",
+            "input_lossy": false
+          },
+          "B05": {
+            "value": "25600",
+            "input_lossy": false
+          },
+          "B06": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B07": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B08": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B09": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B10": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B11": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B12": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B13": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B14": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B15": {
+            "value": "4503599627370496",
+            "input_lossy": false
+          },
+          "B16": {
+            "value": "9007199254740991",
+            "input_lossy": false
+          },
+          "B17": {
+            "value": "9007199254740992",
+            "input_lossy": true
+          },
+          "B18": {
+            "value": "9223372036854775808",
+            "input_lossy": true
+          },
+          "B19": {
+            "value": "6917529027641081856",
+            "input_lossy": true
+          },
+          "B20": {
+            "value": "9223372036854775808",
+            "input_lossy": true
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success"
+          },
+          "R02": {
+            "decision": "Success"
+          },
+          "R03": {
+            "decision": "Success"
+          },
+          "R04": {
+            "decision": "Terminal"
+          },
+          "R05": {
+            "decision": "Terminal"
+          },
+          "R06": {
+            "decision": "Terminal"
+          },
+          "R07": {
+            "decision": "Terminal"
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200"
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400"
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R12": {
+            "decision": "Exhausted"
+          },
+          "R13": {
+            "decision": "Exhausted"
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000"
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R24": {
+            "decision": "Exhausted"
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600"
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            }
+          ]
+        }
+      }
+    },
+    "py_native": {
+      "impl": "py_native",
+      "notes": [
+        "py_native backoff has no deterministic mode; random.uniform pinned to upper bound.",
+        "py_native computes in float seconds; inputs are converted ms/1000 and outputs *1000."
+      ],
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100"
+          },
+          "B02": {
+            "value": "200"
+          },
+          "B03": {
+            "value": "400"
+          },
+          "B04": {
+            "value": "800"
+          },
+          "B05": {
+            "value": "25600"
+          },
+          "B06": {
+            "value": "30000"
+          },
+          "B07": {
+            "value": "30000"
+          },
+          "B08": {
+            "value": "30000"
+          },
+          "B09": {
+            "value": "30000"
+          },
+          "B10": {
+            "error": "OverflowError: int too large to convert to float"
+          },
+          "B11": {
+            "value": "0"
+          },
+          "B12": {
+            "error": "OverflowError: int too large to convert to float"
+          },
+          "B13": {
+            "value": "100"
+          },
+          "B14": {
+            "value": "0"
+          },
+          "B15": {
+            "value": "4503599627370496"
+          },
+          "B16": {
+            "value": "9007199254740990"
+          },
+          "B17": {
+            "value": "9007199254740992"
+          },
+          "B18": {
+            "value": "9223372036854775808"
+          },
+          "B19": {
+            "value": "6917529027641081856"
+          },
+          "B20": {
+            "value": "18446744073709551616"
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R02": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R03": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 3,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R04": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R05": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": "HTTPError"
+            }
+          },
+          "R06": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": "HTTPError"
+            }
+          },
+          "R07": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": "HTTPError"
+            }
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R12": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R13": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "5500",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "1000000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R24": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600",
+            "raw": {
+              "fetch_calls": 6,
+              "on_success": false,
+              "raised": null
+            }
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "stored_state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "stored_state": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "HALF_OPEN",
+              "stored_state": "OPEN",
+              "failure_count": 1
+            }
+          ]
+        }
+      }
+    },
+    "py_pyo3": {
+      "impl": "py_pyo3",
+      "notes": [],
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100"
+          },
+          "B02": {
+            "value": "200"
+          },
+          "B03": {
+            "value": "400"
+          },
+          "B04": {
+            "value": "800"
+          },
+          "B05": {
+            "value": "25600"
+          },
+          "B06": {
+            "value": "30000"
+          },
+          "B07": {
+            "value": "30000"
+          },
+          "B08": {
+            "value": "30000"
+          },
+          "B09": {
+            "value": "30000"
+          },
+          "B10": {
+            "value": "30000"
+          },
+          "B11": {
+            "value": "0"
+          },
+          "B12": {
+            "value": "0"
+          },
+          "B13": {
+            "value": "100"
+          },
+          "B14": {
+            "value": "0"
+          },
+          "B15": {
+            "value": "4503599627370496"
+          },
+          "B16": {
+            "value": "9007199254740991"
+          },
+          "B17": {
+            "value": "9007199254740993"
+          },
+          "B18": {
+            "value": "9223372036854775807"
+          },
+          "B19": {
+            "value": "6917529027641081856"
+          },
+          "B20": {
+            "error": "OverflowError: int too big to convert"
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success"
+          },
+          "R02": {
+            "decision": "Success"
+          },
+          "R03": {
+            "decision": "Success"
+          },
+          "R04": {
+            "decision": "Terminal"
+          },
+          "R05": {
+            "decision": "Terminal"
+          },
+          "R06": {
+            "decision": "Terminal"
+          },
+          "R07": {
+            "decision": "Terminal"
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200"
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400"
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R12": {
+            "decision": "Exhausted"
+          },
+          "R13": {
+            "decision": "Exhausted"
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000"
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R24": {
+            "decision": "Exhausted"
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600"
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "failure_count": 1
+            }
+          ]
+        }
+      }
+    }
+  },
+  "mismatches": [
+    {
+      "suite": "backoff",
+      "id": "B10",
+      "impl": "py_native",
+      "tags": [
+        "cap",
+        "float_exponent_overflow"
+      ],
+      "expected": "30000",
+      "actual": "ERROR(OverflowError: int too large to convert to float)",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B12",
+      "impl": "ts_native",
+      "tags": [
+        "zero_base",
+        "float_exponent_overflow"
+      ],
+      "expected": "0",
+      "actual": "NaN",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B12",
+      "impl": "py_native",
+      "tags": [
+        "zero_base",
+        "float_exponent_overflow"
+      ],
+      "expected": "0",
+      "actual": "ERROR(OverflowError: int too large to convert to float)",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B16",
+      "impl": "py_native",
+      "tags": [
+        "js_safe_integer_boundary",
+        "cap"
+      ],
+      "expected": "9007199254740991",
+      "actual": "9007199254740990",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B17",
+      "impl": "ts_native",
+      "tags": [
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "9007199254740993",
+      "actual": "9007199254740992",
+      "input_lossy": true
+    },
+    {
+      "suite": "backoff",
+      "id": "B17",
+      "impl": "ts_napi",
+      "tags": [
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "9007199254740993",
+      "actual": "9007199254740992",
+      "input_lossy": true
+    },
+    {
+      "suite": "backoff",
+      "id": "B17",
+      "impl": "py_native",
+      "tags": [
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "9007199254740993",
+      "actual": "9007199254740992",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B18",
+      "impl": "ts_native",
+      "tags": [
+        "i64_max",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "9223372036854775807",
+      "actual": "9223372036854775808",
+      "input_lossy": true
+    },
+    {
+      "suite": "backoff",
+      "id": "B18",
+      "impl": "ts_napi",
+      "tags": [
+        "i64_max",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "9223372036854775807",
+      "actual": "9223372036854775808",
+      "input_lossy": true
+    },
+    {
+      "suite": "backoff",
+      "id": "B18",
+      "impl": "py_native",
+      "tags": [
+        "i64_max",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "9223372036854775807",
+      "actual": "9223372036854775808",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B20",
+      "impl": "ts_native",
+      "tags": [
+        "u64_max",
+        "exceeds_i64",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "18446744073709551615",
+      "actual": "18446744073709551616",
+      "input_lossy": true
+    },
+    {
+      "suite": "backoff",
+      "id": "B20",
+      "impl": "ts_napi",
+      "tags": [
+        "u64_max",
+        "exceeds_i64",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "18446744073709551615",
+      "actual": "9223372036854775808",
+      "input_lossy": true
+    },
+    {
+      "suite": "backoff",
+      "id": "B20",
+      "impl": "py_native",
+      "tags": [
+        "u64_max",
+        "exceeds_i64",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "18446744073709551615",
+      "actual": "18446744073709551616",
+      "input_lossy": false
+    },
+    {
+      "suite": "backoff",
+      "id": "B20",
+      "impl": "py_pyo3",
+      "tags": [
+        "u64_max",
+        "exceeds_i64",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "expected": "18446744073709551615",
+      "actual": "ERROR(OverflowError: int too big to convert)",
+      "input_lossy": false
+    },
+    {
+      "suite": "retry_policy",
+      "id": "R20",
+      "impl": "ts_native",
+      "tags": [
+        "retry_after_invalid",
+        "fractional"
+      ],
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_retries": 3,
+        "retry_after": "5.5"
+      },
+      "expected": "Retry(100ms)",
+      "actual": "Retry(5000ms)"
+    },
+    {
+      "suite": "retry_policy",
+      "id": "R20",
+      "impl": "py_native",
+      "tags": [
+        "retry_after_invalid",
+        "fractional"
+      ],
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_retries": 3,
+        "retry_after": "5.5"
+      },
+      "expected": "Retry(100ms)",
+      "actual": "Retry(5500ms)"
+    },
+    {
+      "suite": "retry_policy",
+      "id": "R21",
+      "impl": "ts_native",
+      "tags": [
+        "retry_after_invalid",
+        "trailing_garbage"
+      ],
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_retries": 3,
+        "retry_after": "5abc"
+      },
+      "expected": "Retry(100ms)",
+      "actual": "Retry(5000ms)"
+    },
+    {
+      "suite": "retry_policy",
+      "id": "R22",
+      "impl": "ts_native",
+      "tags": [
+        "retry_after_invalid",
+        "exponent_notation"
+      ],
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_retries": 3,
+        "retry_after": "1e3"
+      },
+      "expected": "Retry(100ms)",
+      "actual": "Retry(1000ms)"
+    },
+    {
+      "suite": "retry_policy",
+      "id": "R22",
+      "impl": "py_native",
+      "tags": [
+        "retry_after_invalid",
+        "exponent_notation"
+      ],
+      "input": {
+        "status": 429,
+        "attempt": 0,
+        "max_retries": 3,
+        "retry_after": "1e3"
+      },
+      "expected": "Retry(100ms)",
+      "actual": "Retry(1000000ms)"
+    },
+    {
+      "suite": "circuit_breaker",
+      "id": "CB04",
+      "impl": "rust_direct",
+      "tags": [
+        "single_probe"
+      ],
+      "step": 2,
+      "op": "can_request",
+      "t": 1002,
+      "diffs": {
+        "ret": {
+          "expected": false,
+          "actual": true
+        }
+      }
+    },
+    {
+      "suite": "circuit_breaker",
+      "id": "CB04",
+      "impl": "ts_napi",
+      "tags": [
+        "single_probe"
+      ],
+      "step": 2,
+      "op": "can_request",
+      "t": 1002,
+      "diffs": {
+        "ret": {
+          "expected": false,
+          "actual": true
+        }
+      }
+    },
+    {
+      "suite": "circuit_breaker",
+      "id": "CB04",
+      "impl": "py_pyo3",
+      "tags": [
+        "single_probe"
+      ],
+      "step": 2,
+      "op": "can_request",
+      "t": 1002,
+      "diffs": {
+        "ret": {
+          "expected": false,
+          "actual": true
+        }
+      }
+    }
+  ],
+  "ambiguous": [
+    {
+      "suite": "retry_policy",
+      "id": "R04",
+      "tags": [
+        "3xx"
+      ],
+      "observed": {
+        "rust_direct": "Terminal",
+        "ts_native": "Success",
+        "ts_napi": "Terminal",
+        "py_native": "Success",
+        "py_pyo3": "Terminal"
+      }
+    },
+    {
+      "suite": "circuit_breaker",
+      "id": "CB09",
+      "tags": [
+        "state_observation"
+      ],
+      "observed": {
+        "rust_direct": [
+          {
+            "failure_count": 1,
+            "state": "OPEN"
+          },
+          {
+            "failure_count": 1,
+            "state": "OPEN"
+          }
+        ],
+        "ts_native": [
+          {
+            "state": "OPEN",
+            "stored_state": "OPEN",
+            "failure_count": 1
+          },
+          {
+            "state": "HALF_OPEN",
+            "stored_state": "OPEN",
+            "failure_count": 1
+          }
+        ],
+        "ts_napi": [
+          {
+            "state": "OPEN",
+            "failure_count": 1
+          },
+          {
+            "state": "OPEN",
+            "failure_count": 1
+          }
+        ],
+        "py_native": [
+          {
+            "state": "OPEN",
+            "stored_state": "OPEN",
+            "failure_count": 1
+          },
+          {
+            "state": "HALF_OPEN",
+            "stored_state": "OPEN",
+            "failure_count": 1
+          }
+        ],
+        "py_pyo3": [
+          {
+            "state": "OPEN",
+            "failure_count": 1
+          },
+          {
+            "state": "OPEN",
+            "failure_count": 1
+          }
+        ]
+      }
+    }
+  ]
+}
