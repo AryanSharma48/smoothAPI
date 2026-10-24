@@ -12,13 +12,15 @@ pub enum RetryDecision {
     Terminal,
 }
 
-// Parses positive integer seconds from Retry-After header and converts to milliseconds
+// Parses non-negative integer seconds (RFC 9110: delay-seconds = 1*DIGIT) from Retry-After header and converts to milliseconds
 pub fn parse_retry_after(header: &str) -> Option<u64> {
-    header
-        .trim()
+    let trimmed = header.trim();
+    if trimmed.is_empty() || !trimmed.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    trimmed
         .parse::<u64>()
         .ok()
-        .filter(|&seconds| seconds > 0)
         .map(|seconds| seconds.saturating_mul(1000))
 }
 
@@ -57,8 +59,8 @@ pub fn evaluate_response_with_retry_on(
     prev_delay_ms: Option<u64>,
     random_factor: f64,
 ) -> RetryDecision {
-    // 2xx response indicates success
-    if (200..300).contains(&status) {
+    // 2xx and 3xx responses require no retry
+    if (200..400).contains(&status) {
         return RetryDecision::Success;
     }
 
@@ -111,6 +113,14 @@ mod tests {
         );
         assert_eq!(
             evaluate_response(204, 0, &config, None, None, 0.0),
+            RetryDecision::Success
+        );
+        assert_eq!(
+            evaluate_response(301, 0, &config, None, None, 0.0),
+            RetryDecision::Success
+        );
+        assert_eq!(
+            evaluate_response(304, 0, &config, None, None, 0.0),
             RetryDecision::Success
         );
     }
@@ -174,6 +184,9 @@ mod tests {
 
         let decision = evaluate_response(429, 0, &config, Some("5"), None, 0.0);
         assert_eq!(decision, RetryDecision::Retry { delay_ms: 5000 });
+
+        let zero_decision = evaluate_response(429, 0, &config, Some("0"), None, 0.0);
+        assert_eq!(zero_decision, RetryDecision::Retry { delay_ms: 0 });
     }
 
     #[test]
@@ -182,5 +195,11 @@ mod tests {
 
         let decision = evaluate_response(429, 0, &config, Some("invalid"), None, 0.0);
         assert_eq!(decision, RetryDecision::Retry { delay_ms: 100 });
+
+        let plus_decision = evaluate_response(429, 0, &config, Some("+5"), None, 0.0);
+        assert_eq!(plus_decision, RetryDecision::Retry { delay_ms: 100 });
+
+        let neg_decision = evaluate_response(429, 0, &config, Some("-5"), None, 0.0);
+        assert_eq!(neg_decision, RetryDecision::Retry { delay_ms: 100 });
     }
 }

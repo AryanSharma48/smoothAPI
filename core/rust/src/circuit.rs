@@ -8,7 +8,7 @@ pub enum CircuitState {
     HalfOpen,
 }
 
-// Single domain circuit breaker tracking failure count and cooldown
+// Single domain circuit breaker tracking failure count, cooldown, and half-open probe
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CircuitBreaker {
     pub failure_threshold: u32,
@@ -16,6 +16,8 @@ pub struct CircuitBreaker {
     pub state: CircuitState,
     pub failure_count: u32,
     pub last_failure_time_ms: u64,
+    pub probe_in_flight: bool,
+    pub probe_start_time_ms: u64,
 }
 
 impl Default for CircuitBreaker {
@@ -32,16 +34,32 @@ impl CircuitBreaker {
             state: CircuitState::Closed,
             failure_count: 0,
             last_failure_time_ms: 0,
+            probe_in_flight: false,
+            probe_start_time_ms: 0,
         }
     }
 
     // Determine if request is allowed, transitioning Open -> HalfOpen when cooldown expires
+    // and enforcing a single in-flight probe (with automatic lease expiry) while HalfOpen.
     pub fn can_request(&mut self, now_ms: u64) -> bool {
         match self.state {
-            CircuitState::Closed | CircuitState::HalfOpen => true,
+            CircuitState::Closed => true,
+            CircuitState::HalfOpen => {
+                if self.probe_in_flight
+                    && now_ms.saturating_sub(self.probe_start_time_ms) <= self.cooldown_ms
+                {
+                    false
+                } else {
+                    self.probe_in_flight = true;
+                    self.probe_start_time_ms = now_ms;
+                    true
+                }
+            }
             CircuitState::Open => {
                 if now_ms.saturating_sub(self.last_failure_time_ms) > self.cooldown_ms {
                     self.state = CircuitState::HalfOpen;
+                    self.probe_in_flight = true;
+                    self.probe_start_time_ms = now_ms;
                     true
                 } else {
                     false
@@ -50,19 +68,40 @@ impl CircuitBreaker {
         }
     }
 
-    // Reset failure counter and transition back to Closed
+    // Reset failure counter, clear probe flag, and transition back to Closed
     pub fn record_success(&mut self) {
+        self.probe_in_flight = false;
+        self.probe_start_time_ms = 0;
         self.failure_count = 0;
         self.state = CircuitState::Closed;
     }
 
     // Record failure, immediately tripping back to Open if in HalfOpen or threshold reached
     pub fn record_failure(&mut self, now_ms: u64) {
+        self.probe_in_flight = false;
+        self.probe_start_time_ms = 0;
         self.failure_count = self.failure_count.saturating_add(1);
 
         if self.state == CircuitState::HalfOpen || self.failure_count >= self.failure_threshold {
             self.state = CircuitState::Open;
             self.last_failure_time_ms = now_ms;
+        }
+    }
+
+    // Release an active HalfOpen probe without mutating failure count or state
+    pub fn release_probe(&mut self) {
+        self.probe_in_flight = false;
+        self.probe_start_time_ms = 0;
+    }
+
+    // Effective state at a supplied timestamp, accounting for cooldown expiration without mutating
+    pub fn state_at(&self, now_ms: u64) -> CircuitState {
+        if self.state == CircuitState::Open
+            && now_ms.saturating_sub(self.last_failure_time_ms) > self.cooldown_ms
+        {
+            CircuitState::HalfOpen
+        } else {
+            self.state
         }
     }
 }
@@ -128,12 +167,27 @@ impl CircuitBreakerState {
         self.get_or_create(domain).record_failure(now_ms);
     }
 
-    // Read the current state of a domain without mutating the map
+    // Read the stored state of a domain without mutating the map
     pub fn get_state(&self, domain: &str) -> CircuitState {
         self.circuits
             .get(domain)
             .map(|b| b.state)
             .unwrap_or(CircuitState::Closed)
+    }
+
+    // Read the effective state of a domain at a supplied timestamp without mutating the map
+    pub fn get_state_at(&self, domain: &str, now_ms: u64) -> CircuitState {
+        self.circuits
+            .get(domain)
+            .map(|b| b.state_at(now_ms))
+            .unwrap_or(CircuitState::Closed)
+    }
+
+    // Release an active HalfOpen probe for the domain
+    pub fn release_probe(&mut self, domain: &str) {
+        if let Some(breaker) = self.circuits.get_mut(domain) {
+            breaker.release_probe();
+        }
     }
 }
 
@@ -238,5 +292,46 @@ mod tests {
 
         state.record_success(github);
         assert_eq!(state.get_state(github), CircuitState::Closed);
+    }
+
+    #[test]
+    fn enforces_single_in_flight_probe_in_half_open_and_state_at() {
+        let mut breaker = CircuitBreaker::new(1, 1000);
+        breaker.record_failure(0);
+        assert_eq!(breaker.state, CircuitState::Open);
+        assert_eq!(breaker.state_at(500), CircuitState::Open);
+        assert_eq!(breaker.state_at(999), CircuitState::Open);
+        assert_eq!(breaker.state_at(1000), CircuitState::Open);
+        assert_eq!(breaker.state_at(1001), CircuitState::HalfOpen);
+        assert_eq!(breaker.state, CircuitState::Open);
+
+        assert!(breaker.can_request(1001));
+        assert_eq!(breaker.state, CircuitState::HalfOpen);
+        assert!(!breaker.can_request(1002));
+
+        breaker.record_success();
+        assert_eq!(breaker.state, CircuitState::Closed);
+        assert!(breaker.can_request(1003));
+    }
+
+    #[test]
+    fn recovers_from_abandoned_or_released_half_open_probe() {
+        let mut breaker = CircuitBreaker::new(1, 1000);
+        breaker.record_failure(0);
+
+        // Probe starts at 1001
+        assert!(breaker.can_request(1001));
+        assert_eq!(breaker.state, CircuitState::HalfOpen);
+        assert!(!breaker.can_request(1500));
+
+        // Explicit release_probe allows immediate retry
+        breaker.release_probe();
+        assert!(breaker.can_request(1600));
+        assert!(!breaker.can_request(2600)); // At exact lease boundary (1600 + 1000), still blocked
+
+        // Automatic lease expiry after cooldown_ms (> 2600) allows new probe
+        assert!(breaker.can_request(2601));
+        breaker.record_success();
+        assert_eq!(breaker.state, CircuitState::Closed);
     }
 }
