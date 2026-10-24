@@ -1,0 +1,3329 @@
+{
+  "counts": {
+    "backoff": 16,
+    "jitter": 12,
+    "retry_policy": 26,
+    "circuit_breaker_steps": 61,
+    "numeric_boundary": 5
+  },
+  "reports": {
+    "rust_direct": {
+      "impl": "rust_direct",
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100"
+          },
+          "B02": {
+            "value": "200"
+          },
+          "B03": {
+            "value": "400"
+          },
+          "B04": {
+            "value": "800"
+          },
+          "B05": {
+            "value": "25600"
+          },
+          "B06": {
+            "value": "30000"
+          },
+          "B07": {
+            "value": "30000"
+          },
+          "B08": {
+            "value": "30000"
+          },
+          "B09": {
+            "value": "30000"
+          },
+          "B10": {
+            "value": "30000"
+          },
+          "B11": {
+            "value": "0"
+          },
+          "B12": {
+            "value": "0"
+          },
+          "B13": {
+            "value": "100"
+          },
+          "B14": {
+            "value": "0"
+          },
+          "B15": {
+            "value": "4503599627370496"
+          },
+          "B16": {
+            "value": "30000"
+          }
+        },
+        "backoff_numeric_boundary": {
+          "NB01": {
+            "value": "9007199254740991"
+          },
+          "NB02": {
+            "value": "9007199254740993"
+          },
+          "NB03": {
+            "value": "9223372036854775807"
+          },
+          "NB04": {
+            "value": "6917529027641081856"
+          },
+          "NB05": {
+            "value": "18446744073709551615"
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 3,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            }
+          ],
+          "CB02": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 1,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "ret": true,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            }
+          ],
+          "CB03": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 2,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 2,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 2,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 3,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            }
+          ],
+          "CB04": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            }
+          ],
+          "CB05": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            }
+          ],
+          "CB06": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            }
+          ],
+          "CB07": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            }
+          ],
+          "CB08": [
+            {
+              "failure_count": 1,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            },
+            {
+              "failure_count": 2,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 3,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            }
+          ],
+          "CB09": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "HALF_OPEN"
+            }
+          ],
+          "CB10": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            }
+          ],
+          "CB11": [
+            {
+              "failure_count": 1,
+              "state": "OPEN",
+              "state_at": "OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 1,
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN"
+            },
+            {
+              "failure_count": 0,
+              "state": "CLOSED",
+              "state_at": "CLOSED"
+            }
+          ]
+        },
+        "jitter": {
+          "J01": {
+            "value": "400"
+          },
+          "J02": {
+            "value": "0"
+          },
+          "J03": {
+            "value": "100"
+          },
+          "J04": {
+            "value": "200"
+          },
+          "J05": {
+            "value": "400"
+          },
+          "J06": {
+            "value": "200"
+          },
+          "J07": {
+            "value": "300"
+          },
+          "J08": {
+            "value": "400"
+          },
+          "J09": {
+            "value": "200"
+          },
+          "J10": {
+            "value": "350"
+          },
+          "J11": {
+            "value": "500"
+          },
+          "J12": {
+            "value": "300"
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success"
+          },
+          "R02": {
+            "decision": "Success"
+          },
+          "R03": {
+            "decision": "Success"
+          },
+          "R04": {
+            "decision": "Success"
+          },
+          "R05": {
+            "decision": "Terminal"
+          },
+          "R06": {
+            "decision": "Terminal"
+          },
+          "R07": {
+            "decision": "Terminal"
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200"
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400"
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R12": {
+            "decision": "Exhausted"
+          },
+          "R13": {
+            "decision": "Exhausted"
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000"
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "0"
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R24": {
+            "decision": "Exhausted"
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600"
+          },
+          "R26": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          }
+        }
+      }
+    },
+    "ts_native": {
+      "impl": "ts_native",
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B02": {
+            "value": "200",
+            "input_lossy": false
+          },
+          "B03": {
+            "value": "400",
+            "input_lossy": false
+          },
+          "B04": {
+            "value": "800",
+            "input_lossy": false
+          },
+          "B05": {
+            "value": "25600",
+            "input_lossy": false
+          },
+          "B06": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B07": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B08": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B09": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B10": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B11": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B12": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B13": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B14": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B15": {
+            "value": "4503599627370496",
+            "input_lossy": false
+          },
+          "B16": {
+            "value": "30000",
+            "input_lossy": false
+          }
+        },
+        "jitter": {
+          "J01": {
+            "value": "400"
+          },
+          "J02": {
+            "value": "0"
+          },
+          "J03": {
+            "value": "100"
+          },
+          "J04": {
+            "value": "200"
+          },
+          "J05": {
+            "value": "400"
+          },
+          "J06": {
+            "value": "200"
+          },
+          "J07": {
+            "value": "300"
+          },
+          "J08": {
+            "value": "400"
+          },
+          "J09": {
+            "value": "200"
+          },
+          "J10": {
+            "value": "350"
+          },
+          "J11": {
+            "value": "500"
+          },
+          "J12": {
+            "value": "300"
+          }
+        },
+        "backoff_numeric_boundary": {
+          "NB01": {
+            "value": "9007199254740991",
+            "input_lossy": false
+          },
+          "NB02": {
+            "value": "9007199254740992",
+            "input_lossy": true
+          },
+          "NB03": {
+            "value": "9223372036854775808",
+            "input_lossy": true
+          },
+          "NB04": {
+            "value": "6917529027641081856",
+            "input_lossy": true
+          },
+          "NB05": {
+            "value": "18446744073709551616",
+            "input_lossy": true
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R02": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R03": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 3,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R04": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "on_failure_message": null
+            }
+          },
+          "R05": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 400"
+            }
+          },
+          "R06": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 404"
+            }
+          },
+          "R07": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 501"
+            }
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 500: Retries exhausted"
+            }
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 502: Retries exhausted"
+            }
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 503: Retries exhausted"
+            }
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 504: Retries exhausted"
+            }
+          },
+          "R12": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 500: Retries exhausted"
+            }
+          },
+          "R13": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "0",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 503: Retries exhausted"
+            }
+          },
+          "R24": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "on_failure_message": "HTTP 500: Retries exhausted"
+            }
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600",
+            "raw": {
+              "fetch_calls": 6,
+              "on_success": false,
+              "on_failure_message": "HTTP 503: Retries exhausted"
+            }
+          },
+          "R26": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "on_failure_message": "HTTP 429: Retries exhausted"
+            }
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB10": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB11": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ]
+        }
+      }
+    },
+    "ts_napi": {
+      "impl": "ts_napi",
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B02": {
+            "value": "200",
+            "input_lossy": false
+          },
+          "B03": {
+            "value": "400",
+            "input_lossy": false
+          },
+          "B04": {
+            "value": "800",
+            "input_lossy": false
+          },
+          "B05": {
+            "value": "25600",
+            "input_lossy": false
+          },
+          "B06": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B07": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B08": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B09": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B10": {
+            "value": "30000",
+            "input_lossy": false
+          },
+          "B11": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B12": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B13": {
+            "value": "100",
+            "input_lossy": false
+          },
+          "B14": {
+            "value": "0",
+            "input_lossy": false
+          },
+          "B15": {
+            "value": "4503599627370496",
+            "input_lossy": false
+          },
+          "B16": {
+            "value": "30000",
+            "input_lossy": false
+          }
+        },
+        "jitter": {
+          "J01": {
+            "value": "400"
+          },
+          "J02": {
+            "value": "0"
+          },
+          "J03": {
+            "value": "100"
+          },
+          "J04": {
+            "value": "200"
+          },
+          "J05": {
+            "value": "400"
+          },
+          "J06": {
+            "value": "200"
+          },
+          "J07": {
+            "value": "300"
+          },
+          "J08": {
+            "value": "400"
+          },
+          "J09": {
+            "value": "200"
+          },
+          "J10": {
+            "value": "350"
+          },
+          "J11": {
+            "value": "500"
+          },
+          "J12": {
+            "value": "300"
+          }
+        },
+        "backoff_numeric_boundary": {
+          "NB01": {
+            "value": "9007199254740991",
+            "input_lossy": false
+          },
+          "NB02": {
+            "value": "9007199254740992",
+            "input_lossy": true
+          },
+          "NB03": {
+            "value": "9223372036854775808",
+            "input_lossy": true
+          },
+          "NB04": {
+            "value": "6917529027641081856",
+            "input_lossy": true
+          },
+          "NB05": {
+            "value": "9223372036854775808",
+            "input_lossy": true
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success"
+          },
+          "R02": {
+            "decision": "Success"
+          },
+          "R03": {
+            "decision": "Success"
+          },
+          "R04": {
+            "decision": "Success"
+          },
+          "R05": {
+            "decision": "Terminal"
+          },
+          "R06": {
+            "decision": "Terminal"
+          },
+          "R07": {
+            "decision": "Terminal"
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200"
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400"
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R12": {
+            "decision": "Exhausted"
+          },
+          "R13": {
+            "decision": "Exhausted"
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000"
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "0"
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R24": {
+            "decision": "Exhausted"
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600"
+          },
+          "R26": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB10": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB11": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ]
+        }
+      }
+    },
+    "py_native": {
+      "impl": "py_native",
+      "notes": [
+        "py_native computes in float seconds; inputs are converted ms/1000 and outputs *1000."
+      ],
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100"
+          },
+          "B02": {
+            "value": "200"
+          },
+          "B03": {
+            "value": "400"
+          },
+          "B04": {
+            "value": "800"
+          },
+          "B05": {
+            "value": "25600"
+          },
+          "B06": {
+            "value": "30000"
+          },
+          "B07": {
+            "value": "30000"
+          },
+          "B08": {
+            "value": "30000"
+          },
+          "B09": {
+            "value": "30000"
+          },
+          "B10": {
+            "value": "30000"
+          },
+          "B11": {
+            "value": "0"
+          },
+          "B12": {
+            "value": "0"
+          },
+          "B13": {
+            "value": "100"
+          },
+          "B14": {
+            "value": "0"
+          },
+          "B15": {
+            "value": "4503599627370496"
+          },
+          "B16": {
+            "value": "30000"
+          }
+        },
+        "jitter": {
+          "J01": {
+            "value": "400"
+          },
+          "J02": {
+            "value": "0"
+          },
+          "J03": {
+            "value": "100"
+          },
+          "J04": {
+            "value": "200"
+          },
+          "J05": {
+            "value": "400"
+          },
+          "J06": {
+            "value": "200"
+          },
+          "J07": {
+            "value": "300"
+          },
+          "J08": {
+            "value": "400"
+          },
+          "J09": {
+            "value": "200"
+          },
+          "J10": {
+            "value": "350"
+          },
+          "J11": {
+            "value": "500"
+          },
+          "J12": {
+            "value": "300"
+          }
+        },
+        "backoff_numeric_boundary": {
+          "NB01": {
+            "value": "9007199254740990"
+          },
+          "NB02": {
+            "value": "9007199254740992"
+          },
+          "NB03": {
+            "value": "9223372036854775808"
+          },
+          "NB04": {
+            "value": "6917529027641081856"
+          },
+          "NB05": {
+            "value": "18446744073709551616"
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R02": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R03": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 3,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R04": {
+            "decision": "Success",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": true,
+              "raised": null
+            }
+          },
+          "R05": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": "HTTPError"
+            }
+          },
+          "R06": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": "HTTPError"
+            }
+          },
+          "R07": {
+            "decision": "Terminal",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": "HTTPError"
+            }
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R12": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R13": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "0",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R24": {
+            "decision": "Exhausted",
+            "raw": {
+              "fetch_calls": 1,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600",
+            "raw": {
+              "fetch_calls": 6,
+              "on_success": false,
+              "raised": null
+            }
+          },
+          "R26": {
+            "decision": "Retry",
+            "delay_ms": "100",
+            "raw": {
+              "fetch_calls": 4,
+              "on_success": false,
+              "raised": null
+            }
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB10": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB11": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ]
+        }
+      }
+    },
+    "py_pyo3": {
+      "impl": "py_pyo3",
+      "notes": [],
+      "results": {
+        "backoff": {
+          "B01": {
+            "value": "100"
+          },
+          "B02": {
+            "value": "200"
+          },
+          "B03": {
+            "value": "400"
+          },
+          "B04": {
+            "value": "800"
+          },
+          "B05": {
+            "value": "25600"
+          },
+          "B06": {
+            "value": "30000"
+          },
+          "B07": {
+            "value": "30000"
+          },
+          "B08": {
+            "value": "30000"
+          },
+          "B09": {
+            "value": "30000"
+          },
+          "B10": {
+            "value": "30000"
+          },
+          "B11": {
+            "value": "0"
+          },
+          "B12": {
+            "value": "0"
+          },
+          "B13": {
+            "value": "100"
+          },
+          "B14": {
+            "value": "0"
+          },
+          "B15": {
+            "value": "4503599627370496"
+          },
+          "B16": {
+            "value": "30000"
+          }
+        },
+        "jitter": {
+          "J01": {
+            "value": "400"
+          },
+          "J02": {
+            "value": "0"
+          },
+          "J03": {
+            "value": "100"
+          },
+          "J04": {
+            "value": "200"
+          },
+          "J05": {
+            "value": "400"
+          },
+          "J06": {
+            "value": "200"
+          },
+          "J07": {
+            "value": "300"
+          },
+          "J08": {
+            "value": "400"
+          },
+          "J09": {
+            "value": "200"
+          },
+          "J10": {
+            "value": "350"
+          },
+          "J11": {
+            "value": "500"
+          },
+          "J12": {
+            "value": "300"
+          }
+        },
+        "backoff_numeric_boundary": {
+          "NB01": {
+            "value": "9007199254740991"
+          },
+          "NB02": {
+            "value": "9007199254740993"
+          },
+          "NB03": {
+            "value": "9223372036854775807"
+          },
+          "NB04": {
+            "value": "6917529027641081856"
+          },
+          "NB05": {
+            "error": "OverflowError: int too big to convert"
+          }
+        },
+        "retry_policy": {
+          "R01": {
+            "decision": "Success"
+          },
+          "R02": {
+            "decision": "Success"
+          },
+          "R03": {
+            "decision": "Success"
+          },
+          "R04": {
+            "decision": "Success"
+          },
+          "R05": {
+            "decision": "Terminal"
+          },
+          "R06": {
+            "decision": "Terminal"
+          },
+          "R07": {
+            "decision": "Terminal"
+          },
+          "R08": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R09": {
+            "decision": "Retry",
+            "delay_ms": "200"
+          },
+          "R10": {
+            "decision": "Retry",
+            "delay_ms": "400"
+          },
+          "R11": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R12": {
+            "decision": "Exhausted"
+          },
+          "R13": {
+            "decision": "Exhausted"
+          },
+          "R14": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R15": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R16": {
+            "decision": "Retry",
+            "delay_ms": "120000"
+          },
+          "R17": {
+            "decision": "Retry",
+            "delay_ms": "0"
+          },
+          "R18": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R19": {
+            "decision": "Retry",
+            "delay_ms": "5000"
+          },
+          "R20": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R21": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R22": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R23": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          },
+          "R24": {
+            "decision": "Exhausted"
+          },
+          "R25": {
+            "decision": "Retry",
+            "delay_ms": "1600"
+          },
+          "R26": {
+            "decision": "Retry",
+            "delay_ms": "100"
+          }
+        },
+        "circuit_breaker": {
+          "CB01": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB02": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 2
+            }
+          ],
+          "CB03": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB04": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB05": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB06": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB07": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB08": [
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 2
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": false,
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 3
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 3
+            }
+          ],
+          "CB09": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            }
+          ],
+          "CB10": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ],
+          "CB11": [
+            {
+              "state": "OPEN",
+              "state_at": "OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": false,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "ret": true,
+              "state": "HALF_OPEN",
+              "state_at": "HALF_OPEN",
+              "failure_count": 1
+            },
+            {
+              "state": "CLOSED",
+              "state_at": "CLOSED",
+              "failure_count": 0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "mismatches": [],
+  "numeric_boundaries": [
+    {
+      "id": "NB01",
+      "exact_u64_ms": "9007199254740991",
+      "tags": [
+        "js_safe_integer_max",
+        "float_seconds_non_dyadic"
+      ],
+      "by_impl": {
+        "rust_direct": {
+          "observed": "9007199254740991",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "ts_native": {
+          "observed": "9007199254740991",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "ts_napi": {
+          "observed": "9007199254740991",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "py_native": {
+          "observed": "9007199254740990",
+          "matches_exact_u64": false,
+          "input_lossy": false
+        },
+        "py_pyo3": {
+          "observed": "9007199254740991",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        }
+      }
+    },
+    {
+      "id": "NB02",
+      "exact_u64_ms": "9007199254740993",
+      "tags": [
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "by_impl": {
+        "rust_direct": {
+          "observed": "9007199254740993",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "ts_native": {
+          "observed": "9007199254740992",
+          "matches_exact_u64": false,
+          "input_lossy": true
+        },
+        "ts_napi": {
+          "observed": "9007199254740992",
+          "matches_exact_u64": false,
+          "input_lossy": true
+        },
+        "py_native": {
+          "observed": "9007199254740992",
+          "matches_exact_u64": false,
+          "input_lossy": false
+        },
+        "py_pyo3": {
+          "observed": "9007199254740993",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        }
+      }
+    },
+    {
+      "id": "NB03",
+      "exact_u64_ms": "9223372036854775807",
+      "tags": [
+        "i64_max",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "by_impl": {
+        "rust_direct": {
+          "observed": "9223372036854775807",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "ts_native": {
+          "observed": "9223372036854775808",
+          "matches_exact_u64": false,
+          "input_lossy": true
+        },
+        "ts_napi": {
+          "observed": "9223372036854775808",
+          "matches_exact_u64": false,
+          "input_lossy": true
+        },
+        "py_native": {
+          "observed": "9223372036854775808",
+          "matches_exact_u64": false,
+          "input_lossy": false
+        },
+        "py_pyo3": {
+          "observed": "9223372036854775807",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        }
+      }
+    },
+    {
+      "id": "NB04",
+      "exact_u64_ms": "6917529027641081856",
+      "tags": [
+        "i64_max",
+        "exceeds_js_safe_integer"
+      ],
+      "by_impl": {
+        "rust_direct": {
+          "observed": "6917529027641081856",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "ts_native": {
+          "observed": "6917529027641081856",
+          "matches_exact_u64": true,
+          "input_lossy": true
+        },
+        "ts_napi": {
+          "observed": "6917529027641081856",
+          "matches_exact_u64": true,
+          "input_lossy": true
+        },
+        "py_native": {
+          "observed": "6917529027641081856",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "py_pyo3": {
+          "observed": "6917529027641081856",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        }
+      }
+    },
+    {
+      "id": "NB05",
+      "exact_u64_ms": "18446744073709551615",
+      "tags": [
+        "u64_max",
+        "exceeds_i64",
+        "exceeds_js_safe_integer",
+        "cap"
+      ],
+      "by_impl": {
+        "rust_direct": {
+          "observed": "18446744073709551615",
+          "matches_exact_u64": true,
+          "input_lossy": false
+        },
+        "ts_native": {
+          "observed": "18446744073709551616",
+          "matches_exact_u64": false,
+          "input_lossy": true
+        },
+        "ts_napi": {
+          "observed": "9223372036854775808",
+          "matches_exact_u64": false,
+          "input_lossy": true
+        },
+        "py_native": {
+          "observed": "18446744073709551616",
+          "matches_exact_u64": false,
+          "input_lossy": false
+        },
+        "py_pyo3": {
+          "observed": "ERROR(OverflowError: int too big to convert)",
+          "matches_exact_u64": false,
+          "input_lossy": false
+        }
+      }
+    }
+  ],
+  "ambiguous": []
+}

@@ -1,0 +1,229 @@
+{
+  "schema_version": 3,
+  "description": "Canonical differential test vectors for SmoothAPI resilience semantics (v3 audited specification). Expected values are verified against an independent specification model.",
+  "conventions": {
+    "integers": "All delay/threshold integers are encoded as decimal strings. Runners parse them into native numeric types and report outputs as decimal strings.",
+    "time_unit": "All delays and timestamps are integer milliseconds.",
+    "retry_after": "null means the Retry-After header is absent. Only RFC 9110 delta-seconds (delay-seconds = 1*DIGIT, non-negative decimal integer) on HTTP 429 is supported; HTTP-date Retry-After and non-429 Retry-After are explicitly out of scope.",
+    "categories": "'backoff', 'jitter', 'retry_policy', and 'circuit_breaker' are normative common-domain parity suites scored for 100% agreement across all 5 implementations. 'backoff_numeric_boundary' records language-specific numeric representation limits above 2^53-1 or non-binary-fraction float-seconds conversions separately."
+  },
+  "semantics": {
+    "backoff_deterministic": "delay = min(max_delay_ms, base_delay_ms * 2^attempt) for base_delay_ms > 0 and max_delay_ms > 0, else 0. Cap-aware and overflow-safe without arbitrary attempt clamping.",
+    "jitter": "Supports 'none', 'full', 'equal', and 'decorrelated', with 'equal' as the default strategy across all implementations. Evaluated deterministically under injected random_factor in [0.0, 1.0].",
+    "retry_policy": {
+      "success": "Status in 200..400 (2xx and 3xx) -> Success (no retry required).",
+      "retryable": "Status in retry_on [429, 500, 502, 503, 504] -> Retry while attempt < max_retries, otherwise Exhausted.",
+      "terminal": "Any other status -> Terminal (returned/propagated to caller, never retried).",
+      "delay": "Retry delay = deterministic backoff for the current attempt.",
+      "retry_after": "Scoped deliberately to HTTP 429: a Retry-After value that is a valid RFC 9110 delay-seconds (1*DIGIT after ASCII whitespace trim, i.e., non-negative integer >= 0) overrides the delay with seconds*1000. Negative, leading-plus, fractional, scientific, or trailing-garbage values are rejected. HTTP-date format is out of scope."
+    },
+    "circuit_breaker": {
+      "trip": "CLOSED -> OPEN when consecutive failure count >= failure_threshold.",
+      "reset": "record_success in CLOSED resets failure count to 0.",
+      "cooldown": "OPEN rejects requests until (now - last_failure_time) > cooldown_ms (strict: t-1 is false, t is false, t+1 is true). The first allowed request transitions stored state to HALF_OPEN.",
+      "single_probe": "While HALF_OPEN with an active probe in flight, further requests are rejected.",
+      "probe_recovery": "If a HALF_OPEN probe is cancelled/aborted via release_probe(), or abandoned for longer than cooldown_ms ((now - probe_start_time) > cooldown_ms), a new probe is permitted so the circuit cannot wedge.",
+      "half_open_failure": "A failure in HALF_OPEN re-trips to OPEN immediately and restarts the cooldown.",
+      "half_open_success": "With success_threshold = 1, a success in HALF_OPEN closes the circuit and resets the failure count.",
+      "failure_while_open": "A failure recorded while OPEN updates last_failure_time, extending the cooldown.",
+      "state_inspection": "'state' reports the currently stored state without clock dependency; 'state_at(now_ms)' reports the effective state at timestamp now_ms (HALF_OPEN when stored state is OPEN and now_ms - last_failure_time > cooldown_ms)."
+    }
+  },
+  "backoff": [
+    { "id": "B01", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 0, "expected_ms": "100", "tags": [] },
+    { "id": "B02", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 1, "expected_ms": "200", "tags": [] },
+    { "id": "B03", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "expected_ms": "400", "tags": [] },
+    { "id": "B04", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 3, "expected_ms": "800", "tags": [] },
+    { "id": "B05", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 8, "expected_ms": "25600", "tags": [] },
+    { "id": "B06", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 9, "expected_ms": "30000", "tags": ["cap"] },
+    { "id": "B07", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 10, "expected_ms": "30000", "tags": ["cap"] },
+    { "id": "B08", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 64, "expected_ms": "30000", "tags": ["cap", "u64_overflow_intermediate"] },
+    { "id": "B09", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 1023, "expected_ms": "30000", "tags": ["cap", "float_exponent_boundary"] },
+    { "id": "B10", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 1024, "expected_ms": "30000", "tags": ["cap", "float_exponent_overflow"] },
+    { "id": "B11", "base_delay_ms": "0", "max_delay_ms": "30000", "attempt": 0, "expected_ms": "0", "tags": ["zero_base"] },
+    { "id": "B12", "base_delay_ms": "0", "max_delay_ms": "30000", "attempt": 1024, "expected_ms": "0", "tags": ["zero_base", "float_exponent_overflow"] },
+    { "id": "B13", "base_delay_ms": "500", "max_delay_ms": "100", "attempt": 0, "expected_ms": "100", "tags": ["base_exceeds_max"] },
+    { "id": "B14", "base_delay_ms": "100", "max_delay_ms": "0", "attempt": 3, "expected_ms": "0", "tags": ["zero_max"] },
+    { "id": "B15", "base_delay_ms": "1", "max_delay_ms": "9007199254740000", "attempt": 52, "expected_ms": "4503599627370496", "tags": ["common_domain_large"] },
+    { "id": "B16", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2000, "expected_ms": "30000", "tags": ["cap", "beyond_1023_no_arbitrary_clamp"] }
+  ],
+  "jitter": [
+    { "id": "J01", "strategy": "none", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.5, "expected_ms": "400", "tags": ["none"] },
+    { "id": "J02", "strategy": "full", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.0, "expected_ms": "0", "tags": ["full", "lower_bound"] },
+    { "id": "J03", "strategy": "full", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.25, "expected_ms": "100", "tags": ["full"] },
+    { "id": "J04", "strategy": "full", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.5, "expected_ms": "200", "tags": ["full", "midpoint"] },
+    { "id": "J05", "strategy": "full", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 1.0, "expected_ms": "400", "tags": ["full", "upper_bound"] },
+    { "id": "J06", "strategy": "equal", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.0, "expected_ms": "200", "tags": ["equal", "lower_bound"] },
+    { "id": "J07", "strategy": "equal", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.5, "expected_ms": "300", "tags": ["equal", "midpoint"] },
+    { "id": "J08", "strategy": "equal", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 1.0, "expected_ms": "400", "tags": ["equal", "upper_bound"] },
+    { "id": "J09", "strategy": "decorrelated", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 0, "prev_delay_ms": null, "random_factor": 0.5, "expected_ms": "200", "tags": ["decorrelated", "no_prev_delay"] },
+    { "id": "J10", "strategy": "decorrelated", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 1, "prev_delay_ms": "200", "random_factor": 0.5, "expected_ms": "350", "tags": ["decorrelated", "with_prev_delay"] },
+    { "id": "J11", "strategy": "decorrelated", "base_delay_ms": "100", "max_delay_ms": "500", "attempt": 2, "prev_delay_ms": "400", "random_factor": 0.75, "expected_ms": "500", "tags": ["decorrelated", "capped"] },
+    { "id": "J12", "strategy": "default", "base_delay_ms": "100", "max_delay_ms": "30000", "attempt": 2, "prev_delay_ms": null, "random_factor": 0.5, "expected_ms": "300", "tags": ["default_jitter_equal"] }
+  ],
+  "backoff_numeric_boundary": [
+    { "id": "NB01", "base_delay_ms": "1", "max_delay_ms": "9007199254740991", "attempt": 53, "exact_u64_ms": "9007199254740991", "tags": ["js_safe_integer_max", "float_seconds_non_dyadic"] },
+    { "id": "NB02", "base_delay_ms": "1", "max_delay_ms": "9007199254740993", "attempt": 54, "exact_u64_ms": "9007199254740993", "tags": ["exceeds_js_safe_integer", "cap"] },
+    { "id": "NB03", "base_delay_ms": "1", "max_delay_ms": "9223372036854775807", "attempt": 63, "exact_u64_ms": "9223372036854775807", "tags": ["i64_max", "exceeds_js_safe_integer", "cap"] },
+    { "id": "NB04", "base_delay_ms": "3", "max_delay_ms": "9223372036854775807", "attempt": 61, "exact_u64_ms": "6917529027641081856", "tags": ["i64_max", "exceeds_js_safe_integer"] },
+    { "id": "NB05", "base_delay_ms": "1", "max_delay_ms": "18446744073709551615", "attempt": 64, "exact_u64_ms": "18446744073709551615", "tags": ["u64_max", "exceeds_i64", "exceeds_js_safe_integer", "cap"] }
+  ],
+  "retry_policy": [
+    { "id": "R01", "status": 200, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Success" }, "spec_status": "normative", "tags": ["2xx"] },
+    { "id": "R02", "status": 204, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Success" }, "spec_status": "normative", "tags": ["2xx"] },
+    { "id": "R03", "status": 201, "attempt": 2, "max_retries": 3, "retry_after": null, "expected": { "decision": "Success" }, "spec_status": "normative", "tags": ["2xx", "after_retries"] },
+    { "id": "R04", "status": 304, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Success" }, "spec_status": "normative", "tags": ["3xx"] },
+    { "id": "R05", "status": 400, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Terminal" }, "spec_status": "normative", "tags": ["4xx"] },
+    { "id": "R06", "status": 404, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Terminal" }, "spec_status": "normative", "tags": ["4xx"] },
+    { "id": "R07", "status": 501, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Terminal" }, "spec_status": "normative", "tags": ["5xx_not_retryable"] },
+    { "id": "R08", "status": 500, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retryable"] },
+    { "id": "R09", "status": 502, "attempt": 1, "max_retries": 3, "retry_after": null, "expected": { "decision": "Retry", "delay_ms": "200" }, "spec_status": "normative", "tags": ["retryable"] },
+    { "id": "R10", "status": 503, "attempt": 2, "max_retries": 3, "retry_after": null, "expected": { "decision": "Retry", "delay_ms": "400" }, "spec_status": "normative", "tags": ["retryable"] },
+    { "id": "R11", "status": 504, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retryable"] },
+    { "id": "R12", "status": 500, "attempt": 3, "max_retries": 3, "retry_after": null, "expected": { "decision": "Exhausted" }, "spec_status": "normative", "tags": ["exhausted"] },
+    { "id": "R13", "status": 429, "attempt": 3, "max_retries": 3, "retry_after": "5", "expected": { "decision": "Exhausted" }, "spec_status": "normative", "tags": ["exhausted", "retry_after"] },
+    { "id": "R14", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": null, "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["429_no_header"] },
+    { "id": "R15", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "5", "expected": { "decision": "Retry", "delay_ms": "5000" }, "spec_status": "normative", "tags": ["retry_after"] },
+    { "id": "R16", "status": 429, "attempt": 1, "max_retries": 3, "retry_after": "120", "expected": { "decision": "Retry", "delay_ms": "120000" }, "spec_status": "normative", "tags": ["retry_after", "exceeds_max_delay"] },
+    { "id": "R17", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "0", "expected": { "decision": "Retry", "delay_ms": "0" }, "spec_status": "normative", "tags": ["retry_after", "zero_seconds_rfc9110"] },
+    { "id": "R18", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "-5", "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retry_after_invalid", "negative"] },
+    { "id": "R19", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": " 5 ", "expected": { "decision": "Retry", "delay_ms": "5000" }, "spec_status": "normative", "tags": ["retry_after", "whitespace"] },
+    { "id": "R20", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "5.5", "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retry_after_invalid", "fractional"] },
+    { "id": "R21", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "5abc", "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retry_after_invalid", "trailing_garbage"] },
+    { "id": "R22", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "1e3", "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retry_after_invalid", "exponent_notation"] },
+    { "id": "R23", "status": 503, "attempt": 0, "max_retries": 3, "retry_after": "5", "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retry_after_ignored_non_429"] },
+    { "id": "R24", "status": 500, "attempt": 0, "max_retries": 0, "retry_after": null, "expected": { "decision": "Exhausted" }, "spec_status": "normative", "tags": ["exhausted", "zero_retries"] },
+    { "id": "R25", "status": 503, "attempt": 4, "max_retries": 5, "retry_after": null, "expected": { "decision": "Retry", "delay_ms": "1600" }, "spec_status": "normative", "tags": ["retryable", "custom_max_retries"] },
+    { "id": "R26", "status": 429, "attempt": 0, "max_retries": 3, "retry_after": "+5", "expected": { "decision": "Retry", "delay_ms": "100" }, "spec_status": "normative", "tags": ["retry_after_invalid", "leading_plus"] }
+  ],
+  "retry_policy_config": { "base_delay_ms": "100", "max_delay_ms": "30000" },
+  "circuit_breaker": [
+    {
+      "id": "CB01", "description": "Trip at threshold, strict cooldown boundary (t-1, t, t+1), HALF_OPEN probe success closes",
+      "failure_threshold": 3, "cooldown_ms": 5000, "spec_status": "normative", "tags": ["trip", "cooldown_boundary", "recovery"],
+      "steps": [
+        { "op": "record_failure", "t": 1000, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 1 } },
+        { "op": "record_failure", "t": 2000, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 2 } },
+        { "op": "record_failure", "t": 3000, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 7999, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 8000, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 8001, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 3 } },
+        { "op": "record_success", "t": 8002, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 0 } }
+      ]
+    },
+    {
+      "id": "CB02", "description": "Success in CLOSED resets consecutive failure count",
+      "failure_threshold": 3, "cooldown_ms": 5000, "spec_status": "normative", "tags": ["reset"],
+      "steps": [
+        { "op": "record_failure", "t": 100, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 1 } },
+        { "op": "record_failure", "t": 200, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 2 } },
+        { "op": "record_success", "t": 300, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 0 } },
+        { "op": "record_failure", "t": 400, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 1 } },
+        { "op": "record_failure", "t": 500, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 2 } },
+        { "op": "can_request", "t": 600, "expect": { "ret": true, "state": "CLOSED", "state_at": "CLOSED", "failure_count": 2 } }
+      ]
+    },
+    {
+      "id": "CB03", "description": "HALF_OPEN failure re-trips and restarts cooldown (tested at t-1, t, t+1)",
+      "failure_threshold": 2, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["half_open_retrip", "cooldown_boundary"],
+      "steps": [
+        { "op": "record_failure", "t": 100, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 1 } },
+        { "op": "record_failure", "t": 200, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 2 } },
+        { "op": "can_request", "t": 1199, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 2 } },
+        { "op": "can_request", "t": 1200, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 2 } },
+        { "op": "can_request", "t": 1201, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 2 } },
+        { "op": "record_failure", "t": 1205, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 2204, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 2205, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 2206, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 3 } },
+        { "op": "record_success", "t": 2207, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 0 } }
+      ]
+    },
+    {
+      "id": "CB04", "description": "Single in-flight probe in HALF_OPEN (anti-flapping)",
+      "failure_threshold": 1, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["single_probe"],
+      "steps": [
+        { "op": "record_failure", "t": 0, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1001, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1002, "expect": { "ret": false, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "record_success", "t": 1003, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 0 } }
+      ]
+    },
+    {
+      "id": "CB05", "description": "Cooldown boundary with non-whole-second timestamps (300ms offset: t-1, t, t+1)",
+      "failure_threshold": 1, "cooldown_ms": 5000, "spec_status": "normative", "tags": ["cooldown_boundary", "fractional_seconds"],
+      "steps": [
+        { "op": "record_failure", "t": 300, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 5299, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 5300, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 5301, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } }
+      ]
+    },
+    {
+      "id": "CB06", "description": "Cooldown boundary with non-whole-second timestamps (700ms offset: t-1, t, t+1)",
+      "failure_threshold": 1, "cooldown_ms": 5000, "spec_status": "normative", "tags": ["cooldown_boundary", "fractional_seconds"],
+      "steps": [
+        { "op": "record_failure", "t": 700, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 5699, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 5700, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 5701, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } }
+      ]
+    },
+    {
+      "id": "CB07", "description": "Cooldown boundary with non-whole-second timestamps (100ms offset, cooldown 1000: t-1, t, t+1)",
+      "failure_threshold": 1, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["cooldown_boundary", "fractional_seconds"],
+      "steps": [
+        { "op": "record_failure", "t": 100, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1099, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1100, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1101, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } }
+      ]
+    },
+    {
+      "id": "CB08", "description": "Failure recorded while OPEN extends the cooldown",
+      "failure_threshold": 2, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["failure_while_open"],
+      "steps": [
+        { "op": "record_failure", "t": 0, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 1 } },
+        { "op": "record_failure", "t": 100, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 2 } },
+        { "op": "record_failure", "t": 500, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 1200, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 1500, "expect": { "ret": false, "state": "OPEN", "state_at": "OPEN", "failure_count": 3 } },
+        { "op": "can_request", "t": 1501, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 3 } }
+      ]
+    },
+    {
+      "id": "CB09", "description": "Passive state inspection at t-1, t, and t+1: stored state stays OPEN while state_at transitions at t+1",
+      "failure_threshold": 1, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["state_observation", "cooldown_boundary"],
+      "steps": [
+        { "op": "record_failure", "t": 0, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "observe", "t": 999, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "observe", "t": 1000, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "observe", "t": 1001, "expect": { "state": "OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } }
+      ]
+    },
+    {
+      "id": "CB10", "description": "Explicit release_probe in HALF_OPEN allows immediate new probe when a request is cancelled/aborted",
+      "failure_threshold": 1, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["probe_recovery", "release_probe"],
+      "steps": [
+        { "op": "record_failure", "t": 0, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1001, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1100, "expect": { "ret": false, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "release_probe", "t": 1200, "expect": { "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1201, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "record_success", "t": 1202, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 0 } }
+      ]
+    },
+    {
+      "id": "CB11", "description": "Abandoned HALF_OPEN probe automatically recovers after lease expiry (cooldown_ms - 1, cooldown_ms, cooldown_ms + 1)",
+      "failure_threshold": 1, "cooldown_ms": 1000, "spec_status": "normative", "tags": ["probe_recovery", "abandoned_probe_lease"],
+      "steps": [
+        { "op": "record_failure", "t": 0, "expect": { "state": "OPEN", "state_at": "OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 1001, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 2000, "expect": { "ret": false, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 2001, "expect": { "ret": false, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "can_request", "t": 2002, "expect": { "ret": true, "state": "HALF_OPEN", "state_at": "HALF_OPEN", "failure_count": 1 } },
+        { "op": "record_success", "t": 2003, "expect": { "state": "CLOSED", "state_at": "CLOSED", "failure_count": 0 } }
+      ]
+    }
+  ]
+}
