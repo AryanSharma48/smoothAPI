@@ -1,0 +1,1433 @@
+{
+  "experiment_id": "perf-002-gil-concurrency",
+  "workloads": {
+    "backoff_concurrent": {
+      "py_native": {
+        "1": {
+          "total_ops": 400000,
+          "ops_per_sec": {
+            "min": 784994.36,
+            "max": 1657280.25,
+            "median": 845110.65,
+            "mean": 1063962.26,
+            "stdev": 336670.1773,
+            "spread": 872285.89,
+            "spread_pct": 103.22
+          },
+          "effective_ns_per_op": {
+            "min": 603.3982,
+            "max": 1273.8945,
+            "median": 1183.277,
+            "mean": 1022.5084,
+            "stdev": 264.8696,
+            "spread": 670.4963,
+            "spread_pct": 56.66
+          },
+          "per_thread_latency_ns": {
+            "min": 603.3982,
+            "max": 1273.8945,
+            "median": 1183.277,
+            "mean": 1022.5084,
+            "stdev": 264.8696,
+            "spread": 670.4963,
+            "spread_pct": 56.66
+          },
+          "elapsed_ms": {
+            "min": 241.3593,
+            "max": 509.5578,
+            "median": 473.3108,
+            "mean": 409.0033,
+            "stdev": 105.9478,
+            "spread": 268.1985,
+            "spread_pct": 56.66
+          }
+        },
+        "2": {
+          "total_ops": 800000,
+          "ops_per_sec": {
+            "min": 925226.33,
+            "max": 1524022.89,
+            "median": 1479444.78,
+            "mean": 1284976.346,
+            "stdev": 263091.4947,
+            "spread": 598796.56,
+            "spread_pct": 40.47
+          },
+          "effective_ns_per_op": {
+            "min": 656.1581,
+            "max": 1080.8166,
+            "median": 675.9293,
+            "mean": 815.7954,
+            "stdev": 183.784,
+            "spread": 424.6585,
+            "spread_pct": 62.83
+          },
+          "per_thread_latency_ns": {
+            "min": 1312.3163,
+            "max": 2161.6332,
+            "median": 1351.8585,
+            "mean": 1631.5907,
+            "stdev": 367.5681,
+            "spread": 849.3169,
+            "spread_pct": 62.83
+          },
+          "elapsed_ms": {
+            "min": 524.9265,
+            "max": 864.6533,
+            "median": 540.7434,
+            "mean": 652.6363,
+            "stdev": 147.0272,
+            "spread": 339.7268,
+            "spread_pct": 62.83
+          }
+        },
+        "4": {
+          "total_ops": 1600000,
+          "ops_per_sec": {
+            "min": 1438908.7,
+            "max": 1764331.03,
+            "median": 1742246.21,
+            "mean": 1654906.822,
+            "stdev": 125860.1226,
+            "spread": 325422.33,
+            "spread_pct": 18.68
+          },
+          "effective_ns_per_op": {
+            "min": 566.7871,
+            "max": 694.9711,
+            "median": 573.9717,
+            "mean": 608.0096,
+            "stdev": 49.3129,
+            "spread": 128.184,
+            "spread_pct": 22.33
+          },
+          "per_thread_latency_ns": {
+            "min": 2267.1483,
+            "max": 2779.8845,
+            "median": 2295.8868,
+            "mean": 2432.0385,
+            "stdev": 197.2514,
+            "spread": 512.7362,
+            "spread_pct": 22.33
+          },
+          "elapsed_ms": {
+            "min": 906.8593,
+            "max": 1111.9538,
+            "median": 918.3547,
+            "mean": 972.8154,
+            "stdev": 78.9006,
+            "spread": 205.0945,
+            "spread_pct": 22.33
+          }
+        },
+        "8": {
+          "total_ops": 3200000,
+          "ops_per_sec": {
+            "min": 1700666.26,
+            "max": 1833898.33,
+            "median": 1784575.62,
+            "mean": 1769539.51,
+            "stdev": 56769.078,
+            "spread": 133232.07,
+            "spread_pct": 7.47
+          },
+          "effective_ns_per_op": {
+            "min": 545.2865,
+            "max": 588.0048,
+            "median": 560.3573,
+            "mean": 565.7045,
+            "stdev": 18.2613,
+            "spread": 42.7183,
+            "spread_pct": 7.62
+          },
+          "per_thread_latency_ns": {
+            "min": 4362.292,
+            "max": 4704.0387,
+            "median": 4482.8585,
+            "mean": 4525.6364,
+            "stdev": 146.0904,
+            "spread": 341.7467,
+            "spread_pct": 7.62
+          },
+          "elapsed_ms": {
+            "min": 1744.9168,
+            "max": 1881.6155,
+            "median": 1793.1434,
+            "mean": 1810.2546,
+            "stdev": 58.4362,
+            "spread": 136.6987,
+            "spread_pct": 7.62
+          }
+        }
+      },
+      "py_pyo3_gil_held": {
+        "1": {
+          "total_ops": 400000,
+          "ops_per_sec": {
+            "min": 4457698.67,
+            "max": 8572249.06,
+            "median": 4809345.52,
+            "mean": 6037805.728,
+            "stdev": 1753279.1442,
+            "spread": 4114550.39,
+            "spread_pct": 85.55
+          },
+          "effective_ns_per_op": {
+            "min": 116.6555,
+            "max": 224.331,
+            "median": 207.9285,
+            "mean": 179.0129,
+            "stdev": 46.2619,
+            "spread": 107.6755,
+            "spread_pct": 51.78
+          },
+          "per_thread_latency_ns": {
+            "min": 116.6555,
+            "max": 224.331,
+            "median": 207.9285,
+            "mean": 179.0129,
+            "stdev": 46.2619,
+            "spread": 107.6755,
+            "spread_pct": 51.78
+          },
+          "elapsed_ms": {
+            "min": 46.6622,
+            "max": 89.7324,
+            "median": 83.1714,
+            "mean": 71.6052,
+            "stdev": 18.5047,
+            "spread": 43.0702,
+            "spread_pct": 51.78
+          }
+        },
+        "2": {
+          "total_ops": 800000,
+          "ops_per_sec": {
+            "min": 4110251.33,
+            "max": 7960579.21,
+            "median": 6180307.38,
+            "mean": 5901126.92,
+            "stdev": 1498819.3169,
+            "spread": 3850327.88,
+            "spread_pct": 62.3
+          },
+          "effective_ns_per_op": {
+            "min": 125.619,
+            "max": 243.2941,
+            "median": 161.8042,
+            "mean": 181.4545,
+            "stdev": 47.7524,
+            "spread": 117.6751,
+            "spread_pct": 72.73
+          },
+          "per_thread_latency_ns": {
+            "min": 251.238,
+            "max": 486.5883,
+            "median": 323.6085,
+            "mean": 362.909,
+            "stdev": 95.5049,
+            "spread": 235.3503,
+            "spread_pct": 72.73
+          },
+          "elapsed_ms": {
+            "min": 100.4952,
+            "max": 194.6353,
+            "median": 129.4434,
+            "mean": 145.1636,
+            "stdev": 38.202,
+            "spread": 94.1401,
+            "spread_pct": 72.73
+          }
+        },
+        "4": {
+          "total_ops": 1600000,
+          "ops_per_sec": {
+            "min": 8134243.49,
+            "max": 9142120.55,
+            "median": 8582880.59,
+            "mean": 8557025.114,
+            "stdev": 383439.3819,
+            "spread": 1007877.06,
+            "spread_pct": 11.74
+          },
+          "effective_ns_per_op": {
+            "min": 109.3838,
+            "max": 122.9371,
+            "median": 116.511,
+            "mean": 117.0959,
+            "stdev": 5.2001,
+            "spread": 13.5533,
+            "spread_pct": 11.63
+          },
+          "per_thread_latency_ns": {
+            "min": 437.5353,
+            "max": 491.7482,
+            "median": 466.044,
+            "mean": 468.3837,
+            "stdev": 20.8003,
+            "spread": 54.2129,
+            "spread_pct": 11.63
+          },
+          "elapsed_ms": {
+            "min": 175.0141,
+            "max": 196.6993,
+            "median": 186.4176,
+            "mean": 187.3535,
+            "stdev": 8.3201,
+            "spread": 21.6852,
+            "spread_pct": 11.63
+          }
+        },
+        "8": {
+          "total_ops": 3200000,
+          "ops_per_sec": {
+            "min": 8622991.75,
+            "max": 9277892.9,
+            "median": 8972696.37,
+            "mean": 8956352.97,
+            "stdev": 265910.0246,
+            "spread": 654901.15,
+            "spread_pct": 7.3
+          },
+          "effective_ns_per_op": {
+            "min": 107.7831,
+            "max": 115.969,
+            "median": 111.4492,
+            "mean": 111.7513,
+            "stdev": 3.3242,
+            "spread": 8.1859,
+            "spread_pct": 7.34
+          },
+          "per_thread_latency_ns": {
+            "min": 862.2648,
+            "max": 927.7523,
+            "median": 891.5938,
+            "mean": 894.0102,
+            "stdev": 26.5932,
+            "spread": 65.4875,
+            "spread_pct": 7.34
+          },
+          "elapsed_ms": {
+            "min": 344.9059,
+            "max": 371.1009,
+            "median": 356.6375,
+            "mean": 357.6041,
+            "stdev": 10.6373,
+            "spread": 26.195,
+            "spread_pct": 7.34
+          }
+        }
+      },
+      "py_pyo3_gil_released": {
+        "1": {
+          "total_ops": 400000,
+          "ops_per_sec": {
+            "min": 2447953.45,
+            "max": 5830189.89,
+            "median": 2822570.4,
+            "mean": 3832633.848,
+            "stdev": 1534491.7404,
+            "spread": 3382236.44,
+            "spread_pct": 119.83
+          },
+          "effective_ns_per_op": {
+            "min": 171.521,
+            "max": 408.5045,
+            "median": 354.287,
+            "mean": 303.1412,
+            "stdev": 105.96,
+            "spread": 236.9835,
+            "spread_pct": 66.89
+          },
+          "per_thread_latency_ns": {
+            "min": 171.521,
+            "max": 408.5045,
+            "median": 354.287,
+            "mean": 303.1412,
+            "stdev": 105.96,
+            "spread": 236.9835,
+            "spread_pct": 66.89
+          },
+          "elapsed_ms": {
+            "min": 68.6084,
+            "max": 163.4018,
+            "median": 141.7148,
+            "mean": 121.2565,
+            "stdev": 42.384,
+            "spread": 94.7934,
+            "spread_pct": 66.89
+          }
+        },
+        "2": {
+          "total_ops": 800000,
+          "ops_per_sec": {
+            "min": 2378481.87,
+            "max": 3628359.8,
+            "median": 2972653.81,
+            "mean": 2991195.834,
+            "stdev": 504594.0915,
+            "spread": 1249877.93,
+            "spread_pct": 42.05
+          },
+          "effective_ns_per_op": {
+            "min": 275.6066,
+            "max": 420.4362,
+            "median": 336.3997,
+            "mean": 344.1332,
+            "stdev": 58.469,
+            "spread": 144.8296,
+            "spread_pct": 43.05
+          },
+          "per_thread_latency_ns": {
+            "min": 551.2133,
+            "max": 840.8725,
+            "median": 672.7995,
+            "mean": 688.2664,
+            "stdev": 116.9379,
+            "spread": 289.6592,
+            "spread_pct": 43.05
+          },
+          "elapsed_ms": {
+            "min": 220.4853,
+            "max": 336.349,
+            "median": 269.1198,
+            "mean": 275.3066,
+            "stdev": 46.7752,
+            "spread": 115.8637,
+            "spread_pct": 43.05
+          }
+        },
+        "4": {
+          "total_ops": 1600000,
+          "ops_per_sec": {
+            "min": 2055308.61,
+            "max": 2275886.03,
+            "median": 2174065.46,
+            "mean": 2181711.786,
+            "stdev": 82662.1747,
+            "spread": 220577.42,
+            "spread_pct": 10.15
+          },
+          "effective_ns_per_op": {
+            "min": 439.3893,
+            "max": 486.5449,
+            "median": 459.9678,
+            "mean": 459.0212,
+            "stdev": 17.5718,
+            "spread": 47.1556,
+            "spread_pct": 10.25
+          },
+          "per_thread_latency_ns": {
+            "min": 1757.5573,
+            "max": 1946.1798,
+            "median": 1839.871,
+            "mean": 1836.0846,
+            "stdev": 70.2871,
+            "spread": 188.6225,
+            "spread_pct": 10.25
+          },
+          "elapsed_ms": {
+            "min": 703.0229,
+            "max": 778.4719,
+            "median": 735.9484,
+            "mean": 734.4338,
+            "stdev": 28.1148,
+            "spread": 75.449,
+            "spread_pct": 10.25
+          }
+        },
+        "8": {
+          "total_ops": 3200000,
+          "ops_per_sec": {
+            "min": 926291.51,
+            "max": 1001316.42,
+            "median": 970906.37,
+            "mean": 971077.01,
+            "stdev": 27810.1271,
+            "spread": 75024.91,
+            "spread_pct": 7.73
+          },
+          "effective_ns_per_op": {
+            "min": 998.6853,
+            "max": 1079.5738,
+            "median": 1029.9654,
+            "mean": 1030.64,
+            "stdev": 29.8822,
+            "spread": 80.8885,
+            "spread_pct": 7.85
+          },
+          "per_thread_latency_ns": {
+            "min": 7989.4825,
+            "max": 8636.59,
+            "median": 8239.7235,
+            "mean": 8245.1198,
+            "stdev": 239.0576,
+            "spread": 647.1075,
+            "spread_pct": 7.85
+          },
+          "elapsed_ms": {
+            "min": 3195.793,
+            "max": 3454.636,
+            "median": 3295.8894,
+            "mean": 3298.0479,
+            "stdev": 95.623,
+            "spread": 258.843,
+            "spread_pct": 7.85
+          }
+        }
+      }
+    },
+    "circuit_independent": {
+      "py_native": {
+        "1": {
+          "total_ops": 250000,
+          "ops_per_sec": {
+            "min": 1043798.19,
+            "max": 1178639.84,
+            "median": 1125536.99,
+            "mean": 1121612.482,
+            "stdev": 49798.8939,
+            "spread": 134841.65,
+            "spread_pct": 11.98
+          },
+          "effective_ns_per_op": {
+            "min": 848.4356,
+            "max": 958.0396,
+            "median": 888.4648,
+            "mean": 893.3638,
+            "stdev": 40.3476,
+            "spread": 109.604,
+            "spread_pct": 12.34
+          },
+          "per_thread_latency_ns": {
+            "min": 848.4356,
+            "max": 958.0396,
+            "median": 888.4648,
+            "mean": 893.3638,
+            "stdev": 40.3476,
+            "spread": 109.604,
+            "spread_pct": 12.34
+          },
+          "elapsed_ms": {
+            "min": 212.1089,
+            "max": 239.5099,
+            "median": 222.1162,
+            "mean": 223.341,
+            "stdev": 10.0869,
+            "spread": 27.401,
+            "spread_pct": 12.34
+          }
+        },
+        "2": {
+          "total_ops": 500000,
+          "ops_per_sec": {
+            "min": 1120372.61,
+            "max": 1196022.89,
+            "median": 1175454.17,
+            "mean": 1160937.214,
+            "stdev": 29234.6259,
+            "spread": 75650.28,
+            "spread_pct": 6.44
+          },
+          "effective_ns_per_op": {
+            "min": 836.1044,
+            "max": 892.5602,
+            "median": 850.735,
+            "mean": 861.9237,
+            "stdev": 21.8707,
+            "spread": 56.4558,
+            "spread_pct": 6.64
+          },
+          "per_thread_latency_ns": {
+            "min": 1672.2088,
+            "max": 1785.1204,
+            "median": 1701.47,
+            "mean": 1723.8474,
+            "stdev": 43.7415,
+            "spread": 112.9116,
+            "spread_pct": 6.64
+          },
+          "elapsed_ms": {
+            "min": 418.0522,
+            "max": 446.2801,
+            "median": 425.3675,
+            "mean": 430.9619,
+            "stdev": 10.9354,
+            "spread": 28.2279,
+            "spread_pct": 6.64
+          }
+        },
+        "4": {
+          "total_ops": 1000000,
+          "ops_per_sec": {
+            "min": 1190432.54,
+            "max": 1247733.34,
+            "median": 1205451.63,
+            "mean": 1209539.664,
+            "stdev": 20711.2772,
+            "spread": 57300.8,
+            "spread_pct": 4.75
+          },
+          "effective_ns_per_op": {
+            "min": 801.4533,
+            "max": 840.0308,
+            "median": 829.5646,
+            "mean": 826.9993,
+            "stdev": 13.9309,
+            "spread": 38.5775,
+            "spread_pct": 4.65
+          },
+          "per_thread_latency_ns": {
+            "min": 3205.8132,
+            "max": 3360.1232,
+            "median": 3318.2584,
+            "mean": 3307.9974,
+            "stdev": 55.7237,
+            "spread": 154.31,
+            "spread_pct": 4.65
+          },
+          "elapsed_ms": {
+            "min": 801.4533,
+            "max": 840.0308,
+            "median": 829.5646,
+            "mean": 826.9993,
+            "stdev": 13.9309,
+            "spread": 38.5775,
+            "spread_pct": 4.65
+          }
+        },
+        "8": {
+          "total_ops": 2000000,
+          "ops_per_sec": {
+            "min": 1197257.8,
+            "max": 1214458.12,
+            "median": 1201161.52,
+            "mean": 1203715.804,
+            "stdev": 6035.628,
+            "spread": 17200.32,
+            "spread_pct": 1.43
+          },
+          "effective_ns_per_op": {
+            "min": 823.4125,
+            "max": 835.242,
+            "median": 832.5275,
+            "mean": 830.7817,
+            "stdev": 4.1486,
+            "spread": 11.8295,
+            "spread_pct": 1.42
+          },
+          "per_thread_latency_ns": {
+            "min": 6587.3,
+            "max": 6681.936,
+            "median": 6660.22,
+            "mean": 6646.2534,
+            "stdev": 33.1887,
+            "spread": 94.636,
+            "spread_pct": 1.42
+          },
+          "elapsed_ms": {
+            "min": 1646.825,
+            "max": 1670.484,
+            "median": 1665.055,
+            "mean": 1661.5634,
+            "stdev": 8.2972,
+            "spread": 23.659,
+            "spread_pct": 1.42
+          }
+        }
+      },
+      "py_pyo3_gil_held": {
+        "1": {
+          "total_ops": 250000,
+          "ops_per_sec": {
+            "min": 7090327.94,
+            "max": 9989291.48,
+            "median": 9505594.99,
+            "mean": 9071866.612,
+            "stdev": 1032226.8632,
+            "spread": 2898963.54,
+            "spread_pct": 30.5
+          },
+          "effective_ns_per_op": {
+            "min": 100.1072,
+            "max": 141.0372,
+            "median": 105.2012,
+            "mean": 111.9227,
+            "stdev": 14.9039,
+            "spread": 40.93,
+            "spread_pct": 38.91
+          },
+          "per_thread_latency_ns": {
+            "min": 100.1072,
+            "max": 141.0372,
+            "median": 105.2012,
+            "mean": 111.9227,
+            "stdev": 14.9039,
+            "spread": 40.93,
+            "spread_pct": 38.91
+          },
+          "elapsed_ms": {
+            "min": 25.0268,
+            "max": 35.2593,
+            "median": 26.3003,
+            "mean": 27.9807,
+            "stdev": 3.726,
+            "spread": 10.2325,
+            "spread_pct": 38.91
+          }
+        },
+        "2": {
+          "total_ops": 500000,
+          "ops_per_sec": {
+            "min": 8504442.72,
+            "max": 9985181.99,
+            "median": 9835452.87,
+            "mean": 9556188.628,
+            "stdev": 553459.9936,
+            "spread": 1480739.27,
+            "spread_pct": 15.06
+          },
+          "effective_ns_per_op": {
+            "min": 100.1484,
+            "max": 117.5856,
+            "median": 101.673,
+            "mean": 105.0228,
+            "stdev": 6.5405,
+            "spread": 17.4372,
+            "spread_pct": 17.15
+          },
+          "per_thread_latency_ns": {
+            "min": 200.2968,
+            "max": 235.1712,
+            "median": 203.346,
+            "mean": 210.0456,
+            "stdev": 13.0809,
+            "spread": 34.8744,
+            "spread_pct": 17.15
+          },
+          "elapsed_ms": {
+            "min": 50.0742,
+            "max": 58.7928,
+            "median": 50.8365,
+            "mean": 52.5114,
+            "stdev": 3.2702,
+            "spread": 8.7186,
+            "spread_pct": 17.15
+          }
+        },
+        "4": {
+          "total_ops": 1000000,
+          "ops_per_sec": {
+            "min": 7834080.44,
+            "max": 10400589.09,
+            "median": 10267151.28,
+            "mean": 9744956.214,
+            "stdev": 970823.2601,
+            "spread": 2566508.65,
+            "spread_pct": 25.0
+          },
+          "effective_ns_per_op": {
+            "min": 96.1484,
+            "max": 127.6474,
+            "median": 97.398,
+            "mean": 103.8151,
+            "stdev": 12.0337,
+            "spread": 31.499,
+            "spread_pct": 32.34
+          },
+          "per_thread_latency_ns": {
+            "min": 384.5936,
+            "max": 510.5896,
+            "median": 389.592,
+            "mean": 415.2606,
+            "stdev": 48.1348,
+            "spread": 125.996,
+            "spread_pct": 32.34
+          },
+          "elapsed_ms": {
+            "min": 96.1484,
+            "max": 127.6474,
+            "median": 97.398,
+            "mean": 103.8151,
+            "stdev": 12.0337,
+            "spread": 31.499,
+            "spread_pct": 32.34
+          }
+        },
+        "8": {
+          "total_ops": 2000000,
+          "ops_per_sec": {
+            "min": 9267587.22,
+            "max": 10061586.97,
+            "median": 9836043.0,
+            "mean": 9775590.972,
+            "stdev": 278905.0317,
+            "spread": 793999.75,
+            "spread_pct": 8.07
+          },
+          "effective_ns_per_op": {
+            "min": 99.3879,
+            "max": 107.903,
+            "median": 101.6669,
+            "mean": 102.3812,
+            "stdev": 3.0012,
+            "spread": 8.5151,
+            "spread_pct": 8.38
+          },
+          "per_thread_latency_ns": {
+            "min": 795.1032,
+            "max": 863.2236,
+            "median": 813.3352,
+            "mean": 819.0497,
+            "stdev": 24.0098,
+            "spread": 68.1204,
+            "spread_pct": 8.38
+          },
+          "elapsed_ms": {
+            "min": 198.7758,
+            "max": 215.8059,
+            "median": 203.3338,
+            "mean": 204.7624,
+            "stdev": 6.0024,
+            "spread": 17.0301,
+            "spread_pct": 8.38
+          }
+        }
+      },
+      "py_pyo3_gil_released": {
+        "1": {
+          "total_ops": 250000,
+          "ops_per_sec": {
+            "min": 4133591.05,
+            "max": 5371988.73,
+            "median": 4738905.27,
+            "mean": 4830163.306,
+            "stdev": 430505.0834,
+            "spread": 1238397.68,
+            "spread_pct": 26.13
+          },
+          "effective_ns_per_op": {
+            "min": 186.1508,
+            "max": 241.9204,
+            "median": 211.0192,
+            "mean": 208.7548,
+            "stdev": 19.3942,
+            "spread": 55.7696,
+            "spread_pct": 26.43
+          },
+          "per_thread_latency_ns": {
+            "min": 186.1508,
+            "max": 241.9204,
+            "median": 211.0192,
+            "mean": 208.7548,
+            "stdev": 19.3942,
+            "spread": 55.7696,
+            "spread_pct": 26.43
+          },
+          "elapsed_ms": {
+            "min": 46.5377,
+            "max": 60.4801,
+            "median": 52.7548,
+            "mean": 52.1887,
+            "stdev": 4.8486,
+            "spread": 13.9424,
+            "spread_pct": 26.43
+          }
+        },
+        "2": {
+          "total_ops": 500000,
+          "ops_per_sec": {
+            "min": 2661481.39,
+            "max": 3217335.52,
+            "median": 3071362.49,
+            "mean": 3005774.9,
+            "stdev": 185791.6567,
+            "spread": 555854.13,
+            "spread_pct": 18.1
+          },
+          "effective_ns_per_op": {
+            "min": 310.8162,
+            "max": 375.7306,
+            "median": 325.5884,
+            "mean": 334.0538,
+            "stdev": 22.0476,
+            "spread": 64.9144,
+            "spread_pct": 19.94
+          },
+          "per_thread_latency_ns": {
+            "min": 621.6324,
+            "max": 751.4612,
+            "median": 651.1768,
+            "mean": 668.1075,
+            "stdev": 44.0951,
+            "spread": 129.8288,
+            "spread_pct": 19.94
+          },
+          "elapsed_ms": {
+            "min": 155.4081,
+            "max": 187.8653,
+            "median": 162.7942,
+            "mean": 167.0269,
+            "stdev": 11.0238,
+            "spread": 32.4572,
+            "spread_pct": 19.94
+          }
+        },
+        "4": {
+          "total_ops": 1000000,
+          "ops_per_sec": {
+            "min": 1609864.48,
+            "max": 1717440.8,
+            "median": 1655497.03,
+            "mean": 1656809.088,
+            "stdev": 36338.2509,
+            "spread": 107576.32,
+            "spread_pct": 6.5
+          },
+          "effective_ns_per_op": {
+            "min": 582.2617,
+            "max": 621.1703,
+            "median": 604.0482,
+            "mean": 603.8576,
+            "stdev": 13.1248,
+            "spread": 38.9086,
+            "spread_pct": 6.44
+          },
+          "per_thread_latency_ns": {
+            "min": 2329.0468,
+            "max": 2484.6812,
+            "median": 2416.1928,
+            "mean": 2415.4306,
+            "stdev": 52.4993,
+            "spread": 155.6344,
+            "spread_pct": 6.44
+          },
+          "elapsed_ms": {
+            "min": 582.2617,
+            "max": 621.1703,
+            "median": 604.0482,
+            "mean": 603.8576,
+            "stdev": 13.1248,
+            "spread": 38.9086,
+            "spread_pct": 6.44
+          }
+        },
+        "8": {
+          "total_ops": 2000000,
+          "ops_per_sec": {
+            "min": 659675.64,
+            "max": 689256.33,
+            "median": 682160.07,
+            "mean": 677878.716,
+            "stdev": 10404.4946,
+            "spread": 29580.69,
+            "spread_pct": 4.34
+          },
+          "effective_ns_per_op": {
+            "min": 1450.8391,
+            "max": 1515.8965,
+            "median": 1465.9316,
+            "mean": 1475.5419,
+            "stdev": 22.9182,
+            "spread": 65.0574,
+            "spread_pct": 4.44
+          },
+          "per_thread_latency_ns": {
+            "min": 11606.7124,
+            "max": 12127.172,
+            "median": 11727.4528,
+            "mean": 11804.335,
+            "stdev": 183.3456,
+            "spread": 520.4596,
+            "spread_pct": 4.44
+          },
+          "elapsed_ms": {
+            "min": 2901.6781,
+            "max": 3031.793,
+            "median": 2931.8632,
+            "mean": 2951.0838,
+            "stdev": 45.8364,
+            "spread": 130.1149,
+            "spread_pct": 4.44
+          }
+        }
+      }
+    },
+    "circuit_shared": {
+      "py_native": {
+        "1": {
+          "total_ops": 250000,
+          "ops_per_sec": {
+            "min": 1187735.91,
+            "max": 1264947.89,
+            "median": 1214874.34,
+            "mean": 1217179.374,
+            "stdev": 26130.0337,
+            "spread": 77211.98,
+            "spread_pct": 6.36
+          },
+          "effective_ns_per_op": {
+            "min": 790.5464,
+            "max": 841.938,
+            "median": 823.1304,
+            "mean": 821.9434,
+            "stdev": 17.3244,
+            "spread": 51.3916,
+            "spread_pct": 6.24
+          },
+          "per_thread_latency_ns": {
+            "min": 790.5464,
+            "max": 841.938,
+            "median": 823.1304,
+            "mean": 821.9434,
+            "stdev": 17.3244,
+            "spread": 51.3916,
+            "spread_pct": 6.24
+          },
+          "elapsed_ms": {
+            "min": 197.6366,
+            "max": 210.4845,
+            "median": 205.7826,
+            "mean": 205.4859,
+            "stdev": 4.3311,
+            "spread": 12.8479,
+            "spread_pct": 6.24
+          }
+        },
+        "2": {
+          "total_ops": 500000,
+          "ops_per_sec": {
+            "min": 1162994.09,
+            "max": 1238054.32,
+            "median": 1215977.85,
+            "mean": 1202806.61,
+            "stdev": 30251.2817,
+            "spread": 75060.23,
+            "spread_pct": 6.17
+          },
+          "effective_ns_per_op": {
+            "min": 807.719,
+            "max": 859.8496,
+            "median": 822.3834,
+            "mean": 831.9187,
+            "stdev": 21.0695,
+            "spread": 52.1306,
+            "spread_pct": 6.34
+          },
+          "per_thread_latency_ns": {
+            "min": 1615.438,
+            "max": 1719.6992,
+            "median": 1644.7668,
+            "mean": 1663.8374,
+            "stdev": 42.139,
+            "spread": 104.2612,
+            "spread_pct": 6.34
+          },
+          "elapsed_ms": {
+            "min": 403.8595,
+            "max": 429.9248,
+            "median": 411.1917,
+            "mean": 415.9594,
+            "stdev": 10.5347,
+            "spread": 26.0653,
+            "spread_pct": 6.34
+          }
+        },
+        "4": {
+          "total_ops": 1000000,
+          "ops_per_sec": {
+            "min": 1163247.48,
+            "max": 1216312.55,
+            "median": 1182095.42,
+            "mean": 1188748.038,
+            "stdev": 19908.8603,
+            "spread": 53065.07,
+            "spread_pct": 4.49
+          },
+          "effective_ns_per_op": {
+            "min": 822.1571,
+            "max": 859.6623,
+            "median": 845.9554,
+            "mean": 841.4564,
+            "stdev": 14.0494,
+            "spread": 37.5052,
+            "spread_pct": 4.43
+          },
+          "per_thread_latency_ns": {
+            "min": 3288.6284,
+            "max": 3438.6492,
+            "median": 3383.8216,
+            "mean": 3365.8258,
+            "stdev": 56.1978,
+            "spread": 150.0208,
+            "spread_pct": 4.43
+          },
+          "elapsed_ms": {
+            "min": 822.1571,
+            "max": 859.6623,
+            "median": 845.9554,
+            "mean": 841.4564,
+            "stdev": 14.0494,
+            "spread": 37.5052,
+            "spread_pct": 4.43
+          }
+        },
+        "8": {
+          "total_ops": 2000000,
+          "ops_per_sec": {
+            "min": 1158095.7,
+            "max": 1213064.39,
+            "median": 1171123.03,
+            "mean": 1177433.248,
+            "stdev": 20338.4918,
+            "spread": 54968.69,
+            "spread_pct": 4.69
+          },
+          "effective_ns_per_op": {
+            "min": 824.3586,
+            "max": 863.4865,
+            "median": 853.8813,
+            "mean": 849.5553,
+            "stdev": 14.4854,
+            "spread": 39.1279,
+            "spread_pct": 4.58
+          },
+          "per_thread_latency_ns": {
+            "min": 6594.8684,
+            "max": 6907.892,
+            "median": 6831.05,
+            "mean": 6796.4419,
+            "stdev": 115.883,
+            "spread": 313.0236,
+            "spread_pct": 4.58
+          },
+          "elapsed_ms": {
+            "min": 1648.7171,
+            "max": 1726.973,
+            "median": 1707.7625,
+            "mean": 1699.1105,
+            "stdev": 28.9707,
+            "spread": 78.2559,
+            "spread_pct": 4.58
+          }
+        }
+      },
+      "py_pyo3_gil_held": {
+        "1": {
+          "total_ops": 250000,
+          "ops_per_sec": {
+            "min": 5749862.58,
+            "max": 10509765.67,
+            "median": 9854585.73,
+            "mean": 9226859.502,
+            "stdev": 1765741.1491,
+            "spread": 4759903.09,
+            "spread_pct": 48.3
+          },
+          "effective_ns_per_op": {
+            "min": 95.1496,
+            "max": 173.9172,
+            "median": 101.4756,
+            "mean": 114.1149,
+            "stdev": 30.0552,
+            "spread": 78.7676,
+            "spread_pct": 77.62
+          },
+          "per_thread_latency_ns": {
+            "min": 95.1496,
+            "max": 173.9172,
+            "median": 101.4756,
+            "mean": 114.1149,
+            "stdev": 30.0552,
+            "spread": 78.7676,
+            "spread_pct": 77.62
+          },
+          "elapsed_ms": {
+            "min": 23.7874,
+            "max": 43.4793,
+            "median": 25.3689,
+            "mean": 28.5287,
+            "stdev": 7.5138,
+            "spread": 19.6919,
+            "spread_pct": 77.62
+          }
+        },
+        "2": {
+          "total_ops": 500000,
+          "ops_per_sec": {
+            "min": 8847819.28,
+            "max": 10408318.33,
+            "median": 10082494.97,
+            "mean": 9915468.782,
+            "stdev": 563784.7622,
+            "spread": 1560499.05,
+            "spread_pct": 15.48
+          },
+          "effective_ns_per_op": {
+            "min": 96.077,
+            "max": 113.0222,
+            "median": 99.1818,
+            "mean": 101.2028,
+            "stdev": 6.1658,
+            "spread": 16.9452,
+            "spread_pct": 17.08
+          },
+          "per_thread_latency_ns": {
+            "min": 192.154,
+            "max": 226.0444,
+            "median": 198.3636,
+            "mean": 202.4057,
+            "stdev": 12.3315,
+            "spread": 33.8904,
+            "spread_pct": 17.08
+          },
+          "elapsed_ms": {
+            "min": 48.0385,
+            "max": 56.5111,
+            "median": 49.5909,
+            "mean": 50.6014,
+            "stdev": 3.0829,
+            "spread": 8.4726,
+            "spread_pct": 17.08
+          }
+        },
+        "4": {
+          "total_ops": 1000000,
+          "ops_per_sec": {
+            "min": 8732899.89,
+            "max": 10229080.25,
+            "median": 9968996.42,
+            "mean": 9778407.636,
+            "stdev": 539744.898,
+            "spread": 1496180.36,
+            "spread_pct": 15.01
+          },
+          "effective_ns_per_op": {
+            "min": 97.7605,
+            "max": 114.5095,
+            "median": 100.311,
+            "mean": 102.6028,
+            "stdev": 6.1014,
+            "spread": 16.749,
+            "spread_pct": 16.7
+          },
+          "per_thread_latency_ns": {
+            "min": 391.042,
+            "max": 458.038,
+            "median": 401.244,
+            "mean": 410.411,
+            "stdev": 24.4055,
+            "spread": 66.996,
+            "spread_pct": 16.7
+          },
+          "elapsed_ms": {
+            "min": 97.7605,
+            "max": 114.5095,
+            "median": 100.311,
+            "mean": 102.6028,
+            "stdev": 6.1014,
+            "spread": 16.749,
+            "spread_pct": 16.7
+          }
+        },
+        "8": {
+          "total_ops": 2000000,
+          "ops_per_sec": {
+            "min": 8862934.28,
+            "max": 10273511.7,
+            "median": 9533106.57,
+            "mean": 9632633.156,
+            "stdev": 559874.576,
+            "spread": 1410577.42,
+            "spread_pct": 14.8
+          },
+          "effective_ns_per_op": {
+            "min": 97.3377,
+            "max": 112.8294,
+            "median": 104.8976,
+            "mean": 104.1664,
+            "stdev": 6.0721,
+            "spread": 15.4917,
+            "spread_pct": 14.77
+          },
+          "per_thread_latency_ns": {
+            "min": 778.7016,
+            "max": 902.6356,
+            "median": 839.1808,
+            "mean": 833.3314,
+            "stdev": 48.5769,
+            "spread": 123.934,
+            "spread_pct": 14.77
+          },
+          "elapsed_ms": {
+            "min": 194.6754,
+            "max": 225.6589,
+            "median": 209.7952,
+            "mean": 208.3329,
+            "stdev": 12.1442,
+            "spread": 30.9835,
+            "spread_pct": 14.77
+          }
+        }
+      },
+      "py_pyo3_gil_released": {
+        "1": {
+          "total_ops": 250000,
+          "ops_per_sec": {
+            "min": 5196673.3,
+            "max": 5635098.1,
+            "median": 5303385.47,
+            "mean": 5358798.736,
+            "stdev": 166170.6134,
+            "spread": 438424.8,
+            "spread_pct": 8.27
+          },
+          "effective_ns_per_op": {
+            "min": 177.4592,
+            "max": 192.4308,
+            "median": 188.5588,
+            "mean": 186.7854,
+            "stdev": 5.6892,
+            "spread": 14.9716,
+            "spread_pct": 7.94
+          },
+          "per_thread_latency_ns": {
+            "min": 177.4592,
+            "max": 192.4308,
+            "median": 188.5588,
+            "mean": 186.7854,
+            "stdev": 5.6892,
+            "spread": 14.9716,
+            "spread_pct": 7.94
+          },
+          "elapsed_ms": {
+            "min": 44.3648,
+            "max": 48.1077,
+            "median": 47.1397,
+            "mean": 46.6963,
+            "stdev": 1.4223,
+            "spread": 3.7429,
+            "spread_pct": 7.94
+          }
+        },
+        "2": {
+          "total_ops": 500000,
+          "ops_per_sec": {
+            "min": 3071021.05,
+            "max": 3300990.23,
+            "median": 3176103.51,
+            "mean": 3185128.732,
+            "stdev": 74693.1186,
+            "spread": 229969.18,
+            "spread_pct": 7.24
+          },
+          "effective_ns_per_op": {
+            "min": 302.9394,
+            "max": 325.6246,
+            "median": 314.8512,
+            "mean": 314.1318,
+            "stdev": 7.3673,
+            "spread": 22.6852,
+            "spread_pct": 7.21
+          },
+          "per_thread_latency_ns": {
+            "min": 605.8788,
+            "max": 651.2492,
+            "median": 629.7024,
+            "mean": 628.2635,
+            "stdev": 14.7345,
+            "spread": 45.3704,
+            "spread_pct": 7.21
+          },
+          "elapsed_ms": {
+            "min": 151.4697,
+            "max": 162.8123,
+            "median": 157.4256,
+            "mean": 157.0659,
+            "stdev": 3.6836,
+            "spread": 11.3426,
+            "spread_pct": 7.21
+          }
+        },
+        "4": {
+          "total_ops": 1000000,
+          "ops_per_sec": {
+            "min": 1620708.77,
+            "max": 1723418.55,
+            "median": 1677851.22,
+            "mean": 1679223.702,
+            "stdev": 34357.7396,
+            "spread": 102709.78,
+            "spread_pct": 6.12
+          },
+          "effective_ns_per_op": {
+            "min": 580.2421,
+            "max": 617.014,
+            "median": 596.0004,
+            "mean": 595.7654,
+            "stdev": 12.3263,
+            "spread": 36.7719,
+            "spread_pct": 6.17
+          },
+          "per_thread_latency_ns": {
+            "min": 2320.9684,
+            "max": 2468.056,
+            "median": 2384.0016,
+            "mean": 2383.0617,
+            "stdev": 49.3052,
+            "spread": 147.0876,
+            "spread_pct": 6.17
+          },
+          "elapsed_ms": {
+            "min": 580.2421,
+            "max": 617.014,
+            "median": 596.0004,
+            "mean": 595.7654,
+            "stdev": 12.3263,
+            "spread": 36.7719,
+            "spread_pct": 6.17
+          }
+        },
+        "8": {
+          "total_ops": 2000000,
+          "ops_per_sec": {
+            "min": 696012.26,
+            "max": 721087.58,
+            "median": 711505.96,
+            "mean": 709440.68,
+            "stdev": 8310.9787,
+            "spread": 25075.32,
+            "spread_pct": 3.52
+          },
+          "effective_ns_per_op": {
+            "min": 1386.7941,
+            "max": 1436.7563,
+            "median": 1405.4696,
+            "mean": 1409.7553,
+            "stdev": 16.5757,
+            "spread": 49.9622,
+            "spread_pct": 3.55
+          },
+          "per_thread_latency_ns": {
+            "min": 11094.3528,
+            "max": 11494.0504,
+            "median": 11243.7568,
+            "mean": 11278.0423,
+            "stdev": 132.6058,
+            "spread": 399.6976,
+            "spread_pct": 3.55
+          },
+          "elapsed_ms": {
+            "min": 2773.5882,
+            "max": 2873.5126,
+            "median": 2810.9392,
+            "mean": 2819.5106,
+            "stdev": 33.1514,
+            "spread": 99.9244,
+            "spread_pct": 3.55
+          }
+        }
+      }
+    }
+  }
+}
