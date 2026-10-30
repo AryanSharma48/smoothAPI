@@ -1,0 +1,60 @@
+{
+  "experiment_id": "perf-001-microbenchmarks",
+  "timestamp": "2026-11-01T17:18:44.163092+00:00",
+  "git_commit": "4b9df8a4039836f6e9a2f7ca10beacdb4c409f62",
+  "system": {
+    "os": "Windows-11-10.0.26300-SP0",
+    "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+    "machine": "AMD64"
+  },
+  "toolchains": {
+    "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+    "node": "v22.20.0",
+    "python": "3.14.0"
+  },
+  "parameters": {
+    "rounds": 5,
+    "warmup_iterations": 50000,
+    "implementations": [
+      "rust_direct",
+      "ts_native",
+      "ts_napi",
+      "py_native",
+      "py_pyo3"
+    ],
+    "workloads": [
+      "backoff_deterministic",
+      "retry_policy_evaluation",
+      "circuit_breaker_transitions"
+    ],
+    "calibrated_iterations": {
+      "backoff_deterministic": {
+        "rust_direct": 200000000,
+        "ts_native": 25000000,
+        "ts_napi": 10000000,
+        "py_native": 2500000,
+        "py_pyo3": 5000000
+      },
+      "retry_policy_evaluation": {
+        "rust_direct": 100000000,
+        "ts_native": 20000000,
+        "ts_napi": 5000000,
+        "py_native": 1500000,
+        "py_pyo3": 2500000
+      },
+      "circuit_breaker_transitions": {
+        "rust_direct": 150000000,
+        "ts_native": 10000000,
+        "ts_napi": 10000000,
+        "py_native": 1000000,
+        "py_pyo3": 4000000
+      }
+    }
+  },
+  "methodology_notes": [
+    "Preserves original exp-001 untouched; records 5-implementation comparison under perf-001-microbenchmarks.",
+    "All 5 implementations passed 575/575 differential checks (diff-003-audited) prior to measurement.",
+    "Execution order is counterbalanced across 5 rounds to control for thermal and OS scheduling drift.",
+    "FFI call overhead is decomposed by subtracting Direct Rust latency from Node-API and PyO3 bound latencies."
+  ]
+}
