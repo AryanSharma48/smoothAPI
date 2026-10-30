@@ -2,6 +2,11 @@
 name = "benchmark-rust"
 version = "0.1.0"
 edition = "2024"
+default-run = "benchmark-rust"
+
+[[bin]]
+name = "differential"
+path = "../tests/test_rust_differential.rs"
 
 [dependencies]
 smooth-api-core = { path = "../../core/rust" }

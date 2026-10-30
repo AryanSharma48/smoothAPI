@@ -1,6 +1,7 @@
 use serde::Serialize;
 use smooth_api_core::{
-    calculate_backoff, evaluate_response, BackoffConfig, JitterStrategy, RetryDecision,
+    calculate_backoff, evaluate_response, BackoffConfig, CircuitBreaker, CircuitState,
+    JitterStrategy, RetryDecision,
 };
 use std::env;
 use std::hint::black_box;
@@ -44,6 +45,22 @@ fn verify_correctness(config: &BackoffConfig) {
 
     let d5 = evaluate_response(500, 3, config, None, None, 0.0);
     assert_eq!(d5, RetryDecision::Exhausted);
+
+    // 3. Circuit breaker lifecycle check
+    let mut cb = CircuitBreaker::new(3, 5000);
+    assert!(cb.can_request(1000));
+    cb.record_failure(1000);
+    assert!(cb.can_request(2000));
+    cb.record_failure(2000);
+    assert!(cb.can_request(3000));
+    cb.record_failure(3000);
+    assert_eq!(cb.state, CircuitState::Open);
+    assert!(!cb.can_request(5000));
+    assert!(cb.can_request(8001));
+    assert_eq!(cb.state, CircuitState::HalfOpen);
+    cb.record_success();
+    assert_eq!(cb.state, CircuitState::Closed);
+    assert_eq!(cb.failure_count, 0);
 }
 
 fn bench_backoff(iterations: u64, warmup: u64, round: u32, config: &BackoffConfig) -> BenchmarkResult {
@@ -162,6 +179,130 @@ fn bench_policy(iterations: u64, warmup: u64, round: u32, config: &BackoffConfig
     }
 }
 
+fn bench_circuit(iterations: u64, warmup: u64, round: u32) -> BenchmarkResult {
+    let mut cb = CircuitBreaker::new(3, 5000);
+    let mut sink: u64 = 0;
+
+    let warmup_batches = (warmup / 5).max(1);
+    for _ in 0..warmup_batches {
+        if black_box(&mut cb).can_request(black_box(1000)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_failure(black_box(1000));
+
+        if black_box(&mut cb).can_request(black_box(2000)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_failure(black_box(2000));
+
+        if black_box(&mut cb).can_request(black_box(3000)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_failure(black_box(3000));
+
+        if !black_box(&mut cb).can_request(black_box(5000)) {
+            sink = sink.wrapping_add(1);
+        }
+
+        if black_box(&mut cb).can_request(black_box(8001)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_success();
+    }
+    black_box(&cb);
+    black_box(sink);
+    sink = 0;
+
+    let batches = (iterations / 5).max(1);
+    let actual_iterations = batches * 5;
+
+    let start = Instant::now();
+    for _ in 0..batches {
+        if black_box(&mut cb).can_request(black_box(1000)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_failure(black_box(1000));
+
+        if black_box(&mut cb).can_request(black_box(2000)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_failure(black_box(2000));
+
+        if black_box(&mut cb).can_request(black_box(3000)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_failure(black_box(3000));
+
+        if !black_box(&mut cb).can_request(black_box(5000)) {
+            sink = sink.wrapping_add(1);
+        }
+
+        if black_box(&mut cb).can_request(black_box(8001)) {
+            sink = sink.wrapping_add(1);
+        }
+        black_box(&mut cb).record_success();
+    }
+    let elapsed = start.elapsed();
+    black_box(&cb);
+    black_box(sink);
+
+    let elapsed_ms = elapsed.as_secs_f64() * 1000.0;
+    let ops_per_sec = (actual_iterations as f64) / elapsed.as_secs_f64();
+    let ns_per_op = (elapsed.as_nanos() as f64) / (actual_iterations as f64);
+
+    BenchmarkResult {
+        workload: "circuit_breaker_transitions".to_string(),
+        language: "rust".to_string(),
+        round,
+        iterations: actual_iterations,
+        elapsed_ms,
+        ops_per_sec,
+        ns_per_op,
+    }
+}
+
+#[inline(never)]
+fn rust_noop(x: i64) -> i64 {
+    black_box(x)
+}
+
+fn bench_noop(iterations: u64, warmup: u64, round: u32) -> BenchmarkResult {
+    let mut sink: i64 = 0;
+    let warmup_batches = (warmup / 5).max(1);
+    for _ in 0..warmup_batches {
+        for x in [1i64, 2, 3, 4, 5] {
+            sink = sink.wrapping_add(rust_noop(black_box(x)));
+        }
+    }
+    black_box(sink);
+    sink = 0;
+
+    let batches = (iterations / 5).max(1);
+    let actual_iterations = batches * 5;
+    let start = Instant::now();
+    for _ in 0..batches {
+        for x in [1i64, 2, 3, 4, 5] {
+            sink = sink.wrapping_add(rust_noop(black_box(x)));
+        }
+    }
+    let elapsed = start.elapsed();
+    black_box(sink);
+
+    let elapsed_ms = elapsed.as_secs_f64() * 1000.0;
+    let ops_per_sec = (actual_iterations as f64) / elapsed.as_secs_f64();
+    let ns_per_op = (elapsed.as_nanos() as f64) / (actual_iterations as f64);
+
+    BenchmarkResult {
+        workload: "noop_roundtrip".to_string(),
+        language: "rust".to_string(),
+        round,
+        iterations: actual_iterations,
+        elapsed_ms,
+        ops_per_sec,
+        ns_per_op,
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut workload = "backoff_deterministic".to_string();
@@ -207,6 +348,8 @@ fn main() {
     let result = match workload.as_str() {
         "backoff_deterministic" => bench_backoff(iterations, warmup, round, &config),
         "retry_policy_evaluation" => bench_policy(iterations, warmup, round, &config),
+        "circuit_breaker_transitions" => bench_circuit(iterations, warmup, round),
+        "noop_roundtrip" => bench_noop(iterations, warmup, round),
         other => {
             eprintln!("Unknown workload: {}", other);
             std::process::exit(1);
