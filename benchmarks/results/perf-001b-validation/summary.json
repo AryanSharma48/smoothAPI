@@ -1,0 +1,248 @@
+{
+  "experiment_id": "perf-001b-validation",
+  "rust_circuit_breaker_validation": {
+    "perf_001_unboxed_cb_median_ns": 0.3805,
+    "perf_001b_black_boxed_cb_median_ns": 2.028,
+    "validated_stats": {
+      "sample_iterations": 150000000,
+      "ns_per_op": {
+        "min": 2.0164,
+        "max": 2.0753,
+        "median": 2.028,
+        "mean": 2.0378,
+        "stdev": 0.0211,
+        "spread": 0.0589,
+        "spread_pct": 2.9
+      },
+      "ops_per_sec": {
+        "min": 481868106.2744,
+        "max": 495942692.83,
+        "median": 493104265.582,
+        "mean": 490782577.3762,
+        "stdev": 5029525.814,
+        "spread": 14074586.5556,
+        "spread_pct": 2.85
+      },
+      "elapsed_ms": {
+        "min": 302.4543,
+        "max": 311.2885,
+        "median": 304.1953,
+        "mean": 305.6667,
+        "stdev": 3.1596,
+        "spread": 8.8342,
+        "spread_pct": 2.9
+      }
+    },
+    "explanation": "In perf-001, the stack-allocated CircuitBreaker struct was not wrapped in black_box(&mut cb) between the 9 calls of the 5-step batch, allowing LLVM to constant-propagate cb.state and eliminate intermediate dead stores (0.38 ns/op). Wrapping black_box(&mut cb) on every step forces actual memory loads/stores and state-branch evaluation, yielding 2.18 ns/op (~1.21 ns per individual method call).",
+    "updated_ratios_vs_validated_rust": {
+      "ts_native_vs_rust_direct_ratio": 13.98,
+      "py_native_vs_rust_direct_ratio": 665.87
+    }
+  },
+  "noop_roundtrip": {
+    "rust_direct": {
+      "sample_iterations": 200000000,
+      "ns_per_op": {
+        "min": 1.1039,
+        "max": 1.3163,
+        "median": 1.1301,
+        "mean": 1.1634,
+        "stdev": 0.0784,
+        "spread": 0.2124,
+        "spread_pct": 18.8
+      },
+      "ops_per_sec": {
+        "min": 759688785.892,
+        "max": 905876693.8762,
+        "median": 884881751.0394,
+        "mean": 863176424.644,
+        "stdev": 53436962.7227,
+        "spread": 146187907.9842,
+        "spread_pct": 16.52
+      },
+      "elapsed_ms": {
+        "min": 220.7806,
+        "max": 263.2657,
+        "median": 226.0189,
+        "mean": 232.6719,
+        "stdev": 15.6706,
+        "spread": 42.4851,
+        "spread_pct": 18.8
+      }
+    },
+    "ts_native": {
+      "sample_iterations": 100000000,
+      "ns_per_op": {
+        "min": 0.8731,
+        "max": 1.1046,
+        "median": 0.9034,
+        "mean": 0.9383,
+        "stdev": 0.0842,
+        "spread": 0.2315,
+        "spread_pct": 25.63
+      },
+      "ops_per_sec": {
+        "min": 905322299.2651,
+        "max": 1145369100.9196,
+        "median": 1106935504.4028,
+        "mean": 1073406045.1689,
+        "stdev": 85721585.5463,
+        "spread": 240046801.6545,
+        "spread_pct": 21.69
+      },
+      "elapsed_ms": {
+        "min": 87.3081,
+        "max": 110.4579,
+        "median": 90.3395,
+        "mean": 93.8333,
+        "stdev": 8.4202,
+        "spread": 23.1498,
+        "spread_pct": 25.63
+      }
+    },
+    "ts_napi": {
+      "sample_iterations": 15000000,
+      "ns_per_op": {
+        "min": 31.4414,
+        "max": 33.5367,
+        "median": 32.4552,
+        "mean": 32.5203,
+        "stdev": 0.6924,
+        "spread": 2.0953,
+        "spread_pct": 6.46
+      },
+      "ops_per_sec": {
+        "min": 29818062.1122,
+        "max": 31805206.2578,
+        "median": 30811671.8721,
+        "mean": 30764011.7887,
+        "stdev": 656980.7708,
+        "spread": 1987144.1456,
+        "spread_pct": 6.45
+      },
+      "elapsed_ms": {
+        "min": 471.6209,
+        "max": 503.0508,
+        "median": 486.8285,
+        "mean": 487.8045,
+        "stdev": 10.3867,
+        "spread": 31.4299,
+        "spread_pct": 6.46
+      }
+    },
+    "py_native": {
+      "sample_iterations": 10000000,
+      "ns_per_op": {
+        "min": 44.164,
+        "max": 117.6639,
+        "median": 46.1225,
+        "mean": 59.9628,
+        "stdev": 28.8652,
+        "spread": 73.4999,
+        "spread_pct": 159.36
+      },
+      "ops_per_sec": {
+        "min": 8498782.6769,
+        "max": 22642866.297,
+        "median": 21681391.9454,
+        "mean": 19276655.159,
+        "stdev": 5407225.8557,
+        "spread": 14144083.6202,
+        "spread_pct": 65.24
+      },
+      "elapsed_ms": {
+        "min": 441.6402,
+        "max": 1176.6391,
+        "median": 461.225,
+        "mean": 599.628,
+        "stdev": 288.652,
+        "spread": 734.9989,
+        "spread_pct": 159.36
+      }
+    },
+    "py_pyo3": {
+      "sample_iterations": 10000000,
+      "ns_per_op": {
+        "min": 54.1772,
+        "max": 147.9664,
+        "median": 56.304,
+        "mean": 74.0289,
+        "stdev": 36.9779,
+        "spread": 93.7892,
+        "spread_pct": 166.58
+      },
+      "ops_per_sec": {
+        "min": 6758290.6147,
+        "max": 18457938.8795,
+        "median": 17760727.4794,
+        "mean": 15758489.2248,
+        "stdev": 4508068.7992,
+        "spread": 11699648.2647,
+        "spread_pct": 65.87
+      },
+      "elapsed_ms": {
+        "min": 541.7723,
+        "max": 1479.6641,
+        "median": 563.04,
+        "mean": 740.2885,
+        "stdev": 369.7787,
+        "spread": 937.8918,
+        "spread_pct": 166.58
+      }
+    },
+    "py_pyo3_nogil": {
+      "sample_iterations": 5000000,
+      "ns_per_op": {
+        "min": 96.8581,
+        "max": 106.1341,
+        "median": 102.5419,
+        "mean": 101.8398,
+        "stdev": 3.267,
+        "spread": 9.276,
+        "spread_pct": 9.05
+      },
+      "ops_per_sec": {
+        "min": 9422044.267,
+        "max": 10324379.6184,
+        "median": 9752109.1862,
+        "mean": 9829551.7455,
+        "stdev": 318269.157,
+        "spread": 902335.3513,
+        "spread_pct": 9.25
+      },
+      "elapsed_ms": {
+        "min": 484.2906,
+        "max": 530.6704,
+        "median": 512.7096,
+        "mean": 509.1989,
+        "stdev": 16.3352,
+        "spread": 46.3798,
+        "spread_pct": 9.05
+      }
+    }
+  },
+  "isolated_ffi_overhead_decomposition": {
+    "node_api_raw_roundtrip_ns": 32.4552,
+    "pyo3_gil_held_raw_roundtrip_ns": 56.304,
+    "pyo3_gil_released_raw_roundtrip_ns": 102.5419,
+    "gil_release_reacquire_cost_ns": 46.24,
+    "by_workload": {
+      "backoff_deterministic": {
+        "ts_napi_total_ns": 113.284,
+        "ts_napi_raw_call_ns": 32.4552,
+        "ts_napi_extra_arg_marshaling_ns": 77.62,
+        "py_pyo3_total_ns": 95.0672,
+        "py_pyo3_raw_call_ns": 56.304,
+        "py_pyo3_extra_arg_marshaling_ns": 35.55
+      },
+      "retry_policy_evaluation": {
+        "ts_napi_total_ns": 802.6985,
+        "ts_napi_raw_call_ns": 32.4552,
+        "ts_napi_string_and_object_marshaling_ns": 763.07,
+        "py_pyo3_total_ns": 424.8281,
+        "py_pyo3_raw_call_ns": 56.304,
+        "py_pyo3_pyclass_and_attr_marshaling_ns": 361.35
+      }
+    }
+  }
+}
