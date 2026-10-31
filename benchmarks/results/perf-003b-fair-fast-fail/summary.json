@@ -1,0 +1,331 @@
+{
+  "scenario": "repeated_failures_cb",
+  "implementations": {
+    "ts_native": {
+      "label": "Native TypeScript",
+      "rounds": 5,
+      "req_per_sec": {
+        "mean": 265617.988,
+        "median": 261915.86,
+        "sd": 32864.2831,
+        "ci95": 28806.8143,
+        "min": 221040.39,
+        "max": 301106.87
+      },
+      "mean_ms": {
+        "mean": 0.0037,
+        "median": 0.0037,
+        "sd": 0.0005,
+        "ci95": 0.0004,
+        "min": 0.0032,
+        "max": 0.0044
+      },
+      "p50_ms": {
+        "mean": 0.0022,
+        "median": 0.0022,
+        "sd": 0.0002,
+        "ci95": 0.0001,
+        "min": 0.0021,
+        "max": 0.0025
+      },
+      "p95_ms": {
+        "mean": 0.0049,
+        "median": 0.0048,
+        "sd": 0.0004,
+        "ci95": 0.0003,
+        "min": 0.0046,
+        "max": 0.0054
+      },
+      "p99_ms": {
+        "mean": 0.0091,
+        "median": 0.0082,
+        "sd": 0.0018,
+        "ci95": 0.0016,
+        "min": 0.0075,
+        "max": 0.0119
+      },
+      "cpu_ms_per_1k_reqs": {
+        "mean": 11.86,
+        "median": 12.5,
+        "sd": 2.6178,
+        "ci95": 2.2946,
+        "min": 7.8,
+        "max": 14.1
+      },
+      "cpu_pct": {
+        "mean": 310.594,
+        "median": 328.21,
+        "sd": 56.9334,
+        "ci95": 49.9043,
+        "min": 229.42,
+        "max": 366.68
+      },
+      "rss_mb": {
+        "mean": 62.396,
+        "median": 62.35,
+        "sd": 0.1354,
+        "ci95": 0.1187,
+        "min": 62.29,
+        "max": 62.62
+      },
+      "heap_mb": {
+        "mean": 8.596,
+        "median": 8.6,
+        "sd": 0.0321,
+        "ci95": 0.0281,
+        "min": 8.55,
+        "max": 8.64
+      }
+    },
+    "ts_napi": {
+      "label": "TypeScript + Node-API (Rust, Fair Path)",
+      "rounds": 5,
+      "req_per_sec": {
+        "mean": 268694.448,
+        "median": 269970.38,
+        "sd": 18748.3773,
+        "ci95": 16433.6773,
+        "min": 239640.92,
+        "max": 288411.34
+      },
+      "mean_ms": {
+        "mean": 0.0036,
+        "median": 0.0036,
+        "sd": 0.0003,
+        "ci95": 0.0002,
+        "min": 0.0033,
+        "max": 0.004
+      },
+      "p50_ms": {
+        "mean": 0.0023,
+        "median": 0.0023,
+        "sd": 0.0002,
+        "ci95": 0.0002,
+        "min": 0.002,
+        "max": 0.0025
+      },
+      "p95_ms": {
+        "mean": 0.0049,
+        "median": 0.0047,
+        "sd": 0.0004,
+        "ci95": 0.0004,
+        "min": 0.0045,
+        "max": 0.0056
+      },
+      "p99_ms": {
+        "mean": 0.0083,
+        "median": 0.0087,
+        "sd": 0.001,
+        "ci95": 0.0009,
+        "min": 0.0073,
+        "max": 0.0096
+      },
+      "cpu_ms_per_1k_reqs": {
+        "mean": 8.14,
+        "median": 6.3,
+        "sd": 3.3396,
+        "ci95": 2.9273,
+        "min": 6.3,
+        "max": 14.0
+      },
+      "cpu_pct": {
+        "mean": 218.042,
+        "median": 181.7,
+        "sd": 89.7109,
+        "ci95": 78.6351,
+        "min": 166.56,
+        "max": 377.96
+      },
+      "rss_mb": {
+        "mean": 62.698,
+        "median": 63.11,
+        "sd": 0.9224,
+        "ci95": 0.8085,
+        "min": 61.07,
+        "max": 63.25
+      },
+      "heap_mb": {
+        "mean": 8.466,
+        "median": 8.46,
+        "sd": 0.0451,
+        "ci95": 0.0395,
+        "min": 8.42,
+        "max": 8.53
+      }
+    },
+    "py_native": {
+      "label": "Native Python",
+      "rounds": 5,
+      "req_per_sec": {
+        "mean": 200888.594,
+        "median": 204294.68,
+        "sd": 6308.0091,
+        "ci95": 5529.2138,
+        "min": 192048.43,
+        "max": 205859.16
+      },
+      "mean_ms": {
+        "mean": 0.0048,
+        "median": 0.0047,
+        "sd": 0.0001,
+        "ci95": 0.0001,
+        "min": 0.0047,
+        "max": 0.005
+      },
+      "p50_ms": {
+        "mean": 0.0039,
+        "median": 0.0039,
+        "sd": 0.0,
+        "ci95": 0.0,
+        "min": 0.0039,
+        "max": 0.0039
+      },
+      "p95_ms": {
+        "mean": 0.0075,
+        "median": 0.0076,
+        "sd": 0.0005,
+        "ci95": 0.0005,
+        "min": 0.0067,
+        "max": 0.008
+      },
+      "p99_ms": {
+        "mean": 0.009,
+        "median": 0.0088,
+        "sd": 0.0004,
+        "ci95": 0.0003,
+        "min": 0.0087,
+        "max": 0.0096
+      },
+      "cpu_ms_per_1k_reqs": {
+        "mean": 5.3125,
+        "median": 4.6875,
+        "sd": 0.8558,
+        "ci95": 0.7502,
+        "min": 4.6875,
+        "max": 6.25
+      },
+      "cpu_pct": {
+        "mean": 106.6,
+        "median": 96.5,
+        "sd": 16.5642,
+        "ci95": 14.5192,
+        "min": 92.06,
+        "max": 128.65
+      },
+      "rss_mb": {
+        "mean": 47.456,
+        "median": 47.48,
+        "sd": 0.0844,
+        "ci95": 0.074,
+        "min": 47.33,
+        "max": 47.55
+      },
+      "heap_mb": {
+        "mean": 35.05,
+        "median": 35.0312,
+        "sd": 0.1788,
+        "ci95": 0.1567,
+        "min": 34.8164,
+        "max": 35.3125
+      }
+    },
+    "py_pyo3": {
+      "label": "Python + PyO3 (Rust, Fair Path)",
+      "rounds": 5,
+      "req_per_sec": {
+        "mean": 194037.512,
+        "median": 198090.02,
+        "sd": 13194.9122,
+        "ci95": 11565.8505,
+        "min": 176776.2,
+        "max": 208887.32
+      },
+      "mean_ms": {
+        "mean": 0.005,
+        "median": 0.0049,
+        "sd": 0.0004,
+        "ci95": 0.0003,
+        "min": 0.0046,
+        "max": 0.0055
+      },
+      "p50_ms": {
+        "mean": 0.0039,
+        "median": 0.0039,
+        "sd": 0.0,
+        "ci95": 0.0,
+        "min": 0.0039,
+        "max": 0.0039
+      },
+      "p95_ms": {
+        "mean": 0.0076,
+        "median": 0.0078,
+        "sd": 0.0005,
+        "ci95": 0.0004,
+        "min": 0.007,
+        "max": 0.0082
+      },
+      "p99_ms": {
+        "mean": 0.0095,
+        "median": 0.0093,
+        "sd": 0.001,
+        "ci95": 0.0008,
+        "min": 0.0086,
+        "max": 0.0111
+      },
+      "cpu_ms_per_1k_reqs": {
+        "mean": 4.375,
+        "median": 4.6875,
+        "sd": 1.3073,
+        "ci95": 1.1459,
+        "min": 3.125,
+        "max": 6.25
+      },
+      "cpu_pct": {
+        "mean": 84.194,
+        "median": 92.85,
+        "sd": 22.0471,
+        "ci95": 19.3252,
+        "min": 57.58,
+        "max": 110.49
+      },
+      "rss_mb": {
+        "mean": 47.462,
+        "median": 47.49,
+        "sd": 0.1085,
+        "ci95": 0.0951,
+        "min": 47.34,
+        "max": 47.59
+      },
+      "heap_mb": {
+        "mean": 35.0844,
+        "median": 34.9961,
+        "sd": 0.1852,
+        "ci95": 0.1623,
+        "min": 34.9336,
+        "max": 35.3672
+      }
+    }
+  },
+  "relative_speedups": {
+    "ts_napi_vs_ts_native_rps_ratio": 1.0116,
+    "py_pyo3_vs_py_native_rps_ratio": 0.9659,
+    "ts_native_vs_py_native_rps_ratio": 1.3222,
+    "ts_napi_vs_ts_native_cpu_reduction": 1.457,
+    "py_pyo3_vs_py_native_cpu_reduction": 1.2143
+  },
+  "comparison_with_perf_003": {
+    "perf_003_unequal_prework": {
+      "ts_napi_vs_ts_native_rps_ratio": 2.1018,
+      "py_pyo3_vs_py_native_rps_ratio": 4.2145,
+      "ts_native_vs_py_native_rps_ratio": 1.5125,
+      "ts_napi_vs_ts_native_cpu_reduction": 2.0851,
+      "py_pyo3_vs_py_native_cpu_reduction": 3.2
+    },
+    "perf_003b_equal_prework": {
+      "ts_napi_vs_ts_native_rps_ratio": 1.0116,
+      "py_pyo3_vs_py_native_rps_ratio": 0.9659,
+      "ts_napi_vs_ts_native_cpu_reduction": 1.457,
+      "py_pyo3_vs_py_native_cpu_reduction": 1.2143
+    }
+  }
+}

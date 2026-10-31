@@ -1,0 +1,22 @@
+{
+  "experiment_id": "perf-003b-fair-fast-fail",
+  "timestamp_utc": "2026-11-01T18:03:49.691940+00:00",
+  "os": "Windows-11-10.0.26300-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+  "python_version": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "node_version": "v22.20.0",
+  "rounds": 5,
+  "scenario": "repeated_failures_cb",
+  "requests_per_round": 10000,
+  "warmup_per_round": 20,
+  "methodology_notes": [
+    "Preserves perf-003-end-to-end untouched.",
+    "Enforces identical pre-circuit-breaker client work across native and Rust-backed paths in both TypeScript and Python:",
+    "1. URL extraction and parsing (new URL() in TS; _extract_url + urlparse in Python).",
+    "2. Domain/circuit-key resolution (getCircuitKey in TS; _resolve_circuit_key in Python).",
+    "3. Per-domain Map/dict lookup with >1000-entry cleanup guard (Map in TS; dict + RLock in Python).",
+    "4. Circuit-breaker canRequest check (native JS/Python state vs Node-API/PyO3 NativeCircuitBreaker).",
+    "5. Lifecycle hook check and fallback return."
+  ]
+}
