@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Literal, Optional
 
 CircuitState = Literal['CLOSED', 'OPEN', 'HALF_OPEN']
+PartitionBy = Literal['host', 'host-and-path']
+CircuitKeyFn = Callable[..., str]
 
 
 @dataclass
@@ -12,6 +14,8 @@ class CircuitStateChangeEvent:
     from_state: CircuitState
     to_state: CircuitState
     failure_count: int
+    failure_rate: Optional[float] = None
+    key: Optional[str] = None
 
     @property
     def from_(self) -> CircuitState:
@@ -24,6 +28,10 @@ class CircuitStateChangeEvent:
     @property
     def failureCount(self) -> int:
         return self.failure_count
+
+    @property
+    def failureRate(self) -> Optional[float]:
+        return self.failure_rate
 
 
 @dataclass
@@ -53,6 +61,40 @@ class BackoffConfig:
 class CircuitBreakerConfig:
     failure_threshold: int = 3      # consecutive failures to trip OPEN
     cooldown_ms: int = 10_000       # time in OPEN before probing with HALF_OPEN
+    success_threshold: int = 1      # consecutive successes in HALF_OPEN to close
+    failure_rate_threshold: Optional[float] = None  # 0.0 - 1.0 (e.g. 0.5 = 50%)
+    window_size: int = 20           # sliding window size
+    min_requests_in_window: int = 5 # min requests before failure rate applies
+    partition_by: PartitionBy = 'host'  # 'host' or 'host-and-path'
+    circuit_key_fn: Optional[CircuitKeyFn] = None
+
+    # CamelCase aliases for cross-language compatibility
+    failureThreshold: Optional[int] = None
+    cooldownMs: Optional[int] = None
+    successThreshold: Optional[int] = None
+    failureRateThreshold: Optional[float] = None
+    windowSize: Optional[int] = None
+    minRequestsInWindow: Optional[int] = None
+    partitionBy: Optional[PartitionBy] = None
+    circuitKeyFn: Optional[CircuitKeyFn] = None
+
+    def __post_init__(self):
+        if self.failureThreshold is not None:
+            self.failure_threshold = self.failureThreshold
+        if self.cooldownMs is not None:
+            self.cooldown_ms = self.cooldownMs
+        if self.successThreshold is not None:
+            self.success_threshold = self.successThreshold
+        if self.failureRateThreshold is not None:
+            self.failure_rate_threshold = self.failureRateThreshold
+        if self.windowSize is not None:
+            self.window_size = self.windowSize
+        if self.minRequestsInWindow is not None:
+            self.min_requests_in_window = self.minRequestsInWindow
+        if self.partitionBy is not None:
+            self.partition_by = self.partitionBy
+        if self.circuitKeyFn is not None:
+            self.circuit_key_fn = self.circuitKeyFn
 
 
 # A key function receives (*args, **kwargs) of the wrapped function and must
