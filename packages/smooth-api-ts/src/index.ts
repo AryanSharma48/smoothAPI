@@ -1,10 +1,16 @@
 import { CircuitBreakerState } from "./state.js";
 import { calculateBackoff, sleep } from "./utils/backoff.js";
-import { CircuitOpenError, SmoothFetchConfig, ShouldRetryPredicate } from "./types.js";
+import {
+  CircuitOpenError,
+  SmoothFetchConfig,
+  ShouldRetryPredicate,
+  CircuitBreakerConfig,
+} from "./types.js";
 import { RequestDeduplicator } from "./dedup.js";
 
 export * from "./types.js";
 export type { ShouldRetryPredicate } from "./types.js";
+export { CircuitBreakerState } from "./state.js";
 
 const BACKOFF_DEFAULTS = {
   baseDelay: 100,
@@ -52,6 +58,21 @@ async function evaluateShouldRetry(
   }
 }
 
+function getCircuitKey(
+  url: string | URL,
+  parsedUrl: URL,
+  options?: RequestInit,
+  cbConfig?: Partial<CircuitBreakerConfig>
+): string {
+  if (cbConfig?.circuitKeyFn) {
+    return cbConfig.circuitKeyFn(url, options);
+  }
+  if (cbConfig?.partitionBy === 'host-and-path') {
+    return `${parsedUrl.hostname}${parsedUrl.pathname}`;
+  }
+  return parsedUrl.hostname;
+}
+
 export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
   const backoffConfig = { ...BACKOFF_DEFAULTS, ...globalConfig.backoff };
   const retryOn = globalConfig.retryOn ?? DEFAULT_RETRY_ON;
@@ -72,24 +93,27 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
     const startTime = Date.now();
     const urlStr = url.toString();
     // Fallback to local origin to support relative paths
-    const domain = new URL(urlStr, typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost').hostname;
+    const origin = typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+    const parsedUrl = new URL(urlStr, origin);
+    const domain = parsedUrl.hostname;
+    const circuitKey = getCircuitKey(url, parsedUrl, options, globalConfig.circuitBreaker);
 
     // Block before any network IO if the circuit is OPEN.
-    if (!breaker.canRequest(domain)) {
+    if (!breaker.canRequest(circuitKey)) {
       if (globalConfig.onFailure) {
         safeInvoke(globalConfig.onFailure, {
           url: urlStr,
           domain,
           attempts: 0,
           durationMs: Date.now() - startTime,
-          error: new CircuitOpenError(domain),
+          error: new CircuitOpenError(circuitKey),
           isCircuitOpen: true,
         });
       }
       if (globalConfig.fallback !== undefined) {
         return globalConfig.fallback as T;
       }
-      throw new CircuitOpenError(domain);
+      throw new CircuitOpenError(circuitKey);
     }
 
     // The core fetch-with-retry logic extracted into a thunk so the
@@ -104,6 +128,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
           attemptCount = attempt + 1;
           // Pre-flight abort check
           if (options?.signal?.aborted) {
+            breaker.releaseProbe(circuitKey);
             const abortErr = options.signal.reason || new DOMException("The operation was aborted.", "AbortError");
             if (globalConfig.onFailure) {
               safeInvoke(globalConfig.onFailure, {
@@ -152,7 +177,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             // fetch() resolves for any HTTP status. Retryable codes or custom predicates need to be
             // treated as failures manually.
             if (isRetryable) {
-              breaker.recordFailure(domain);
+              breaker.recordFailure(circuitKey);
 
               if (attempt < backoffConfig.maxRetries) {
                 let delayMs = calculateBackoff(attempt, backoffConfig, prevDelay);
@@ -205,7 +230,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                 console.error(message);
               }
 
-              breaker.recordSuccess(domain);
+              breaker.recordSuccess(circuitKey);
 
               if (globalConfig.onFailure) {
                 safeInvoke(globalConfig.onFailure, {
@@ -238,7 +263,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
               );
             }
 
-            breaker.recordSuccess(domain);
+            breaker.recordSuccess(circuitKey);
 
             if (response.status >= 400) {
               if (globalConfig.onFailure) {
@@ -273,6 +298,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             // (We know it's our timeout if controller is aborted and the user's signal isn't).
             const isInternalTimeout = controller?.signal?.aborted && !options?.signal?.aborted;
             if (err?.name === 'AbortError' && !isInternalTimeout) {
+              breaker.releaseProbe(circuitKey);
               if (globalConfig.onFailure) {
                 safeInvoke(globalConfig.onFailure, {
                   url: urlStr,
@@ -288,6 +314,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
 
             // Do not retry or record failure if the user explicitly aborted the request
             if (options?.signal?.aborted) {
+              breaker.releaseProbe(circuitKey);
               if (globalConfig.onFailure) {
                 safeInvoke(globalConfig.onFailure, {
                   url: urlStr,
@@ -304,7 +331,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
             if (globalConfig.shouldRetry) {
               const should = await evaluateShouldRetry(globalConfig.shouldRetry, undefined, err, true);
               if (!should) {
-                breaker.recordFailure(domain);
+                breaker.recordFailure(circuitKey);
                 if (globalConfig.onFailure) {
                   safeInvoke(globalConfig.onFailure, {
                     url: urlStr,
@@ -319,7 +346,7 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
               }
             }
 
-            breaker.recordFailure(domain);
+            breaker.recordFailure(circuitKey);
 
             // Don't sleep after the final attempt
             if (attempt < backoffConfig.maxRetries) {

@@ -19,11 +19,24 @@ export interface DeduplicationConfig {
   keyFn?: DeduplicationKeyFn;
 }
 
-// Per-domain runtime entry stored in the state map.
+export type PartitionBy = 'host' | 'host-and-path';
+
+export type CircuitKeyFn = (
+  url: string | URL,
+  options?: RequestInit
+) => string;
+
+// Per-partition runtime entry stored in the state map.
 export interface CircuitEntry {
   state: CircuitState;
   failureCount: number;
   lastFailureTime: number; // epoch ms, used to compute cooldown expiry
+  consecutiveSuccesses: number; // consecutive successes in HALF_OPEN
+  probeInFlight: boolean;       // whether a probe request is currently running in HALF_OPEN
+  window: Uint8Array;           // circular buffer of outcomes: 0 = failure, 1 = success
+  windowIndex: number;
+  windowCount: number;
+  windowFailures: number;
 }
 
 export interface BackoffConfig {
@@ -34,8 +47,14 @@ export interface BackoffConfig {
 }
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number; // consecutive failures to trip OPEN
-  cooldownMs: number;       // time in OPEN before probing with HALF_OPEN
+  failureThreshold?: number;     // consecutive failures to trip OPEN (default: 3)
+  cooldownMs?: number;           // time in OPEN before probing with HALF_OPEN (default: 10_000)
+  successThreshold?: number;     // consecutive successes in HALF_OPEN to close (default: 1)
+  failureRateThreshold?: number; // 0.0 - 1.0 (e.g. 0.5 = 50% failures in sliding window)
+  windowSize?: number;           // circular buffer size for failure rate calculation (default: 20)
+  minRequestsInWindow?: number;  // min requests in window before failure rate triggers (default: 5)
+  partitionBy?: PartitionBy;     // 'host' (default) or 'host-and-path'
+  circuitKeyFn?: CircuitKeyFn;   // custom partition key extractor
 }
 
 export interface RetryContext {
@@ -53,6 +72,8 @@ export interface CircuitStateChangeEvent {
   from: CircuitState;
   to: CircuitState;
   failureCount: number;
+  key?: string;
+  failureRate?: number;
 }
 
 /**
