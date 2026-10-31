@@ -74,7 +74,12 @@ function getCircuitKey(
 }
 
 export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
-  const backoffConfig = { ...BACKOFF_DEFAULTS, ...globalConfig.backoff };
+  const backoffConfig = {
+    baseDelay: globalConfig.backoff?.baseDelay ?? BACKOFF_DEFAULTS.baseDelay,
+    maxDelay: globalConfig.backoff?.maxDelay ?? BACKOFF_DEFAULTS.maxDelay,
+    maxRetries: globalConfig.backoff?.maxRetries ?? BACKOFF_DEFAULTS.maxRetries,
+    jitter: globalConfig.backoff?.jitter,
+  };
   const retryOn = globalConfig.retryOn ?? DEFAULT_RETRY_ON;
   const breaker = new CircuitBreakerState(
     globalConfig.circuitBreaker,
@@ -388,11 +393,14 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
       return run();
     };
 
-    if (deduplicator) {
-      return deduplicator.execute(url, options, executeRequest);
+    try {
+      if (deduplicator) {
+        return await deduplicator.execute(url, options, executeRequest);
+      }
+      return await executeRequest();
+    } finally {
+      breaker.releaseProbe(circuitKey);
     }
-
-    return executeRequest();
   };
 }
 

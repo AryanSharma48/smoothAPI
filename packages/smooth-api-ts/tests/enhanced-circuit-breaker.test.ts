@@ -217,3 +217,48 @@ describe('Enhanced Circuit Breaker: Route Partitioning', () => {
   });
 });
 
+describe('Circuit Breaker Resilience: Config Defaults & Probe Recovery', () => {
+  it('does not allow explicit undefined config values to overwrite defaults', () => {
+    const breaker = new CircuitBreakerState({
+      failureThreshold: undefined,
+      cooldownMs: undefined,
+      successThreshold: undefined,
+    });
+
+    // failureThreshold should fall back to default 3
+    breaker.recordFailure('api.example.com');
+    breaker.recordFailure('api.example.com');
+    assert.equal(breaker.getState('api.example.com'), 'CLOSED');
+
+    breaker.recordFailure('api.example.com');
+    assert.equal(breaker.getState('api.example.com'), 'OPEN');
+  });
+
+  it('recovers from leaked HALF_OPEN probe via lease expiry', () => {
+    const breaker = new CircuitBreakerState({
+      failureThreshold: 1,
+      cooldownMs: 50,
+    });
+
+    breaker.recordFailure('api.example.com');
+    assert.equal(breaker.getState('api.example.com'), 'OPEN');
+
+    // Simulate cooldown expired
+    const entry = (breaker as any).getOrCreate('api.example.com');
+    entry.lastFailureTime = Date.now() - 100;
+
+    // Caller 1 takes the probe
+    assert.equal(breaker.canRequest('api.example.com'), true);
+    assert.equal(entry.probeInFlight, true);
+
+    // Caller 1 leaks/crashes without calling recordSuccess or recordFailure.
+    // Immediately, caller 2 is blocked:
+    assert.equal(breaker.canRequest('api.example.com'), false);
+
+    // After cooldownMs passes, probe lease expires automatically
+    entry.probeStartTime = Date.now() - 60;
+    assert.equal(breaker.canRequest('api.example.com'), true);
+  });
+});
+
+

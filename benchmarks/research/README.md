@@ -13,7 +13,7 @@ This directory documents the empirical performance evaluation of a shared Rust r
 
 | Experiment ID | Date | Workloads Evaluated | Status | Link |
 |---|---|---|---|---|
-| `exp-001` | 2026-10-20 | Deterministic backoff & retry-policy evaluation | Planned / Baseline | [Results](../benchmarks/results/exp-001/) |
+| `exp-001` | 2026-10-20 | Deterministic backoff & retry-policy evaluation | Planned / Baseline | [Results](../results/exp-001/) |
 
 ## Structure
 

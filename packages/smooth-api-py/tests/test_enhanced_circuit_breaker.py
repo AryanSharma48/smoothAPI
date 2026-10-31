@@ -201,3 +201,37 @@ def test_custom_circuit_key_fn():
     # billing-service is isolated and works fine
     assert call_service(service="billing-service") == {"status": "ok", "service": "billing-service"}
 
+
+def test_get_stats_does_not_deadlock():
+    breaker = CircuitBreakerState(CircuitBreakerConfig(failure_threshold=2))
+    breaker.record_failure("api.example.com")
+
+    # get_stats should acquire lock safely and return stats without deadlocking
+    stats = breaker.get_stats("api.example.com")
+    assert stats["state"] == "CLOSED"
+    assert stats["failure_count"] == 1
+    assert stats["failure_rate"] == 1.0
+
+
+def test_leaked_probe_recovers_via_lease_expiry():
+    breaker = CircuitBreakerState(CircuitBreakerConfig(failure_threshold=1, cooldown_ms=50))
+    breaker.record_failure("api.example.com")
+    assert breaker.get_state("api.example.com") == "OPEN"
+
+    # Simulate cooldown expired
+    entry = breaker._get_or_create("api.example.com")
+    entry.last_failure_time = time.time() - 1.0
+
+    # Probe 1 starts
+    assert breaker.can_request("api.example.com") is True
+    assert entry.probe_in_flight is True
+
+    # Immediate concurrent probe is denied
+    assert breaker.can_request("api.example.com") is False
+
+    # Simulate probe crashed/leaked and cooldown_ms passed
+    entry.probe_start_time = time.time() - 0.1
+    # Lease expired: new probe is granted!
+    assert breaker.can_request("api.example.com") is True
+
+

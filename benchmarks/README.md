@@ -55,12 +55,12 @@ Each runner can be executed independently with custom iterations and warmups:
 
 ## Latest Experiment Results (`exp-001`)
 
-![Experiment exp-001 Benchmark Results](../research/figures/exp-001-summary.png)
+![Experiment exp-001 Benchmark Results](./research/figures/exp-001-summary.png)
 
 | Workload | Rust | TypeScript (Node) | Python 3.14 | Speedup vs Python |
 |---|:---:|:---:|:---:|:---:|
 | **Backoff Calculation** | **2.81 ns/op** (356.0M ops/s) | 35.19 ns/op (28.4M ops/s) | 130.79 ns/op (7.6M ops/s) | **46.6x faster** |
 | **Retry Policy Evaluation** | **5.76 ns/op** (173.7M ops/s) | 16.08 ns/op (62.2M ops/s) | 294.15 ns/op (3.4M ops/s) | **51.1x faster** |
 
-*See [research/findings.md](../research/findings.md) for detailed analysis and limitations.*
+*See [research/findings.md](./research/findings.md) for detailed analysis and limitations.*
 

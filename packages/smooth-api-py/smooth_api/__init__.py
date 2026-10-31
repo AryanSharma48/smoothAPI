@@ -327,10 +327,12 @@ def smooth_api(config: SmoothConfig):
                         ))
                     raise last_err  # type: ignore[misc]
 
-                if deduplicator is not None:
-                    return await deduplicator.execute(_execute, args, kwargs)
-
-                return await _execute()
+                try:
+                    if deduplicator is not None:
+                        return await deduplicator.execute(_execute, args, kwargs)
+                    return await _execute()
+                finally:
+                    breaker.release_probe(key)
 
             wrapper.circuit_breaker = breaker
             return wrapper
@@ -368,52 +370,72 @@ def smooth_api(config: SmoothConfig):
                 last_err: Exception | None = None
                 attempt_count = 0
 
-                for attempt in range(config.backoff.max_retries + 1):
-                    attempt_count = attempt + 1
-                    try:
-                        result = fn(*args, **kwargs)
-                        status = getattr(result, "status_code", None)
-                        res_url = url or _extract_url(args, kwargs, result)
-                        if status is not None and status >= 400:
-                            if config.on_failure:
-                                _safe_invoke(config.on_failure, FailureContext(
-                                    url=res_url,
-                                    domain=key,
-                                    attempts=attempt_count,
-                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
-                                    status=status,
-                                    response=result,
-                                    error=RuntimeError(f"HTTP {status}"),
-                                    is_circuit_open=False,
-                                ))
-                        else:
-                            if config.on_success:
-                                _safe_invoke(config.on_success, SuccessContext(
-                                    url=res_url,
-                                    domain=key,
-                                    attempts=attempt_count,
-                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
-                                    status=status,
-                                    response=result,
-                                ))
+                try:
+                    for attempt in range(config.backoff.max_retries + 1):
+                        attempt_count = attempt + 1
+                        try:
+                            result = fn(*args, **kwargs)
+                            status = getattr(result, "status_code", None)
+                            res_url = url or _extract_url(args, kwargs, result)
+                            if status is not None and status >= 400:
+                                if config.on_failure:
+                                    _safe_invoke(config.on_failure, FailureContext(
+                                        url=res_url,
+                                        domain=key,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=result,
+                                        error=RuntimeError(f"HTTP {status}"),
+                                        is_circuit_open=False,
+                                    ))
+                            else:
+                                if config.on_success:
+                                    _safe_invoke(config.on_success, SuccessContext(
+                                        url=res_url,
+                                        domain=key,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=result,
+                                    ))
 
-                        breaker.record_success(key)
-                        return result
-                    except Exception as err:
-                        status = _get_status_code(err)
-                        err_url = url or _extract_url(args, kwargs, err)
-                        if status is not None and status not in config.retry_on:
-                            if config.fallback_on_non_retryable:
-                                import sys
-                                reason = getattr(err.response, 'reason', getattr(err.response, 'reason_phrase', ''))
-                                message = f"Non-retryable HTTP error: {status} {reason}".strip()
-                                if config.on_non_retryable_error:
-                                    config.on_non_retryable_error(status, message)
-                                else:
-                                    sys.stderr.write(f"{message}\n")
-                                
-                                breaker.record_success(key)
+                            breaker.record_success(key)
+                            return result
+                        except Exception as err:
+                            status = _get_status_code(err)
+                            err_url = url or _extract_url(args, kwargs, err)
+                            if status is not None and status not in config.retry_on:
+                                if config.fallback_on_non_retryable:
+                                    import sys
+                                    reason = getattr(err.response, 'reason', getattr(err.response, 'reason_phrase', ''))
+                                    message = f"Non-retryable HTTP error: {status} {reason}".strip()
+                                    if config.on_non_retryable_error:
+                                        config.on_non_retryable_error(status, message)
+                                    else:
+                                        sys.stderr.write(f"{message}\n")
+                                    
+                                    breaker.record_success(key)
 
+                                    if config.on_failure:
+                                        _safe_invoke(config.on_failure, FailureContext(
+                                            url=err_url,
+                                            domain=key,
+                                            attempts=attempt_count,
+                                            duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                            status=status,
+                                            response=getattr(err, 'response', None),
+                                            error=err,
+                                            is_circuit_open=False,
+                                        ))
+
+                                    if fallback is not None:
+                                        return fallback
+                                    return MockResponse(
+                                        status_code=status,
+                                        content={"error": True, "status": status, "message": message},
+                                        reason=reason
+                                    )
                                 if config.on_failure:
                                     _safe_invoke(config.on_failure, FailureContext(
                                         url=err_url,
@@ -425,73 +447,56 @@ def smooth_api(config: SmoothConfig):
                                         error=err,
                                         is_circuit_open=False,
                                     ))
+                                raise
+                            breaker.record_failure(key)
+                            last_err = err
+                            if attempt < config.backoff.max_retries:
+                                delay = calculate_backoff(attempt, config.backoff)
+                                if status == 429:
+                                    retry_after_delay = _get_retry_after_delay(err)
+                                if status == 429 and retry_after_delay is not None:
+                                    delay = retry_after_delay
+                                if config.on_retry:
+                                    ctx = RetryContext(
+                                        attempt=attempt + 1,
+                                        max_retries=config.backoff.max_retries,
+                                        delay_ms=delay * 1000.0,
+                                        status=status,
+                                        error=err,
+                                        url=err_url,
+                                        domain=key,
+                                    )
+                                    _safe_invoke(config.on_retry, ctx)
+                                sleep_backoff(delay)
+                                continue
+                                
+                            if status is not None and hasattr(err, 'response'):
+                                if config.on_failure:
+                                    _safe_invoke(config.on_failure, FailureContext(
+                                        url=err_url,
+                                        domain=key,
+                                        attempts=attempt_count,
+                                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                                        status=status,
+                                        response=err.response,
+                                        error=err,
+                                        is_circuit_open=False,
+                                    ))
+                                return err.response
 
-                                if fallback is not None:
-                                    return fallback
-                                return MockResponse(
-                                    status_code=status,
-                                    content={"error": True, "status": status, "message": message},
-                                    reason=reason
-                                )
-                            if config.on_failure:
-                                _safe_invoke(config.on_failure, FailureContext(
-                                    url=err_url,
-                                    domain=key,
-                                    attempts=attempt_count,
-                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
-                                    status=status,
-                                    response=getattr(err, 'response', None),
-                                    error=err,
-                                    is_circuit_open=False,
-                                ))
-                            raise
-                        breaker.record_failure(key)
-                        last_err = err
-                        if attempt < config.backoff.max_retries:
-                            delay = calculate_backoff(attempt, config.backoff)
-                            if status == 429:
-                                retry_after_delay = _get_retry_after_delay(err)
-                            if status == 429 and retry_after_delay is not None:
-                                delay = retry_after_delay
-                            if config.on_retry:
-                                ctx = RetryContext(
-                                    attempt=attempt + 1,
-                                    max_retries=config.backoff.max_retries,
-                                    delay_ms=delay * 1000.0,
-                                    status=status,
-                                    error=err,
-                                    url=err_url,
-                                    domain=key,
-                                )
-                                _safe_invoke(config.on_retry, ctx)
-                            sleep_backoff(delay)
-                            continue
-                            
-                        if status is not None and hasattr(err, 'response'):
-                            if config.on_failure:
-                                _safe_invoke(config.on_failure, FailureContext(
-                                    url=err_url,
-                                    domain=key,
-                                    attempts=attempt_count,
-                                    duration_ms=(time.perf_counter() - start_time) * 1000.0,
-                                    status=status,
-                                    response=err.response,
-                                    error=err,
-                                    is_circuit_open=False,
-                                ))
-                            return err.response
-
-                if config.on_failure:
-                    _safe_invoke(config.on_failure, FailureContext(
-                        url=url or _extract_url(args, kwargs, last_err),
-                        domain=key,
-                        attempts=attempt_count,
-                        duration_ms=(time.perf_counter() - start_time) * 1000.0,
-                        error=last_err,
-                        status=_get_status_code(last_err) if last_err else None,
-                        is_circuit_open=False,
-                    ))
-                raise last_err  # type: ignore[misc]
+                    if config.on_failure:
+                        _safe_invoke(config.on_failure, FailureContext(
+                            url=url or _extract_url(args, kwargs, last_err),
+                            domain=key,
+                            attempts=attempt_count,
+                            duration_ms=(time.perf_counter() - start_time) * 1000.0,
+                            error=last_err,
+                            status=_get_status_code(last_err) if last_err else None,
+                            is_circuit_open=False,
+                        ))
+                    raise last_err  # type: ignore[misc]
+                finally:
+                    breaker.release_probe(key)
 
             wrapper.circuit_breaker = breaker
             return wrapper

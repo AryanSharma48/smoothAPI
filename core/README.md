@@ -188,9 +188,9 @@ To evaluate the benefits and trade-offs of a shared Rust core, SmoothAPI follows
 
 ### Baseline Findings (`exp-001`)
 
-![Experiment exp-001 Benchmark Results](../research/figures/exp-001-summary.png)
+![Experiment exp-001 Benchmark Results](../benchmarks/research/figures/exp-001-summary.png)
 
-Full statistical logs, raw CSVs, and measurement controls are available in the [research/](../research) directory and [benchmarks/](../benchmarks).
+Full statistical logs, raw CSVs, and measurement controls are available in the [benchmarks/research/](../benchmarks/research) directory and [benchmarks/](../benchmarks).
 
 > **Research Note:** Comparing raw Rust computation against interpreted or JIT-compiled runtimes measures execution cost alone. Production viability requires accounting for language binding overhead (Node-API / PyO3) and realistic network latency.
 

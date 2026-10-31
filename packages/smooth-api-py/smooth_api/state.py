@@ -18,6 +18,7 @@ class CircuitEntry:
     last_failure_time: float  # epoch seconds (not ms)
     consecutive_successes: int = 0
     probe_in_flight: bool = False
+    probe_start_time: float = 0.0
     window: list[int] = field(default_factory=list)
     window_index: int = 0
     window_count: int = 0
@@ -33,7 +34,7 @@ class CircuitBreakerState:
         self._config = config or CircuitBreakerConfig()
         self._on_state_change = on_state_change
         self._map: dict[str, CircuitEntry] = {}
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def _transition(
         self,
@@ -128,24 +129,33 @@ class CircuitBreakerState:
 
     def can_request(self, domain: str) -> bool:
         event = None
+        now = time.time()
         with self._lock:
             entry = self._get_or_create(domain)
             if entry.state == 'CLOSED':
                 return True
-            elapsed = time.time() - entry.last_failure_time
+            elapsed = now - entry.last_failure_time
             if entry.state == 'OPEN':
                 if elapsed > self._config.cooldown_ms / 1000:
                     event = self._transition(domain, entry, 'HALF_OPEN')
                     entry.consecutive_successes = 0
                     entry.probe_in_flight = True
+                    entry.probe_start_time = now
                     allowed = True
                 else:
                     allowed = False
             else:  # HALF_OPEN
                 if entry.probe_in_flight:
-                    allowed = False
+                    # Lease expiry guard: if the in-flight probe has been running longer than cooldown_ms,
+                    # it has leaked or timed out. Expire the lease so the circuit does not remain permanently blocked.
+                    if now - entry.probe_start_time > self._config.cooldown_ms / 1000:
+                        entry.probe_start_time = now
+                        allowed = True
+                    else:
+                        allowed = False
                 else:
                     entry.probe_in_flight = True
+                    entry.probe_start_time = now
                     allowed = True
         if event:
             self._notify_state_change(event)
@@ -216,7 +226,9 @@ class CircuitBreakerState:
     def get_stats(self, domain: str) -> dict[str, Any]:
         with self._lock:
             entry = self._get_or_create(domain)
-            state = self.get_state(domain)
+            state = entry.state
+            if state == 'OPEN' and (time.time() - entry.last_failure_time) > self._config.cooldown_ms / 1000:
+                state = 'HALF_OPEN'
             rate = entry.window_failures / entry.window_count if entry.window_count > 0 else 0.0
             return {
                 "state": state,

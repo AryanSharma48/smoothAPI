@@ -33,6 +33,7 @@ export interface CircuitEntry {
   lastFailureTime: number; // epoch ms, used to compute cooldown expiry
   consecutiveSuccesses: number; // consecutive successes in HALF_OPEN
   probeInFlight: boolean;       // whether a probe request is currently running in HALF_OPEN
+  probeStartTime: number;       // epoch ms when probe was leased to prevent permanent lockup
   window: Uint8Array;           // circular buffer of outcomes: 0 = failure, 1 = success
   windowIndex: number;
   windowCount: number;

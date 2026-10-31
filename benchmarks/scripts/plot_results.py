@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-FIG_DIR = ROOT_DIR / "research" / "figures"
+FIG_DIR = ROOT_DIR / "benchmarks" / "research" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 def main():

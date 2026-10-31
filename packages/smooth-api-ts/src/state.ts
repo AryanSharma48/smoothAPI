@@ -36,7 +36,16 @@ export class CircuitBreakerState {
     config: Partial<CircuitBreakerConfig> = {},
     private readonly onStateChange?: (event: CircuitStateChangeEvent) => void
   ) {
-    this.config = { ...DEFAULTS, ...config };
+    this.config = {
+      failureThreshold: config.failureThreshold ?? DEFAULTS.failureThreshold,
+      cooldownMs: config.cooldownMs ?? DEFAULTS.cooldownMs,
+      successThreshold: config.successThreshold ?? DEFAULTS.successThreshold,
+      failureRateThreshold: config.failureRateThreshold,
+      windowSize: config.windowSize ?? DEFAULTS.windowSize,
+      minRequestsInWindow: config.minRequestsInWindow ?? DEFAULTS.minRequestsInWindow,
+      partitionBy: config.partitionBy ?? DEFAULTS.partitionBy,
+      circuitKeyFn: config.circuitKeyFn,
+    };
     this.map = new Map();
   }
 
@@ -97,6 +106,7 @@ export class CircuitBreakerState {
         lastFailureTime: 0,
         consecutiveSuccesses: 0,
         probeInFlight: false,
+        probeStartTime: 0,
         window: new Uint8Array(size),
         windowIndex: 0,
         windowCount: 0,
@@ -112,12 +122,14 @@ export class CircuitBreakerState {
       return true;
     }
 
-    const elapsedTime = Date.now() - entry.lastFailureTime;
+    const now = Date.now();
+    const elapsedTime = now - entry.lastFailureTime;
     if (entry.state === 'OPEN') {
       if (elapsedTime > this.config.cooldownMs) {
         this.transition(domain, entry, 'HALF_OPEN');
         entry.consecutiveSuccesses = 0;
         entry.probeInFlight = true;
+        entry.probeStartTime = now;
         return true;
       }
       return false;
@@ -125,9 +137,16 @@ export class CircuitBreakerState {
 
     // State is HALF_OPEN: only allow single in-flight probe
     if (entry.probeInFlight) {
+      // Lease expiry guard: if the in-flight probe has been running longer than cooldownMs,
+      // it has leaked or timed out. Expire the lease so the circuit does not remain permanently blocked.
+      if (now - entry.probeStartTime > this.config.cooldownMs) {
+        entry.probeStartTime = now;
+        return true;
+      }
       return false;
     }
     entry.probeInFlight = true;
+    entry.probeStartTime = now;
     return true;
   }
 

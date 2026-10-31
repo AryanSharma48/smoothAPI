@@ -17,7 +17,7 @@ This document records observations and interpretations drawn directly from measu
   - **Compiler Specialization Barrier:** Rust runner passes `black_box(&config)` into `calculate_backoff` and `evaluate_response`.
   - **Sink Accumulation & DCE Prevention:** All three runtimes accumulate return values into numeric sinks with compiler DCE guards.
   - **Counterbalanced Execution Order:** Language execution order was rotated across all 5 rounds.
-- **Data Source:** [benchmarks/results/exp-001/summary.json](../benchmarks/results/exp-001/summary.json) & [raw.csv](../benchmarks/results/exp-001/raw.csv)
+- **Data Source:** [benchmarks/results/exp-001/summary.json](../results/exp-001/summary.json) & [raw.csv](../results/exp-001/raw.csv)
 
 ### Summary Table
 
