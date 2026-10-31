@@ -15,6 +15,8 @@
   <a href="https://www.npmjs.com/package/@codingaryan/smoothapi"><img src="https://img.shields.io/npm/v/@codingaryan/smoothapi?style=flat-square&color=8b5cf6" alt="NPM Version"></a>
   <a href="https://pypi.org/project/smoothapi-py/"><img src="https://img.shields.io/pypi/v/smoothapi-py?style=flat-square&color=ec4899" alt="PyPI Version"></a>
   <a href="https://www.npmjs.com/package/@codingaryan/smoothapi"><img src="https://img.shields.io/npm/dm/@codingaryan/smoothapi?style=flat-square&color=10b981" alt="NPM Downloads"></a>
+  <a href="https://hub.xerj.org/contributors/AryanSharma48">
+    <img src="https://hub.xerj.org/contributors/AryanSharma48/badge.svg" alt="XERJ Corpus Hub Contributor"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6b7280?style=flat-square" alt="License"></a>
 </p>
 
