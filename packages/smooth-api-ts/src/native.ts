@@ -77,9 +77,12 @@ export function evaluateResponseWithNative(
   }
   let delay = Math.min(max, base * (2 ** attempt));
   if (status === 429 && retryAfter) {
-    const parsed = parseInt(retryAfter, 10);
-    if (!Number.isNaN(parsed) && parsed > 0) {
-      delay = parsed * 1000;
+    const trimmed = retryAfter.trim();
+    if (/^\d+$/.test(trimmed)) {
+      const parsed = Number(trimmed);
+      if (Number.isSafeInteger(parsed) && parsed >= 0) {
+        delay = parsed * 1000;
+      }
     }
   }
   return { type: 'Retry', delayMs: delay };

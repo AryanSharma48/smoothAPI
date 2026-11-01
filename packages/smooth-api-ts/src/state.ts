@@ -208,15 +208,23 @@ export class CircuitBreakerState {
     }
   }
 
-  getState(domain: string): CircuitState {
+  getStoredState(domain: string): CircuitState {
+    return this.getOrCreate(domain).state;
+  }
+
+  getStateAt(domain: string, nowMs: number): CircuitState {
     const entry = this.getOrCreate(domain);
     if (
       entry.state === 'OPEN' &&
-      Date.now() - entry.lastFailureTime > this.config.cooldownMs
+      nowMs - entry.lastFailureTime > this.config.cooldownMs
     ) {
       return 'HALF_OPEN';
     }
     return entry.state;
+  }
+
+  getState(domain: string): CircuitState {
+    return this.getStateAt(domain, Date.now());
   }
 
   getStats(domain: string) {

@@ -189,9 +189,12 @@ export function createSmoothFetch<T>(globalConfig: SmoothFetchConfig<T>) {
                 if (response.status === 429) {
                   const retryAfter = response.headers.get('Retry-After');
                   if (retryAfter) {
-                    const parsed = parseInt(retryAfter, 10);
-                    if (!Number.isNaN(parsed) && parsed > 0) {
-                      delayMs = parsed * 1000;
+                    const trimmed = retryAfter.trim();
+                    if (/^\d+$/.test(trimmed)) {
+                      const parsed = Number(trimmed);
+                      if (Number.isSafeInteger(parsed) && parsed >= 0) {
+                        delayMs = parsed * 1000;
+                      }
                     }
                   }
                 }
