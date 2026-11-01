@@ -82,7 +82,7 @@ def test_retry_respects_retry_after_header_sync():
     
     class MockResponse:
         status_code = 429
-        headers = {"Retry-After": "0.1"}
+        headers = {"Retry-After": "1"}
         reason = "Too Many Requests"
 
     class MockResponseSuccess:
@@ -124,7 +124,7 @@ async def test_retry_respects_retry_after_header_async():
     
     class MockResponse:
         status_code = 429
-        headers = {"Retry-After": "0.1"}
+        headers = {"Retry-After": "1"}
         reason = "Too Many Requests"
 
     class MockResponseSuccess:

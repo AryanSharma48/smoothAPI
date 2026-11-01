@@ -108,12 +108,11 @@ def _get_retry_after_delay(err: Exception) -> float | None:
         if hasattr(err.response, "headers"):
             retry_after = err.response.headers.get("Retry-After")
             if retry_after is not None:
-                try:
-                    delay = float(retry_after)
-                    if delay > 0:
-                        return delay
-                except ValueError:
-                    pass
+                trimmed = str(retry_after).strip()
+                if trimmed.isascii() and trimmed.isdigit():
+                    delay = int(trimmed)
+                    if delay >= 0:
+                        return float(delay)
     return None
 
 
@@ -182,6 +181,7 @@ def smooth_api(config: SmoothConfig):
                 # or attach to an already-running Future.
                 async def _execute():
                     last_err: Exception | None = None
+                    prev_delay: float | None = None
                     attempt_count = 0
 
                     for attempt in range(config.backoff.max_retries + 1):
@@ -281,11 +281,12 @@ def smooth_api(config: SmoothConfig):
                             breaker.record_failure(key)
                             last_err = err
                             if attempt < config.backoff.max_retries:
-                                delay = calculate_backoff(attempt, config.backoff)
+                                delay = calculate_backoff(attempt, config.backoff, prev_delay)
                                 if status == 429:
                                     retry_after_delay = _get_retry_after_delay(err)
                                     if retry_after_delay is not None:
                                         delay = retry_after_delay
+                                prev_delay = delay
                                 if config.on_retry:
                                     ctx = RetryContext(
                                         attempt=attempt + 1,
@@ -368,6 +369,7 @@ def smooth_api(config: SmoothConfig):
                     raise RuntimeError(f'Circuit breaker is OPEN for: {key}')
 
                 last_err: Exception | None = None
+                prev_delay: float | None = None
                 attempt_count = 0
 
                 try:
@@ -451,11 +453,11 @@ def smooth_api(config: SmoothConfig):
                             breaker.record_failure(key)
                             last_err = err
                             if attempt < config.backoff.max_retries:
-                                delay = calculate_backoff(attempt, config.backoff)
-                                if status == 429:
-                                    retry_after_delay = _get_retry_after_delay(err)
+                                delay = calculate_backoff(attempt, config.backoff, prev_delay)
+                                retry_after_delay = _get_retry_after_delay(err) if status == 429 else None
                                 if status == 429 and retry_after_delay is not None:
                                     delay = retry_after_delay
+                                prev_delay = delay
                                 if config.on_retry:
                                     ctx = RetryContext(
                                         attempt=attempt + 1,

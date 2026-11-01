@@ -50,11 +50,15 @@ class RetryContext:
         return self.delay_ms / 1000.0
 
 
+JitterStrategy = Literal['none', 'full', 'equal', 'decorrelated']
+
+
 @dataclass
 class BackoffConfig:
     base_delay: float = 0.1   # seconds, doubles each attempt before jitter
     max_delay: float = 30.0   # ceiling on the pre-jitter exponential
     max_retries: int = 3
+    jitter: JitterStrategy = 'equal'
 
 
 @dataclass

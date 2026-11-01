@@ -216,6 +216,17 @@ class CircuitBreakerState:
         if event:
             self._notify_state_change(event)
 
+    def get_stored_state(self, domain: str) -> CircuitState:
+        with self._lock:
+            return self._get_or_create(domain).state
+
+    def get_state_at(self, domain: str, now_ms: float) -> CircuitState:
+        with self._lock:
+            entry = self._get_or_create(domain)
+            if entry.state == 'OPEN' and ((now_ms / 1000.0) - entry.last_failure_time) > self._config.cooldown_ms / 1000:
+                return 'HALF_OPEN'
+            return entry.state
+
     def get_state(self, domain: str) -> CircuitState:
         with self._lock:
             entry = self._get_or_create(domain)
